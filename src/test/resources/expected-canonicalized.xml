@@ -1,0 +1,17 @@
+<root date="2015-09-25T09:42:11.046+02:00">
+    <step1>
+        p-general=GENERAL
+        p-step1=step1
+    </step1>
+    <step2>
+        p-general=GENERAL
+        p-step2=step2
+    </step2>
+    <step3>
+        p-general=GENERAL
+        p-step3=step3
+    </step3>
+    <information id="a1234">
+        <contenu>TEXTE INCLUS</contenu>
+    </information>
+</root>
