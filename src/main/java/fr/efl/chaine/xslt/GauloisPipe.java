@@ -12,6 +12,7 @@ import fr.efl.chaine.xslt.config.CfgFile;
 import fr.efl.chaine.xslt.config.Config;
 import fr.efl.chaine.xslt.config.ConfigUtil;
 import fr.efl.chaine.xslt.config.Output;
+import fr.efl.chaine.xslt.config.ParametrableStep;
 import fr.efl.chaine.xslt.config.Pipe;
 import fr.efl.chaine.xslt.config.Tee;
 import fr.efl.chaine.xslt.config.Xslt;
@@ -350,30 +351,40 @@ public class GauloisPipe {
     
     private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
         XsltTransformer first = null;
-        Iterator<Xslt> it = pipe.getXslts();
-        XsltTransformer previousTransformer = null;
+        Iterator<ParametrableStep> it = pipe.getXslts();
+        Object previousTransformer = null;
         while(it.hasNext()) {
-            Xslt xsl = it.next();
-            XsltTransformer currentTransformer = getXsltTransformer(xsl.getHref(), parameters);
-            if(listener!=null) {
-                currentTransformer.setMessageListener(listener);
+            ParametrableStep step = it.next();
+            if(step instanceof Xslt) {
+                Xslt xsl = (Xslt)step;
+                XsltTransformer currentTransformer = getXsltTransformer(xsl.getHref(), parameters);
+                if(listener!=null) {
+                    currentTransformer.setMessageListener(listener);
+                }
+                for(ParameterValue pv:xsl.getParams()) {
+                    // on substitue les paramètres globaux dans ceux de la XSL
+                    String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters);
+                    currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(value));
+                }
+                for(ParameterValue pv:parameters) {
+                    // la substitution a été faite avant, dans le merge
+                    currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
+                }
+                if(first==null) {
+                    first = currentTransformer;
+                }
+                if(previousTransformer!=null) {
+                    if(previousTransformer instanceof XsltTransformer) {
+                        ((XsltTransformer)previousTransformer).setDestination(currentTransformer);
+                    } else {
+                        // TODO
+                    }
+                }
+                previousTransformer = currentTransformer;
+            } else if(step instanceof JavaStep) {
+                
             }
-            for(ParameterValue pv:xsl.getParams()) {
-                // on substitue les paramètres globaux dans ceux de la XSL
-                String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters);
-                currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(value));
-            }
-            for(ParameterValue pv:parameters) {
-                // la substitution a été faite avant, dans le merge
-                currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
-            }
-            if(first==null) {
-                first = currentTransformer;
-            }
-            if(previousTransformer!=null) {
-                previousTransformer.setDestination(currentTransformer);
-            }
-            previousTransformer = currentTransformer;
+
         }
         if(pipe.getTee()!=null) {
             previousTransformer.setDestination(buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener));

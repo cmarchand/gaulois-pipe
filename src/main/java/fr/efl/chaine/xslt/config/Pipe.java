@@ -23,7 +23,7 @@ public class Pipe implements Verifiable {
     // par défaut, 10Mo
     private int multithreadMaxSourceSize = 10*1024*1024;
     private int nbThreads = 1;
-    private final List<Xslt> xslts;
+    private final List<ParametrableStep> xslts;
     private Output output;
     private Tee tee;
     
@@ -48,7 +48,7 @@ public class Pipe implements Verifiable {
         this.nbThreads = nbThreads;
     }
 
-    public Iterator<Xslt> getXslts() {
+    public Iterator<ParametrableStep> getXslts() {
         return xslts.iterator();
     }
     
@@ -66,7 +66,7 @@ public class Pipe implements Verifiable {
 
     @Override
     public void verify() throws InvalidSyntaxException {
-        for(Xslt x:xslts) x.verify();
+        for(ParametrableStep x:xslts) x.verify();
     }
 
     public Output getOutput() {

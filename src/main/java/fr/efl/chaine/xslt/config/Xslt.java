@@ -19,7 +19,7 @@ import net.sf.saxon.s9api.QName;
  *
  * @author ext-cmarchand
  */
-public class Xslt implements Verifiable {
+public class Xslt implements ParametrableStep {
     static final QName QNAME = new QName(Config.NS, "xslt");
     static final QName ATTR_HREF = new QName("href");
     private String href;
@@ -45,10 +45,12 @@ public class Xslt implements Verifiable {
         this.href = href;
     }
 
+    @Override
     public Collection<ParameterValue> getParams() {
         return params.values();
     }
     
+    @Override
     public void addParameter(ParameterValue param) {
         params.put(param.getKey(), param);
     }
