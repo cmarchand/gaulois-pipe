@@ -11,6 +11,7 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.config.CfgFile;
 import fr.efl.chaine.xslt.config.Config;
 import fr.efl.chaine.xslt.config.ConfigUtil;
+import fr.efl.chaine.xslt.config.JavaStep;
 import fr.efl.chaine.xslt.config.Output;
 import fr.efl.chaine.xslt.config.ParametrableStep;
 import fr.efl.chaine.xslt.config.Pipe;
@@ -43,6 +44,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 import net.sf.saxon.Configuration;
@@ -376,21 +378,46 @@ public class GauloisPipe {
                 if(previousTransformer!=null) {
                     if(previousTransformer instanceof XsltTransformer) {
                         ((XsltTransformer)previousTransformer).setDestination(currentTransformer);
-                    } else {
-                        // TODO
+                    } else if(previousTransformer instanceof StepJava) {
+                        ((StepJava)previousTransformer).setDestination(currentTransformer);
                     }
                 }
                 previousTransformer = currentTransformer;
             } else if(step instanceof JavaStep) {
+                JavaStep javaStep = (JavaStep)step;
+                try {
+                    StepJava stepJava = javaStep.getStepClass().newInstance();
+                    for(ParameterValue pv:parameters) {
+                        // la substitution a été faite avant, dans le merge
+                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
+                    }
+                    if(previousTransformer!=null) {
+                        if(previousTransformer instanceof XsltTransformer) {
+                            ((XsltTransformer)previousTransformer).setDestination(stepJava);
+                        } else if(previousTransformer instanceof StepJava) {
+                            ((StepJava)previousTransformer).setDestination(stepJava);
+                        }
+                    }
+                    previousTransformer = stepJava;
+                } catch (InstantiationException | IllegalAccessException ex) {
+                    throw new InvalidSyntaxException(ex);
+                }
                 
             }
 
         }
+        Destination nextStep = null;
         if(pipe.getTee()!=null) {
-            previousTransformer.setDestination(buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener));
+            nextStep = buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener);
         } else if(pipe.getOutput()!=null) {
             Serializer serializer = buildSerializer(pipe.getOutput(),inputFile,parameters);
-            previousTransformer.setDestination(serializer);
+        }
+        if(nextStep!=null) {
+            if(previousTransformer instanceof XsltTransformer) {
+                ((XsltTransformer)previousTransformer).setDestination(nextStep);
+            } else {
+                ((StepJava)previousTransformer).setDestination(nextStep);
+            }
         }
         return first;
     }

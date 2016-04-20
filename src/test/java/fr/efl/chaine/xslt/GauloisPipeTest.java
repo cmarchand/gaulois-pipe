@@ -8,7 +8,7 @@ package fr.efl.chaine.xslt;
 
 import fr.efl.chaine.xslt.config.Config;
 import fr.efl.chaine.xslt.config.ConfigUtil;
-import fr.efl.chaine.xslt.config.Xslt;
+import fr.efl.chaine.xslt.config.ParametrableStep;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.File;
 import java.util.ArrayList;
@@ -91,7 +91,7 @@ public class GauloisPipeTest {
         try {
             Config config = new ConfigUtil("./src/test/resources/comment-xslt.xml").buildConfig(emptyInputParams);
             config.verify();
-            Iterator<Xslt> it = config.getPipe().getXslts();
+            Iterator<ParametrableStep> it = config.getPipe().getXslts();
             int count=0;
             while(it.hasNext()) {
                 it.next();

@@ -6,6 +6,7 @@
 package fr.efl.chaine.xslt.config;
 
 import fr.efl.chaine.xslt.InvalidSyntaxException;
+import fr.efl.chaine.xslt.StepJava;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,12 +47,30 @@ public class JavaStep implements ParametrableStep {
     public void verify() throws InvalidSyntaxException {
         try {
             clazz = Class.forName(className);
-            if(!Arrays.asList(clazz.getInterfaces()).contains(/* TODO : mettre la bonne classe */)) {
-                throw new InvalidSyntaxException("La classe "+className+" n'implémente pas "+)
+            if(!isDerivedFrom(clazz, StepJava.class)) {
+                throw new InvalidSyntaxException("La classe "+className+" n'implémente pas "+StepJava.class.getName());
             }
-        } catch(Exception ex) {
+        } catch(ClassNotFoundException | InvalidSyntaxException ex) {
             throw new InvalidSyntaxException(ex);
         }
+    }
+    
+    public Class<StepJava> getStepClass() {
+        return clazz;
+    }
+    
+    /**
+     * Returns true if {@link toTest} is or extends {@link isA}
+     * @param toTest
+     * @param isA
+     * @return 
+     */
+    private static boolean isDerivedFrom(Class toTest, Class isA) {
+        Class hierarch = toTest;
+        while(hierarch!=null && !hierarch.equals(isA)) {
+            hierarch = hierarch.getSuperclass();
+        }
+        return hierarch!=null;
     }
     
 }
