@@ -8,7 +8,6 @@ package fr.efl.chaine.xslt.config;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.StepJava;
 import fr.efl.chaine.xslt.utils.ParameterValue;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import net.sf.saxon.s9api.QName;
@@ -19,7 +18,7 @@ import net.sf.saxon.s9api.QName;
  */
 public class JavaStep implements ParametrableStep {
     static final QName QNAME = new QName(Config.NS, "java");
-    static final QName ATTR_HREF = new QName("class");
+    static final QName ATTR_CLASS = new QName("class");
     private String className;
     private HashMap<String,ParameterValue> params;
     private Class clazz;

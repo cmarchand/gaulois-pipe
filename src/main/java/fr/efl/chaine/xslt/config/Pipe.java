@@ -57,9 +57,9 @@ public class Pipe implements Verifiable {
      * @param xsl
      * @throws IllegalStateException Si on a déjà ajouté un <tt>&lt;tee&gt;</tt> ou un <tt>&lt;output&gt;</tt>
      */
-    public void addXslt(Xslt xsl) throws InvalidSyntaxException {
+    public void addXslt(ParametrableStep xsl) throws InvalidSyntaxException {
         if(output!=null || tee!=null) {
-            throw new InvalidSyntaxException("xsl elements must not be added after a output or a tee element");
+            throw new InvalidSyntaxException("xsl|javaStep elements must not be added after a output or a tee element");
         }
         xslts.add(xsl);
     }

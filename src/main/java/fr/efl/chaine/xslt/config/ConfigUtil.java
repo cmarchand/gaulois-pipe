@@ -114,6 +114,8 @@ public class ConfigUtil {
                 XdmNode node = (XdmNode)item;
                 if(Xslt.QNAME.equals(node.getNodeName())) {
                     pipe.addXslt(buildXslt(node,parameters));
+                } else if(JavaStep.QNAME.equals(node.getNodeName())) {
+                    pipe.addXslt(buildJavaStep(node, parameters));
                 } else if(Tee.QNAME.equals(node.getNodeName())) {
                     pipe.setTee(buildTee(node, parameters));
                 } else if(Output.QNAME.equals(node.getNodeName())) {
@@ -180,6 +182,15 @@ public class ConfigUtil {
         LOGGER.debug("buildXslt on {}", xsltNode.getNodeName());
         Xslt ret = new Xslt(resolveEscapes(xsltNode.getAttributeValue(Xslt.ATTR_HREF),parameters));
         XdmSequenceIterator it = xsltNode.axisIterator(Axis.CHILD, QN_PARAM);
+        while(it.hasNext()) {
+            ret.addParameter(buildParameter((XdmNode)it.next(),parameters));
+        }
+        return ret;
+    }
+    private JavaStep buildJavaStep(XdmNode javaNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+        LOGGER.debug("buildJavaStep on {}", javaNode.getNodeName());
+        JavaStep ret = new JavaStep(resolveEscapes(javaNode.getAttributeValue(JavaStep.ATTR_CLASS), parameters));
+        XdmSequenceIterator it = javaNode.axisIterator(Axis.CHILD, QN_PARAM);
         while(it.hasNext()) {
             ret.addParameter(buildParameter((XdmNode)it.next(),parameters));
         }
@@ -293,7 +304,7 @@ public class ConfigUtil {
         return ret;
     }
     private boolean getBooleanValue(String v) {
-        return "true".equals(v) || "1".equals(v);
+        return "true".equals(v) || "1".equals(v) || "yes".equals(v);
     }
     
     /**

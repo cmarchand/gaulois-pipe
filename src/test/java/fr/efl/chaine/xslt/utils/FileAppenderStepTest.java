@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Processor;
@@ -31,23 +32,31 @@ public class FileAppenderStepTest {
         Configuration config = Configuration.newConfiguration();
         Processor processor = new Processor(config);
         XsltTransformer transformer = processor.newXsltCompiler().compile(new StreamSource("src/test/resources/identity.xsl")).load();
-        Serializer serializer = processor.newSerializer(new File("target/output.xml"));
+        Serializer serializer = processor.newSerializer(new File("target/generated-test-files/output.xml"));
         FileAppenderStep fas = new FileAppenderStep();
-        fas.setParameter(FileAppenderStep.FILE_NAME, new XdmAtomicValue("target/appendee.txt"));
+        fas.setParameter(FileAppenderStep.FILE_NAME, new XdmAtomicValue("target/generated-test-files/appendee.txt"));
         fas.setParameter(FileAppenderStep.VALUE, new XdmAtomicValue("blablabla"));
         fas.setParameter(FileAppenderStep.LINE_SEPARATOR, new XdmAtomicValue("LF"));
         fas.setDestination(serializer);
         transformer.setDestination(fas);
         transformer.setSource(new StreamSource("src/test/resources/source.xml"));
+        File expect = new File("target/generated-test-files/appendee.txt");
+        if(expect.exists()) expect.delete();
         transformer.transform();
-        File expect = new File("target/appendee.txt");
         assertTrue(expect.isFile());
         BufferedReader br = new BufferedReader(new FileReader(expect));
-        char[] buff = new char[10];
+        char[] buff = new char[30];
         int ret = br.read(buff);
+        br.close();
         assertEquals(10, ret);
         char[] ex = new char[] { 'b', 'l', 'a', 'b', 'l', 'a', 'b', 'l', 'a', '\n'};
-        assertArrayEquals(ex, buff);
+        assertArrayEquals(ex, Arrays.copyOf(buff, ret));
+        fas.setDestination(processor.newSerializer(new File("target/generated-test-files/output2.xml")));
+        transformer.transform();
+        br = new BufferedReader(new FileReader(expect));
+        ret = br.read(buff);
+        br.close();
+        assertEquals(20, ret);
     }
     
 }

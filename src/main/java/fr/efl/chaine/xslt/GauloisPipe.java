@@ -77,6 +77,8 @@ public class GauloisPipe {
     
     private final Map<String,XsltExecutable> xslCache;
     
+    private Processor processor;
+    
     /**
      * Message listener for XSLT-SAXON messages (xsl:message)
      */
@@ -159,7 +161,7 @@ public class GauloisPipe {
         try {
             Configuration saxonConfig = SaxonConfigurationFactory.buildConfiguration();
             saxonConfig.setURIResolver(buildUriResolver(saxonConfig.getURIResolver()));
-            Processor processor = new Processor(saxonConfig);
+            processor = new Processor(saxonConfig);
             xsltCompiler = processor.newXsltCompiler();
             builder = processor.newDocumentBuilder();
 
@@ -376,27 +378,22 @@ public class GauloisPipe {
                     first = currentTransformer;
                 }
                 if(previousTransformer!=null) {
-                    if(previousTransformer instanceof XsltTransformer) {
-                        ((XsltTransformer)previousTransformer).setDestination(currentTransformer);
-                    } else if(previousTransformer instanceof StepJava) {
-                        ((StepJava)previousTransformer).setDestination(currentTransformer);
-                    }
+                    assignStepToDestination(previousTransformer, currentTransformer);
                 }
                 previousTransformer = currentTransformer;
             } else if(step instanceof JavaStep) {
                 JavaStep javaStep = (JavaStep)step;
                 try {
                     StepJava stepJava = javaStep.getStepClass().newInstance();
+                    for(ParameterValue pv:javaStep.getParams()) {
+                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
+                    }
                     for(ParameterValue pv:parameters) {
                         // la substitution a été faite avant, dans le merge
                         stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
                     }
                     if(previousTransformer!=null) {
-                        if(previousTransformer instanceof XsltTransformer) {
-                            ((XsltTransformer)previousTransformer).setDestination(stepJava);
-                        } else if(previousTransformer instanceof StepJava) {
-                            ((StepJava)previousTransformer).setDestination(stepJava);
-                        }
+                        assignStepToDestination(previousTransformer, stepJava);
                     }
                     previousTransformer = stepJava;
                 } catch (InstantiationException | IllegalAccessException ex) {
@@ -410,16 +407,26 @@ public class GauloisPipe {
         if(pipe.getTee()!=null) {
             nextStep = buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener);
         } else if(pipe.getOutput()!=null) {
-            Serializer serializer = buildSerializer(pipe.getOutput(),inputFile,parameters);
+            nextStep = buildSerializer(pipe.getOutput(),inputFile,parameters);
         }
         if(nextStep!=null) {
-            if(previousTransformer instanceof XsltTransformer) {
-                ((XsltTransformer)previousTransformer).setDestination(nextStep);
-            } else {
-                ((StepJava)previousTransformer).setDestination(nextStep);
-            }
+            assignStepToDestination(previousTransformer, nextStep);
+        } else {
+            throw new InvalidSyntaxException("Pipe "+pipe.toString()+" has no terminal Step.");
         }
         return first;
+    }
+    
+    private void assignStepToDestination(Object assignee, Destination assigned) throws IllegalArgumentException {
+        if(assignee==null) throw new IllegalArgumentException("assignee must not be null");
+        if(assigned==null) throw new IllegalArgumentException("assigned must not be null");
+        if(assignee instanceof XsltTransformer) {
+            ((XsltTransformer)assignee).setDestination(assigned);
+        } else if(assignee instanceof StepJava) {
+            ((StepJava)assignee).setDestination(assigned);
+        } else {
+            throw new IllegalArgumentException("assignee must be either a XsltTransformer or a SteJava instance");
+        }
     }
     
     private XsltTransformer getXsltTransformer(String href, Collection<ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException {
@@ -461,7 +468,7 @@ public class GauloisPipe {
     }
     
     private Serializer buildSerializer(Output output, File inputFile, List<ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
-        Serializer ret = new Serializer(output.getDestinationFile(inputFile, parameters));
+        Serializer ret = processor.newSerializer(output.getDestinationFile(inputFile, parameters));
         Properties outputProps = output.getOutputProperties();
         for(Object key: outputProps.keySet()) {
             ret.setOutputProperty(Output.VALID_OUTPUT_PROPERTIES.get(key.toString()).getSaxonProperty(), outputProps.getProperty(key.toString()));

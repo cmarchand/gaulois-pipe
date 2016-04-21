@@ -102,5 +102,19 @@ public class GauloisPipeTest {
             fail(ex.getMessage());
         }
     }
+    
+    @Test
+    public void testJavaStep() throws Exception {
+        ConfigUtil cu = new ConfigUtil("./src/test/resources/FileAppenderHook.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        GauloisPipe piper = new GauloisPipe(config, "STEP_JAVA");
+        File expect = new File("./target/generated-test-files/appendee.txt");
+        if(expect.exists()) expect.delete();
+        piper.launch();
+        assertTrue("Le fichier ./target/generated-test-files/appendee.txt n'existe pas", expect.exists());
+        expect = new File("./target/generated-test-files/source-identity-result.xml");
+        assertTrue("Le fichier ./target/generated-test-files/source-identity-result.xml n'existe pas", expect.exists());
+    }
 
 }
