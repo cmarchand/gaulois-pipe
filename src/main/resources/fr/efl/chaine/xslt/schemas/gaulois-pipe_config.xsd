@@ -6,7 +6,7 @@ This Source Code Form is subject to the terms of
 the Mozilla Public License, v. 2.0. If a copy of 
 the MPL was not distributed with this file, You 
 can obtain one at https://mozilla.org/MPL/2.0/.
-        <xs:documentation> 
+        </xs:documentation> 
     </xs:annotation>
     <xs:element name="config" type="cfg:TConfig">
         <xs:annotation>
@@ -96,22 +96,18 @@ can obtain one at https://mozilla.org/MPL/2.0/.
         </xs:attribute>
     </xs:complexType>
     <xs:complexType name="TRestrictedPipe">
-        <xs:complexContent>
-            <xs:restriction base="cfg:TPipe">
-                <xs:sequence>
-                    <xs:choice minOccurs="1" maxOccurs="unbounded">
-                        <xs:element name="xslt" type="cfg:TXslt" />
-                        <xs:element name="java" type="cfg:TJava"/>
-                    </xs:choice>
-                    <xs:choice>
-                        <xs:element name="tee" type="cfg:TTee" />
-                        <xs:element name="output" type="cfg:TOutput"/>
-                    </xs:choice>
-                </xs:sequence>
-                <xs:attribute name="nbThreads" type="cfg:positiveInt" use="prohibited"/>
-                <xs:attribute name="mutiThreadMaxSourceSize" use="prohibited"/>
-            </xs:restriction>
-        </xs:complexContent>
+        <xs:sequence>
+            <xs:choice minOccurs="1" maxOccurs="unbounded">
+                <xs:element name="xslt" type="cfg:TXslt" />
+                <xs:element name="java" type="cfg:TJava"/>
+            </xs:choice>
+            <xs:choice>
+                <xs:element name="tee" type="cfg:TTee" />
+                <xs:element name="output" type="cfg:TOutput"/>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="nbThreads" type="cfg:positiveInt" use="prohibited"/>
+        <xs:attribute name="mutiThreadMaxSourceSize" use="prohibited"/>
     </xs:complexType>
     
     <xs:complexType name="TTee">
@@ -620,10 +616,10 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     
     <xs:complexType name="TJava">
         <xs:annotation>
-            <xs:docuemntation xml:lang="fr">
+            <xs:documentation xml:lang="fr">
                 Un step écrit en Java. Cette classe doit étendre
                 fr.efl.chaine.xslt.StepJava
-            </xs:docuemntation>
+            </xs:documentation>
             <xs:documentation xml:lang="en">
                 A Java Step to use in the pipe. This java class must extends 
                 fr.efl.chaine.xslt.StepJava
@@ -632,10 +628,10 @@ can obtain one at https://mozilla.org/MPL/2.0/.
         <xs:sequence>
             <xs:element name="param" type="cfg:TParam" minOccurs="0" maxOccurs="unbounded">
                 <xs:annotation>
-                    <xs:docuemntation xml:lang="fr">
+                    <xs:documentation xml:lang="fr">
                         Un paramètre à passer au step.
                         La valeur sera la même pour toutes les sources passées dans le pipe.
-                    </xs:docuemntation>
+                    </xs:documentation>
                     <xs:documentation xml:lang="en">
                         A parameter to give to step instance. 
                         The value of the parameter will be the same for all sources processed by the pipe.
