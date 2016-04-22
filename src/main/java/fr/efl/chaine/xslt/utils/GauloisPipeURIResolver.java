@@ -1,9 +1,3 @@
-/**
- * This Source Code Form is subject to the terms of 
- * the Mozilla Public License, v. 2.0. If a copy of 
- * the MPL was not distributed with this file, You 
- * can obtain one at https://mozilla.org/MPL/2.0/.
- */
 package fr.efl.chaine.xslt.utils;
 
 import org.slf4j.Logger;
@@ -106,12 +100,16 @@ public class GauloisPipeURIResolver implements URIResolver {
             if ("".equals(href)) {
                 return defaultUriResolver.resolve(href, base);
             } else {
-                String path = href;
-                path = path.replace(UNIX_DOUBLE_SLASH, UNIX_SIMPLE_SLASH);
-                path = path.replace(UNIX_FILE_PROTOCOL, UNIX_SIMPLE_SLASH);
-                path = path.replace(WINDOWS_FILE_PROTOCOL, EMPTY_STRING);
-                String filename = path.substring(path.lastIndexOf('/') + 1);
-                File file = path.contains(":") ? new File(new URI(path)) : new File(path);
+                String path;
+                File file;
+                try {
+                    URI uri = new URI(href);
+                    file = new File(uri);
+                }
+                catch (URISyntaxException | IllegalArgumentException | NullPointerException e) {
+                    file = new File(href);
+                }
+                String filename = href.substring(href.lastIndexOf('/') + 1);
                 if (uriMapping.containsKey(filename)) {
                     LOGGER.debug("Target file {} from uriMapping {}", filename, uriMapping.get(filename));
                     file = new File(uriMapping.get(filename));
@@ -199,10 +197,7 @@ public class GauloisPipeURIResolver implements URIResolver {
             if (!Objects.equals(this.href, other.href)) {
                 return false;
             }
-            if (!Objects.equals(this.base, other.base)) {
-                return false;
-            }
-            return true;
+            return Objects.equals(this.base, other.base);
         }
         
     }
