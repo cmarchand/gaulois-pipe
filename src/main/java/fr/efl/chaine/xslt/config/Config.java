@@ -30,6 +30,7 @@ public class Config implements Verifiable {
     private Sources sources;
     private int maxDocumentCacheSize = MAX_DOCUMENT_CACHE_SIZE;
     private static final Logger LOGGER = LoggerFactory.getLogger(Config.class);
+    private boolean logFileSize;
     
 
     public Config(XdmNode node) {
@@ -96,6 +97,14 @@ public class Config implements Verifiable {
 
     public void setMaxDocumentCacheSize(int maxDocumentCacheSize) {
         this.maxDocumentCacheSize = maxDocumentCacheSize;
+    }
+
+    public boolean isLogFileSize() {
+        return logFileSize;
+    }
+
+    public void setLogFileSize(boolean logFileSize) {
+        this.logFileSize = logFileSize;
     }
     
 }

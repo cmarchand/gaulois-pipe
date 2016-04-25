@@ -58,6 +58,7 @@ public class GauloisPipeTest {
     public void testSameInputFile() throws Exception {
         ConfigUtil cu = new ConfigUtil("./src/test/resources/same-source-file.xml");
         Config config = cu.buildConfig(emptyInputParams);
+        config.setLogFileSize(true);
         assertEquals(2, config.getSources().getFiles().size());
         GauloisPipe piper = new GauloisPipe(config,"SAME_INPUT");
         piper.launch();
@@ -70,6 +71,7 @@ public class GauloisPipeTest {
     public void testSubstitution() throws Exception {
         ConfigUtil cu = new ConfigUtil("./src/test/resources/substitution.xml");
         Config config = cu.buildConfig(emptyInputParams);
+        config.setLogFileSize(true);
         config.verify();
         GauloisPipe piper = new GauloisPipe(config,"SUBSTITUTION");
         piper.launch();
@@ -80,6 +82,7 @@ public class GauloisPipeTest {
     public void testNoSourceFile() throws Exception {
         ConfigUtil cu = new ConfigUtil("./src/test/resources/no-source.xml");
         Config config = cu.buildConfig(emptyInputParams);
+        config.setLogFileSize(true);
         config.verify();
         // on veut juste s'assurer qu'on a pas d'exception
         assertTrue(true);

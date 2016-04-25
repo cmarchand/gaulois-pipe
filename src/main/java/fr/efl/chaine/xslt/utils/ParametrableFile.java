@@ -17,6 +17,7 @@ import java.util.List;
 public class ParametrableFile {
     private final List<ParameterValue> parameters;
     private final File file;
+    private boolean avoidCache;
     
     public ParametrableFile(final File file) {
         super();
@@ -49,5 +50,11 @@ public class ParametrableFile {
             sb.append(")");
         }
         return sb.toString();
+    }
+    public void setAvoidCache(boolean avoidCache) {
+        this.avoidCache=avoidCache;
+    }
+    public boolean getAvoidCache() {
+        return avoidCache;
     }
 }

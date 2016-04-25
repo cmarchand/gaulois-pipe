@@ -44,10 +44,12 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.event.ProxyReceiver;
+import net.sf.saxon.event.Receiver;
+import net.sf.saxon.trans.XPathException;
 
 /**
  * The saxon pipe.
@@ -308,26 +310,36 @@ public class GauloisPipe {
      */
     private void execute(Pipe pipe, ParametrableFile input, MessageListener listener)
             throws SaxonApiException, MalformedURLException, InvalidSyntaxException, URISyntaxException, FileNotFoundException {
+        boolean avoidCache = input.getAvoidCache();
         long start = System.currentTimeMillis();
         String key = input.getFile().getAbsolutePath().intern();
         XdmNode source = documentCache.get(key);
-        if(source==null) {
-            if(documentCache.isLoading(instanceName)) {
+        if(source==null || avoidCache) {
+            if(!avoidCache && documentCache.isLoading(instanceName)) {
                 source = documentCache.waitForLoading(key);
             }
-            if(source==null) {
+            if(source==null || avoidCache) {
                 synchronized(key) {
-                    source = documentCache.get(key);
+                    if(!avoidCache) {
+                        source = documentCache.get(key);
+                    }
                     if(source==null) {
                         documentCache.setLoading(key);
+                        if(config.isLogFileSize()) {
+                            LOGGER.info("["+instanceName+"] "+input.toString()+" as input: "+input.getFile().length());
+                        }
                         source = builder.build(input.getFile());
-                        if(config.getSources().getFileUsage(input.getFile())>1) {
+                        if(!avoidCache && config.getSources().getFileUsage(input.getFile())>1) {
                             // on ne le met en cache que si il est utilisé plusieurs fois !
                             LOGGER.debug("["+instanceName+"] mise en cache de "+key);
                             documentCache.put(key, source);
                         } else {
                             documentCache.ignoreLoading(key);
-                            LOGGER.debug("["+instanceName+"] "+key+" n'est utilisé qu'une fois : pas de mise en cache");
+                            if(avoidCache){
+                                LOGGER.debug("["+instanceName+"] "+key+" est explicitement exclu du cache");
+                            } else {
+                                LOGGER.debug("["+instanceName+"] "+key+" n'est utilisé qu'une fois : pas de mise en cache");
+                            }
                         }
                     }
                 }
@@ -467,13 +479,34 @@ public class GauloisPipe {
         }
     }
     
-    private Serializer buildSerializer(Output output, File inputFile, List<ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
-        Serializer ret = processor.newSerializer(output.getDestinationFile(inputFile, parameters));
+    private Destination buildSerializer(Output output, File inputFile, List<ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
+        final File destinationFile = output.getDestinationFile(inputFile, parameters);
+        final Serializer ret = processor.newSerializer(destinationFile);
         Properties outputProps = output.getOutputProperties();
         for(Object key: outputProps.keySet()) {
             ret.setOutputProperty(Output.VALID_OUTPUT_PROPERTIES.get(key.toString()).getSaxonProperty(), outputProps.getProperty(key.toString()));
         }
-        return ret;
+        if(config.isLogFileSize()) {
+            Destination dest = new Destination() {
+                @Override
+                public Receiver getReceiver(Configuration c) throws SaxonApiException {
+                    return new ProxyReceiver(ret.getReceiver(c)) {
+                        @Override
+                        public void close() throws XPathException {
+                            super.close();
+                            LOGGER.info("["+instanceName+"] Written "+destinationFile.getAbsolutePath()+": "+destinationFile.length());
+                        }
+                    };
+                }
+                @Override
+                public void close() throws SaxonApiException {
+                    ret.close();
+                }
+            };
+            return dest;
+        } else {
+            return ret;
+        }
     }
     
     /**
@@ -590,6 +623,7 @@ public class GauloisPipe {
         String messageListener = null;
         String configFileName = null;
         String __instanceName = INSTANCE_DEFAULT_NAME;
+        boolean logFileSize = false;
         int inputMode = -1;
         for (String argument : args) {
             if (null != argument) {
@@ -620,6 +654,8 @@ public class GauloisPipe {
                         continue;
                     case "--config":
                         inputMode = CONFIG;
+                    case "--logFileSize":
+                        logFileSize=true;
                 }
             }
                 
@@ -657,6 +693,7 @@ public class GauloisPipe {
         for(String inputXsl: inputXsls) ConfigUtil.addTemplate(config, inputXsl);
         if(nbThreads!=null) ConfigUtil.setNbThreads(config, nbThreads);
         if(inputOutput!=null) ConfigUtil.setOutput(config, inputOutput);
+        config.setLogFileSize(logFileSize);
         config.verify();
         GauloisPipe saxonPipe = new GauloisPipe(config, __instanceName);
         if (messageListener != null) {
@@ -687,6 +724,7 @@ public class GauloisPipe {
             + "\t{--instance-name | -iName} <name>\t\tthe instance name to use in logs\n"
             + "\t{--output | -o} <outputfile>\t\t\toutput directory\n"
             + "\t{--nbthreads | -n} <n>\t\t\tnumber of threads to use\n"
+            + "\t{--logFileSize}\t\t\tdisplays intput and output files size in logs as INFO\n"
             + "\txsl_file[ xsl_file]*\t\tthe XSLs to pipe\n"
             + "\t[PARAMS p1=xxx[ p2=yyy]*]\tthe params to give to XSLs\n"
             + "\tFILES file1[ filen]*\t\tthe files to apply pipe on\n.\n"
