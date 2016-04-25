@@ -26,10 +26,15 @@ public class Pipe implements Verifiable {
     private final List<ParametrableStep> xslts;
     private Output output;
     private Tee tee;
+    private Tee parentTee = null;
     
     public Pipe() {
         super();
         xslts = new ArrayList<>();
+    }
+    public Pipe(Tee parent) {
+        this();
+        this.parentTee=parent;
     }
 
     public int getMultithreadMaxSourceSize() {
@@ -55,6 +60,7 @@ public class Pipe implements Verifiable {
     /**
      * Ajoute une XSL au pipe
      * @param xsl
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException
      * @throws IllegalStateException Si on a déjà ajouté un <tt>&lt;tee&gt;</tt> ou un <tt>&lt;output&gt;</tt>
      */
     public void addXslt(ParametrableStep xsl) throws InvalidSyntaxException {
@@ -67,6 +73,18 @@ public class Pipe implements Verifiable {
     @Override
     public void verify() throws InvalidSyntaxException {
         for(ParametrableStep x:xslts) x.verify();
+        if(!xslts.isEmpty()) {
+            if(xslts.get(0) instanceof JavaStep) {
+                if(parentTee==null)
+                    throw new InvalidSyntaxException("A java step must not be the first step of a pipe. Please a identity XSL to start pipe.");
+            }
+        }
+        if(tee!=null) {
+            tee.verify();
+        }
+        if(output!=null) {
+            output.verify();
+        }
     }
 
     public Output getOutput() {

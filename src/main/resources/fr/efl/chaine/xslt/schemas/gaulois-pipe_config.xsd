@@ -97,7 +97,8 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     </xs:complexType>
     <xs:complexType name="TRestrictedPipe">
         <xs:sequence>
-            <xs:choice minOccurs="1" maxOccurs="unbounded">
+            <xs:element name="xslt" type="cfg:TXslt" />
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
                 <xs:element name="xslt" type="cfg:TXslt" />
                 <xs:element name="java" type="cfg:TJava"/>
             </xs:choice>

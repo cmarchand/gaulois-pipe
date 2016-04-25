@@ -96,8 +96,11 @@ public class ConfigUtil {
     }
     
     private Pipe buildPipe(XdmNode pipeNode, Collection<ParameterValue> parameters) throws IllegalStateException, InvalidSyntaxException {
+        return buildPipe(pipeNode, parameters, null);
+    }
+    private Pipe buildPipe(XdmNode pipeNode, Collection<ParameterValue> parameters, Tee parentTee) throws IllegalStateException, InvalidSyntaxException {
         LOGGER.debug("buildPipe on "+pipeNode.getNodeName());
-        Pipe pipe = new Pipe();
+        Pipe pipe = new Pipe(parentTee);
         try {
             int nbThreads = Integer.parseInt(resolveEscapes(pipeNode.getAttributeValue(new QName(Pipe.ATTR_NB_THREADS)),parameters));
             pipe.setNbThreads(nbThreads);
@@ -140,7 +143,7 @@ public class ConfigUtil {
             XdmNode node = (XdmNode)seq.next();
             QName nodeName = node.getNodeName();
             if(Tee.PIPE1.equals(nodeName) || Tee.PIPE2.equals(nodeName)) {
-                Pipe pipe = buildPipe(node, parameters);
+                Pipe pipe = buildPipe(node, parameters, tee);
                 if(Tee.PIPE1.equals(nodeName)) {
                     tee.setPipe1(pipe);
                 } else {

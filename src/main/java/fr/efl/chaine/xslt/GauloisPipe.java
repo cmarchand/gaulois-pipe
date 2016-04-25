@@ -411,9 +411,9 @@ public class GauloisPipe {
                 } catch (InstantiationException | IllegalAccessException ex) {
                     throw new InvalidSyntaxException(ex);
                 }
-                
+            } else if(step instanceof Tee) {
+                throw new InvalidSyntaxException("A tee can not be the root of a pipe");
             }
-
         }
         Destination nextStep = null;
         if(pipe.getTee()!=null) {

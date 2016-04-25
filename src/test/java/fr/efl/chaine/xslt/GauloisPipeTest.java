@@ -119,5 +119,46 @@ public class GauloisPipeTest {
         expect = new File("./target/generated-test-files/source-identity-result.xml");
         assertTrue("Le fichier ./target/generated-test-files/source-identity-result.xml n'existe pas", expect.exists());
     }
+    
+    @Test
+    public void testTeeJava() throws Exception {
+        // checks a Java can be in a Tee
+        ConfigUtil cu = new ConfigUtil("./src/test/resources/java-tee.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        GauloisPipe piper = new GauloisPipe(config, "JAVA_TEE");
+        File expect1 = new File("./target/generated-test-files/tee-java.txt");
+        if(expect1.exists()) expect1.delete();
+        File expect2 = new File("./target/generated-test-files/source-pipe1.xml");
+        if(expect2.exists()) expect2.delete();
+        File expect3 = new File("./target/generated-test-files/source-pipe2.xml");
+        if(expect3.exists()) expect3.delete();
+        piper.launch();
+        assertTrue("The file ./target/generated-test-files/tee-java.txt does not exists", expect1.exists());
+        assertTrue("The file ./target/generated-test-files/source-pipe1.xml does not exists", expect2.exists());
+        assertTrue("The file ./target/generated-test-files/source-pipe2.xml does not exists", expect3.exists());
+    }
+    
+    @Test(expected = InvalidSyntaxException.class)
+    public void testInitialJavaStepKo() throws Exception {
+        // checks a Java can not be an initial step
+        ConfigUtil cu = new ConfigUtil("./src/test/resources/java-initial-step-ko.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+    }
+    @Test()
+    public void testInitialJavaStepOk() throws Exception {
+        // checks a Java can not be an initial step
+        ConfigUtil cu = new ConfigUtil("./src/test/resources/java-initial-step-ok.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+    }
+    @Test()
+    public void testInitialTeeStep() throws Exception {
+        // checks a Tee can be an initial Step
+        ConfigUtil cu = new ConfigUtil("./src/test/resources/tee-initial-step.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+    }
 
 }
