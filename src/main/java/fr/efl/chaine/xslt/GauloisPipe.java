@@ -6,6 +6,8 @@
  */
 package fr.efl.chaine.xslt;
 
+import de.schlichtherle.truezip.file.TFile;
+import de.schlichtherle.truezip.file.TFileInputStream;
 import fr.efl.chaine.xslt.utils.GauloisPipeURIResolver;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.config.CfgFile;
@@ -39,6 +41,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -448,12 +451,22 @@ public class GauloisPipe {
             File f;
             if(__href.startsWith("file:")) {
                 f = new File(new URI(__href));
+            } else if(__href.startsWith("jar:")) {
+                String xslUri = href.substring(href.indexOf("!")+1);
+                if(!xslUri.startsWith("/")) xslUri = "/"+xslUri;
+                String jarUri = href.substring(4,href.length()-xslUri.length()-1);
+                if(jarUri.startsWith("file://")) {
+                    jarUri = jarUri.substring(7);
+                } else if(jarUri.startsWith("file:")) {
+                    jarUri = jarUri.substring(5);
+                }
+                f = new TFile(jarUri+xslUri);
             } else {
                 f = new File(__href);
             }
-            FileInputStream input = new FileInputStream(f);
+            InputStream input = (f instanceof TFile) ? new TFileInputStream(f) : new FileInputStream(f);
             StreamSource source = new StreamSource(input);
-            source.setSystemId(f);
+            source.setSystemId(__href);
             
             xsl = xsltCompiler.compile(source);
             xslCache.put(__href, xsl);

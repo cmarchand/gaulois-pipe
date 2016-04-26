@@ -160,5 +160,16 @@ public class GauloisPipeTest {
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
     }
+    @Test()
+    public void testXslInJar() throws Exception {
+        // checks a Tee can be an initial Step
+        ConfigUtil cu = new ConfigUtil("./src/test/resources/jar-xsl.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        GauloisPipe piper = new GauloisPipe(config, "JAR_XSL");
+        piper.launch();
+        File expect = new File("./target/generated-test-files/source-jar.xml");
+        assertTrue("The file target/generated-test-files/source-jar.xml does not exists", expect.exists());
+    }
 
 }

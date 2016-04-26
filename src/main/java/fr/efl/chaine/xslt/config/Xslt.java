@@ -6,6 +6,7 @@
  */
 package fr.efl.chaine.xslt.config;
 
+import de.schlichtherle.truezip.file.TFile;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.File;
@@ -60,6 +61,16 @@ public class Xslt implements ParametrableStep {
         if(file==null) {
             if(href.startsWith("file:")) {
                 file = new File(new URI(href));
+            } else if(href.startsWith("jar:")) {
+                String xslUri = href.substring(href.indexOf("!")+1);
+                if(!xslUri.startsWith("/")) xslUri = "/"+xslUri;
+                String jarUri = href.substring(4,href.length()-xslUri.length()-1);
+                if(jarUri.startsWith("file://")) {
+                    jarUri = jarUri.substring(7);
+                } else if(jarUri.startsWith("file:")) {
+                    jarUri = jarUri.substring(5);
+                }
+                file = new TFile(jarUri+xslUri);
             } else {
                 file = new File(href);
             }
@@ -71,8 +82,16 @@ public class Xslt implements ParametrableStep {
     public void verify() throws InvalidSyntaxException {
         try {
             if(!href.contains("$[")) {
-                if(!getFile().exists() || !getFile().isFile()) {
-                    throw new InvalidSyntaxException(getFile().getAbsolutePath()+" does not exists or is not a regular file");
+                File xslFile = getFile();
+                if(xslFile instanceof TFile) {
+                    TFile tf = (TFile)xslFile;
+                    if(!tf.canRead()) {
+                        throw new InvalidSyntaxException(tf.getAbsolutePath()+" is not readable");
+                    }
+                } else {
+                    if(!getFile().exists() || !getFile().isFile()) {
+                        throw new InvalidSyntaxException(getFile().getAbsolutePath()+" does not exists or is not a regular file");
+                    }
                 }
             } else {
                 // on ne peut pas effectuer cette vérification.
