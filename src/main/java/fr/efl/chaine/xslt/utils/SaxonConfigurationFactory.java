@@ -23,19 +23,10 @@ public class SaxonConfigurationFactory {
      * @return 
      */
     public static Configuration buildConfiguration() {
-        try {
-            Class clazz = Class.forName("com.saxonica.config.EnterpriseConfiguration");
-            Configuration instance = (Configuration)clazz.newInstance();
-            return instance;
-        } catch(ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            try {
-                Class clazz = Class.forName("com.saxonica.config.ProfessionalConfiguration");
-                Configuration instance = (Configuration)clazz.newInstance();
-                return instance;
-            } catch(ClassNotFoundException | InstantiationException | IllegalAccessException ex2) {
-                return new Configuration();
-            }
-        }
+        // according to http://saxon.markmail.org/search/?q=#query:+page:3+mid:6g2jsds5oe7af243+state:results
+        // this is enough.
+        Configuration config = Configuration.newConfiguration();
+        return config;
     }
     
 }
