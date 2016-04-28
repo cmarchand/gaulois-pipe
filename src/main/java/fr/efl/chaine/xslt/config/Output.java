@@ -13,8 +13,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 
@@ -29,12 +31,12 @@ import org.slf4j.LoggerFactory;
  */
 public class Output implements Verifiable {
     final static QName QNAME = new QName(Config.NS, "output");
-    public static final Hashtable<String,OutputPropertyEntry> VALID_OUTPUT_PROPERTIES = new Hashtable<>();
+    public static final HashMap<String,OutputPropertyEntry> VALID_OUTPUT_PROPERTIES = new HashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(Output.class);
     private String relativeTo, relativePath;
     private String absolute;
     private String prefix, suffix, name;
-    private OutputProperties outputProperties;
+    private final OutputProperties outputProperties;
     
     static {
         VALID_OUTPUT_PROPERTIES.put("byte-order-mark", new OutputPropertyEntry(Serializer.Property.BYTE_ORDER_MARK, "yes", "no"));
@@ -112,6 +114,7 @@ public class Output implements Verifiable {
      * Defines outputProperties, based on <tt>props</tt> values.
      * It does not modify {@link #outputPorperty} <tt>Properties</tt> object, it defines the values in.
      * @param props 
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException 
      */
     public void setOutputProperties(final Properties props) throws InvalidSyntaxException {
         outputProperties.clear();
@@ -124,6 +127,7 @@ public class Output implements Verifiable {
      * it is overriden
      * @param key
      * @param value 
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException 
      */
     public void setOutputProperty(final String key, final String value) throws InvalidSyntaxException {
         outputProperties.defineProperty(key, value);
@@ -136,7 +140,12 @@ public class Output implements Verifiable {
      * @return 
      */
     public Properties getOutputProperties() {
-        return new Properties(outputProperties);
+        Properties ret = new Properties();
+        for(Object key: outputProperties.keySet()) {
+            String sKey = key.toString();
+            ret.setProperty(sKey,outputProperties.getProperty(sKey));
+        }
+        return ret;
     }
     public String getOutputProperty(final String key) {
         return outputProperties.getProperty(key);

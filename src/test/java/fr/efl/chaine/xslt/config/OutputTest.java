@@ -6,10 +6,18 @@
  */
 package fr.efl.chaine.xslt.config;
 
+import fr.efl.chaine.xslt.GauloisPipe;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
+import fr.efl.chaine.xslt.utils.ParameterValue;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.Collection;
 import org.junit.After;
-import org.junit.Assert;
+import static org.junit.Assert.*;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -18,7 +26,12 @@ import org.junit.Test;
  */
 public class OutputTest {
     private Output output;
+    private static Collection<ParameterValue> emptyInputParams;
     
+    @BeforeClass
+    public static void initialize() {
+        emptyInputParams = new ArrayList<>();
+    }
     @Before
     public void before() { output = new Output(); }
     @After
@@ -66,7 +79,7 @@ public class OutputTest {
         output.setOutputProperty("version","1.0");
         output.setOutputProperty("version","1.1");
         // on veut juste pas d'exception
-        Assert.assertTrue(true);
+        assertTrue(true);
     }
     
     @Test(expected = InvalidSyntaxException.class)
@@ -114,4 +127,28 @@ public class OutputTest {
         output.setOutputProperty("pouet","yes");
     }
 
+    @Test
+    public void testIndent() throws Exception {
+        // checks a Tee can be an initial Step
+        ConfigUtil cu = new ConfigUtil("./src/test/resources/outputParams.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        GauloisPipe piper = new GauloisPipe(config, "OUTPUT_PARAMS");
+        piper.launch();
+        File expect = new File("./target/generated-test-files/source-output-indented.xml");
+        assertTrue("The file target/generated-test-files/source-output-indented.xml does not exists", expect.exists());
+        try (BufferedReader br = new BufferedReader(new FileReader(expect))) {
+            String line = br.readLine();
+            assertTrue("output is not ISO-8859-1 encoded", line.contains("ISO-8859-1"));
+            assertTrue("output is not indented (1)", !line.contains("<root>"));
+            line=br.readLine();
+            assertEquals("output is not indented (2)", "<root>",line);
+            line=br.readLine();
+            assertTrue("output is not indented (3)", line.startsWith(" "));
+            assertTrue("CDATA is not set in <information/>",line.contains("<![CDATA["));
+            assertTrue("CDATA is not set in <information/>",line.contains("]]>"));
+            line=br.readLine();
+            assertEquals("problen in indentation","</root>",line);
+        }
+    }
 }
