@@ -9,8 +9,9 @@ package fr.efl.chaine.xslt.utils;
 /**
  * The multi-thread runner.
  *
- * @param <T>
+ * @param <T> The type this MultiThreadRunner must process
  */
+@Deprecated
 public interface MultiThreadRunner<T> {
 
     void run(T input) throws Exception;

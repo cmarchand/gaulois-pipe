@@ -9,20 +9,20 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.util.Collection;
 
 /**
- *
+ * A step which can have parameters
  * @author cmarchand
  */
 public interface ParametrableStep extends Verifiable {
     
     /**
      * Returns the parameters 
-     * @return 
+     * @return The parameters
      */
     Collection<ParameterValue> getParams();
     
     /**
      * Adds a parameter
-     * @param param 
+     * @param param the parameter to add
      */
     void addParameter(ParameterValue param);
 }

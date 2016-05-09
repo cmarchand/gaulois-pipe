@@ -83,10 +83,10 @@ public class GauloisPipeURIResolver implements URIResolver {
     /**
      * {@inheritDoc}
      *
-     * @param href
-     * @param base
-     * @return
-     * @throws javax.xml.transform.TransformerException
+     * @param href The href to resolve
+     * @param base The base to use to resolve
+     * @return A source that denotes the href
+     * @throws javax.xml.transform.TransformerException If something's wrong
      */
     @Override
     public Source resolve(String href, String base) throws TransformerException {

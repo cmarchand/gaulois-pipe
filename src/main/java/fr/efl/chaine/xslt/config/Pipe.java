@@ -59,8 +59,8 @@ public class Pipe implements Verifiable {
     
     /**
      * Ajoute une XSL au pipe
-     * @param xsl
-     * @throws fr.efl.chaine.xslt.InvalidSyntaxException
+     * @param xsl The xsl to add
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException If this xsl is added in a invlid location
      * @throws IllegalStateException Si on a déjà ajouté un <tt>&lt;tee&gt;</tt> ou un <tt>&lt;output&gt;</tt>
      */
     public void addXslt(ParametrableStep xsl) throws InvalidSyntaxException {
@@ -114,7 +114,7 @@ public class Pipe implements Verifiable {
     }
     /**
      * Return <tt>true</tt> if this pipe does not contains any <tt>tee</tt>.
-     * @return 
+     * @return <tt>true</tt> if this pipe does not contains a tee
      */
     public boolean isStraight() {
         return tee==null;

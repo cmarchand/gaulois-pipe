@@ -14,9 +14,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 
@@ -112,9 +110,11 @@ public class Output implements Verifiable {
     }
     /**
      * Defines outputProperties, based on <tt>props</tt> values.
-     * It does not modify {@link #outputPorperty} <tt>Properties</tt> object, it defines the values in.
-     * @param props 
-     * @throws fr.efl.chaine.xslt.InvalidSyntaxException 
+     * It does not modify {@link #outputProperties} <tt>Properties</tt> object, it defines the values in.
+     * It call {@link #setOutputProperty(java.lang.String, java.lang.String)} for each property
+     * All existing properties are removed before setting new properties.
+     * @param props The properties to set
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException  If a property or a value is invalid
      */
     public void setOutputProperties(final Properties props) throws InvalidSyntaxException {
         outputProperties.clear();
@@ -125,9 +125,9 @@ public class Output implements Verifiable {
     /**
      * Sets a new output property value. If this property was allready defined,
      * it is overriden
-     * @param key
-     * @param value 
-     * @throws fr.efl.chaine.xslt.InvalidSyntaxException 
+     * @param key The property name
+     * @param value The property value
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException If the property is invalid, or if the value is not allowed for the property
      */
     public void setOutputProperty(final String key, final String value) throws InvalidSyntaxException {
         outputProperties.defineProperty(key, value);
@@ -137,7 +137,7 @@ public class Output implements Verifiable {
     }
     /**
      * Returns a copy of outputProperties
-     * @return 
+     * @return A new copy of output properties
      */
     public Properties getOutputProperties() {
         Properties ret = new Properties();
@@ -154,10 +154,10 @@ public class Output implements Verifiable {
     /**
      * Renvoie le fichier destination
      * @param sourceFile Le fichier source traité
-     * @param parameters
-     * @return
-     * @throws InvalidSyntaxException 
-     * @throws java.net.URISyntaxException 
+     * @param parameters Parameters to give. Should be used only to parse the escapes
+     * @return The file to create
+     * @throws InvalidSyntaxException If this output has no been correctly defined
+     * @throws java.net.URISyntaxException If the constructed URI is no valid
      */
     public File getDestinationFile(File sourceFile, Collection<ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
         File ret = null;
@@ -187,7 +187,7 @@ public class Output implements Verifiable {
             else if(relativeTo.startsWith("${")) {
                 directory = new File(System.getProperty(relativeTo.substring(2).substring(0,relativeTo.length()-3)));
             } else {
-                throw new InvalidSyntaxException("to must be either source-file or ${xxx} where xxx is a system-property name");
+                throw new InvalidSyntaxException("relativeTo must be either source-file or ${xxx} where xxx is a system-property name");
             }
             directory = new File(directory, relativePath);
             ret = new File(directory, getFileName(sourceFile, parameters));

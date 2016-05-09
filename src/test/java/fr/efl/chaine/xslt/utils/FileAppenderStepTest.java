@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author Christophe Marchand <christophe@marchand.top>
+ * @author Christophe Marchand christophe@marchand.top
  */
 public class FileAppenderStepTest {
     

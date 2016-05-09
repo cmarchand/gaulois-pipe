@@ -85,7 +85,7 @@ public class Config implements Verifiable {
     }
     /**
      * Returns <tt>true</tt> if input files with size over multi-thread limit exist.
-     * @return 
+     * @return <tt>true</tt> if at least one file exceeds the limit size
      */
     public boolean hasFilesOverMultiThreadLimit() {
         return getSources().hasFileOverLimit(getPipe().getMultithreadMaxSourceSize());

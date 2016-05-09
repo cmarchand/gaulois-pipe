@@ -97,8 +97,8 @@ public class GauloisPipe {
     /**
      * The default contructor.
      *
-     * @param config
-     * @param instanceName Le nom de l'instance de saxon-pipe à utiliser dans les logs
+     * @param config The config to use to build pipe
+     * @param instanceName The instance name to use in the logs
      */
     public GauloisPipe(Config config, String instanceName) {
         super();
@@ -108,8 +108,8 @@ public class GauloisPipe {
         documentCache = new DocumentCache(config.getMaxDocumentCacheSize());
     }
     /**
-     * Pour compatibilité ascendante
-     * @param config 
+     * For backward compatibility
+     * @param config The config to use
      */
     public GauloisPipe(Config config) {
         this(config,INSTANCE_DEFAULT_NAME);
@@ -122,8 +122,8 @@ public class GauloisPipe {
      * @param outputDirectory the output directory
      * @param templatePaths the template paths
      * @param nbThreads the nbThreads
-     * @param instanceName
-     * @throws fr.efl.chaine.xslt.InvalidSyntaxException
+     * @param instanceName The instance name to use in the logs
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException If config's syntax is incorrect
      */
     public GauloisPipe(List<String> inputs, String outputDirectory,List<String> templatePaths, int nbThreads, String instanceName) throws InvalidSyntaxException {
         super();
@@ -147,10 +147,10 @@ public class GauloisPipe {
     /**
      * Launch the pipe.
      *
-     * @throws fr.efl.chaine.xslt.InvalidSyntaxException
-     * @throws java.io.FileNotFoundException
-     * @throws net.sf.saxon.s9api.SaxonApiException
-     * @throws java.net.URISyntaxException
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException If config's syntax is incorrect
+     * @throws java.io.FileNotFoundException If a file is not found...
+     * @throws net.sf.saxon.s9api.SaxonApiException If a SaxonApi problem occurs
+     * @throws java.net.URISyntaxException Because MVN forces to have comments...
      */
     public void launch() throws InvalidSyntaxException, FileNotFoundException, SaxonApiException, URISyntaxException, IOException {
         long start = System.currentTimeMillis();
@@ -220,9 +220,17 @@ public class GauloisPipe {
         }
     }
 
+    /**
+     * Returns ...
+     * @return the size of the document cache. Mainly used for UT
+     */
     public int getDocumentCacheSize() {
         return documentCache.size();
     }
+    /**
+     * Returns...
+     * @return the size of XSLT cache. Mainly used by UT
+     */
     public int getXsltCacheSize() {
         return xslCache.size();
     }
@@ -540,7 +548,7 @@ public class GauloisPipe {
     /**
      * Build URI mapping from system property.
      *
-     * @return
+     * @return The URI mapping to use by the URI resolver
      */
     protected Map<String, String> buildUriMapping() {
         LOGGER.info("["+instanceName+"] BuildUriMapping");
@@ -558,7 +566,7 @@ public class GauloisPipe {
 
 
     /**
-     * Main entry point of saxon xslt pipe.<br/>
+     * Main entry point of saxon xslt pipe.<br>
      * The arguments are :
      * <ul>
      * <li><tt>--config

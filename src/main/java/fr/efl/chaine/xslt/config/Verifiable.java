@@ -15,7 +15,7 @@ import fr.efl.chaine.xslt.InvalidSyntaxException;
 public interface Verifiable {
     /**
      * Réalise les vérifications nécessaires sur l'instance, et jette une exception en cas de problème
-     * @throws InvalidSyntaxException 
+     * @throws InvalidSyntaxException If something is wrong
      */
     void verify() throws InvalidSyntaxException;
     

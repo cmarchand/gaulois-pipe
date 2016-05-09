@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * A helper class to build the configuration.
  * @author ext-cmarchand
  */
 public class ConfigUtil {
@@ -312,9 +312,9 @@ public class ConfigUtil {
     
     /**
      * Cette méthode statique ne peut être utilisée que pour construire un pipe linéaire (sans <tt>&lt;tee&gt;</tt>)
-     * @param config
-     * @param parameterPattern
-     * @throws InvalidSyntaxException 
+     * @param config The config to modify
+     * @param parameterPattern The prameter definition
+     * @throws InvalidSyntaxException If the parameter definition is incorrect
      */
     public static void addConfigParameter(Config config, String parameterPattern) throws InvalidSyntaxException {
         config.addParameter(parseParameterPattern(parameterPattern));
@@ -328,9 +328,9 @@ public class ConfigUtil {
     }
     /**
      * Cette méthode statique ne peut être utilisée que pour construire un pipe linéaire (sans <tt>&lt;tee&gt;</tt>)
-     * @param config
-     * @param argument
-     * @throws InvalidSyntaxException 
+     * @param config The config to modify
+     * @param argument The number of threads
+     * @throws InvalidSyntaxException It should never throws anything... but if argument is not an integer...
      */
     public static void setNbThreads(Config config, String argument) throws InvalidSyntaxException {
         try {
@@ -345,9 +345,9 @@ public class ConfigUtil {
     }
     /**
      * Cette méthode statique ne peut être utilisée que pour construire un pipe linéaire (sans <tt>&lt;tee&gt;</tt>)
-     * @param config
-     * @param argument
-     * @throws InvalidSyntaxException 
+     * @param config The config to modify
+     * @param argument The file to add
+     * @throws InvalidSyntaxException If input file definition is incorrect
      */
     public static void addInputFile(Config config, String argument) throws InvalidSyntaxException {
         Sources sources = config.getSources();
@@ -359,9 +359,9 @@ public class ConfigUtil {
     }
     /**
      * Cette méthode statique ne peut être utilisée que pour construire un pipe linéaire (sans <tt>&lt;tee&gt;</tt>)
-     * @param config
-     * @param argument 
-     * @throws fr.efl.chaine.xslt.InvalidSyntaxException 
+     * @param config the config to modify
+     * @param argument The Xsl to add
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException If xsl definition is incorrect
      */
     public static void addTemplate(Config config, String argument) throws InvalidSyntaxException {
         Pipe pipe = config.getPipe();
@@ -373,9 +373,9 @@ public class ConfigUtil {
     }
     /**
      * Cette méthode statique ne peut être utilisée que pour construire un pipe linéaire (sans <tt>&lt;tee&gt;</tt>)
-     * @param config
-     * @param argument 
-     * @throws fr.efl.chaine.xslt.InvalidSyntaxException 
+     * @param config The config used
+     * @param argument The absolute dir to put files in
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException  If output definition is incorrect
      */
     public static void setOutput(Config config, String argument) throws InvalidSyntaxException {
         if(config.getPipe()==null) {

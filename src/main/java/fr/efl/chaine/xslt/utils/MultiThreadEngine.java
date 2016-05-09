@@ -17,9 +17,10 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
- *
- * @param <T>
+ * The multi-thread engine
+ * @param <T> The type to process
  */
+@Deprecated
 public class MultiThreadEngine<T> {
 
     /**
@@ -47,7 +48,7 @@ public class MultiThreadEngine<T> {
      * The default constructor.
      *
      * @param nbThreads the threads number
-     * @param runner
+     * @param runner The runner to use
      * @param instanceName LE nom de l'instance à utiliser dans les logs
      */
     public MultiThreadEngine(int nbThreads, MultiThreadRunner<T> runner, String instanceName) {

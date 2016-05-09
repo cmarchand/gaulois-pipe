@@ -22,8 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * @author Christophe Marchand <christophe@marchand.top>
+ * A step to append something ina text-file
+ * @author Christophe Marchand christophe@marchand.top
  */
 public class FileAppenderStep extends StepJava {
     /**

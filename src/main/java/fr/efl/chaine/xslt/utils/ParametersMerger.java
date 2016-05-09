@@ -11,16 +11,16 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- *
+ * Merges parameters
  * @author Christophe Marchand
  */
 public class ParametersMerger {
 
     /**
      * Merges the two lists into a new list, and let the two original lists unchanged.
-     * @param l1
-     * @param l2
-     * @return A new list taht contains all elements from <tt>l1</tt> and <tt>l2</tt>
+     * @param l1 First list of parameters
+     * @param l2 Second list of parameters
+     * @return A new list that contains all elements from <tt>l1</tt> and <tt>l2</tt>
      */
     public static List<ParameterValue> merge(final Collection<ParameterValue> l1, final Collection<ParameterValue> l2) {
         ArrayList<ParameterValue> ret = new ArrayList<>(l1.size()+l2.size());
@@ -33,6 +33,12 @@ public class ParametersMerger {
         return ret;
     }
     
+    /**
+     * Replaces the parameters in string
+     * @param initialValue The String to change parameters in
+     * @param parameters The parameters values
+     * @return The initialValue with all parameters replaced
+     */
     public static String processParametersReplacement(String initialValue, final Collection<ParameterValue> parameters) {
         String ret = initialValue;
         if(ret.contains("$[")) {

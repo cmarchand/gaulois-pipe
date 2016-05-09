@@ -32,7 +32,7 @@ public abstract class StepJava implements Destination {
     /**
      * Defines the next step in the pipeline.
      * This call must be done when constructing the pipeline. A StepJava must not be a terminal Step.
-     * @param nextStep
+     * @param nextStep The next step to process
      */
     public void setDestination(Destination nextStep) {
         this.nextStep=nextStep;
@@ -40,9 +40,9 @@ public abstract class StepJava implements Destination {
     
     /**
      * Use this method when you construct the ProxyReceiver in {@link #getReceiver(Configuration)}
-     * @param config
-     * @return
-     * @throws SaxonApiException 
+     * @param config The config to use.
+     * @return The receiver of the next step
+     * @throws SaxonApiException If something goes wrong
      */
     protected Receiver getNextReceiver(Configuration config) throws SaxonApiException {
         return nextStep.getReceiver(config);
@@ -50,8 +50,8 @@ public abstract class StepJava implements Destination {
     
     /**
      * Defines a parameter
-     * @param name
-     * @param value 
+     * @param name Param name...
+     * @param value and Param value
      */
     public void setParameter(QName name, XdmValue value) {
         parameters.put(name, value);
@@ -59,8 +59,8 @@ public abstract class StepJava implements Destination {
     
     /**
      * Returns the parameter value, or <tt>null</tt> if it does not exists.
-     * @param name
-     * @return 
+     * @param name The parameter name
+     * @return The Parameter value, if defined
      */
     public XdmValue getParameter(QName name) {
         return parameters.get(name);

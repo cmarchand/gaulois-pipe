@@ -20,7 +20,7 @@ public class SaxonConfigurationFactory {
      * Returns aConfiguration. Depending on the release of saxon, and the licence availability,
      * it returns a <tt>EnterpriseConfiguration</tt>, a <tt>ProfessionalConfiguration</tt>, or
      * a <tt>Configuration</tt>
-     * @return 
+     * @return A Configuration, according to saxon release available
      */
     public static Configuration buildConfiguration() {
         // according to http://saxon.markmail.org/search/?q=#query:+page:3+mid:6g2jsds5oe7af243+state:results
