@@ -7,11 +7,13 @@
 package fr.efl.chaine.xslt.config;
 
 import de.schlichtherle.truezip.file.TFile;
+import fr.efl.chaine.xslt.GauloisPipe;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import net.sf.saxon.s9api.QName;
@@ -71,6 +73,8 @@ public class Xslt implements ParametrableStep {
                     jarUri = jarUri.substring(5);
                 }
                 file = new TFile(jarUri+xslUri);
+            } else if(href.startsWith("cp:")) {
+                
             } else {
                 file = new File(href);
             }
@@ -82,16 +86,21 @@ public class Xslt implements ParametrableStep {
     public void verify() throws InvalidSyntaxException {
         try {
             if(!href.contains("$[")) {
-                File xslFile = getFile();
-                if(xslFile instanceof TFile) {
-                    TFile tf = (TFile)xslFile;
-                    if(!tf.canRead()) {
-                        throw new InvalidSyntaxException(tf.getAbsolutePath()+" is not readable");
+                if(!href.startsWith("cp:")) {
+                    File xslFile = getFile();
+                    if(xslFile instanceof TFile) {
+                        TFile tf = (TFile)xslFile;
+                        if(!tf.canRead()) {
+                            throw new InvalidSyntaxException(tf.getAbsolutePath()+" is not readable");
+                        }
+                    } else {
+                        if(!getFile().exists() || !getFile().isFile()) {
+                            throw new InvalidSyntaxException(getFile().getAbsolutePath()+" does not exists or is not a regular file");
+                        }
                     }
                 } else {
-                    if(!getFile().exists() || !getFile().isFile()) {
-                        throw new InvalidSyntaxException(getFile().getAbsolutePath()+" does not exists or is not a regular file");
-                    }
+                    URL url = GauloisPipe.class.getResource(href.substring(3));
+                    if(url==null) throw new InvalidSyntaxException("Unable to load "+href+" from classpath. Did you start with a '/' ?");
                 }
             } else {
                 // on ne peut pas effectuer cette vérification.

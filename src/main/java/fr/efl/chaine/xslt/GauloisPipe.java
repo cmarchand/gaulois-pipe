@@ -448,9 +448,10 @@ public class GauloisPipe {
         String __href = ParametersMerger.processParametersReplacement(href, parameters);
         XsltExecutable xsl = xslCache.get(__href);
         if(xsl==null) {
-            File f;
+            InputStream input = null;
             if(__href.startsWith("file:")) {
-                f = new File(new URI(__href));
+                File f = new File(new URI(__href));
+                input = new FileInputStream(f);
             } else if(__href.startsWith("jar:")) {
                 String xslUri = href.substring(href.indexOf("!")+1);
                 if(!xslUri.startsWith("/")) xslUri = "/"+xslUri;
@@ -460,11 +461,14 @@ public class GauloisPipe {
                 } else if(jarUri.startsWith("file:")) {
                     jarUri = jarUri.substring(5);
                 }
-                f = new TFile(jarUri+xslUri);
+                TFile f = new TFile(jarUri+xslUri);
+                input = new TFileInputStream(f);
+            } else if(__href.startsWith("cp:")) {
+                input = GauloisPipe.class.getResourceAsStream(__href.substring(3));
             } else {
-                f = new File(__href);
+                File f = new File(__href);
+                input = new FileInputStream(f);
             }
-            InputStream input = (f instanceof TFile) ? new TFileInputStream(f) : new FileInputStream(f);
             StreamSource source = new StreamSource(input);
             source.setSystemId(__href);
             

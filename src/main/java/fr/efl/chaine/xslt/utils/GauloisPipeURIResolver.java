@@ -1,5 +1,8 @@
 package fr.efl.chaine.xslt.utils;
 
+import de.schlichtherle.truezip.file.TFile;
+import de.schlichtherle.truezip.file.TFileInputStream;
+import fr.efl.chaine.xslt.GauloisPipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +13,7 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -99,6 +103,25 @@ public class GauloisPipeURIResolver implements URIResolver {
         try {
             if ("".equals(href)) {
                 return defaultUriResolver.resolve(href, base);
+            } else if(href.startsWith("cp:")) {
+                InputStream is = GauloisPipe.class.getResourceAsStream(href.substring(3));
+                StreamSource sr = new StreamSource(is);
+                sr.setSystemId(href);
+                return sr;
+            } else if(href.startsWith("jar:")) {
+                String xslUri = href.substring(href.indexOf("!")+1);
+                if(!xslUri.startsWith("/")) xslUri = "/"+xslUri;
+                String jarUri = href.substring(4,href.length()-xslUri.length()-1);
+                if(jarUri.startsWith("file://")) {
+                    jarUri = jarUri.substring(7);
+                } else if(jarUri.startsWith("file:")) {
+                    jarUri = jarUri.substring(5);
+                }
+                TFile file = new TFile(jarUri+xslUri);
+                InputStream is = new TFileInputStream(file);
+                StreamSource sr = new StreamSource(is);
+                sr.setSystemId(href);
+                return sr;
             } else {
                 String path;
                 File file;
