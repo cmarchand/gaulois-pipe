@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<project name="Gaulois Pipe">
+    <body>
+        <menu name="Gaulois Pipe">
+            <item name="Overview" href="index.html"/>
+        </menu>
+    </body>
+</project>
