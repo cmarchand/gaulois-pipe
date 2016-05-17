@@ -28,7 +28,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     <xsl:template match="*">
         <xsl:element name="{upper-case(local-name(.))}" namespace="{namespace-uri(.)}">
             <xsl:apply-templates select="node() | @*"/>
-        </xsl:eleemnt>
+        </xsl:element>
     </xsl:template>
         
 </xsl:transform>
