@@ -24,7 +24,12 @@ import java.util.Objects;
 
 /**
  * Saxon pipe URI resolver.
+ * This class is now deprecated, and is not further used in Gaulois-pipe.
+ * If you previously use URI mapping via system properties,
+ * you should now use OASIS catalogs. See http://xmlresolver:org to configure
+ * catalogs for Gaulois-pipe
  */
+@Deprecated
 public class GauloisPipeURIResolver implements URIResolver {
 
     private final URIResolver defaultUriResolver;
@@ -101,6 +106,8 @@ public class GauloisPipeURIResolver implements URIResolver {
             } catch(FileNotFoundException ex) {}
         }
         try {
+            URI hrefUri = new URI(href);
+            LOGGER.info(href+" isAbsolute() ? "+hrefUri.isAbsolute());
             if ("".equals(href)) {
                 return defaultUriResolver.resolve(href, base);
             } else if(href.startsWith("cp:")) {

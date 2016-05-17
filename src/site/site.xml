@@ -2,7 +2,8 @@
 <project name="Gaulois Pipe">
     <body>
         <menu name="Gaulois Pipe">
-            <item name="Overview" href="index.html"/>
+            <item name="Overview" href="overview.html"/>
         </menu>
+        <menu ref="reports"/>
     </body>
 </project>

@@ -53,6 +53,8 @@ import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.trans.XPathException;
+import org.xmlresolver.Resolver;
+import top.marchand.xml.protocols.ProtocolInstaller;
 
 /**
  * The saxon pipe.
@@ -106,6 +108,7 @@ public class GauloisPipe {
         this.instanceName=instanceName;
         xslCache = new HashMap<>();
         documentCache = new DocumentCache(config.getMaxDocumentCacheSize());
+        ProtocolInstaller.registerAdditionalProtocols();
     }
     /**
      * For backward compatibility
@@ -448,11 +451,12 @@ public class GauloisPipe {
         } else if(assignee instanceof StepJava) {
             ((StepJava)assignee).setDestination(assigned);
         } else {
-            throw new IllegalArgumentException("assignee must be either a XsltTransformer or a SteJava instance");
+            throw new IllegalArgumentException("assignee must be either a XsltTransformer or a StepJava instance");
         }
     }
     
     private XsltTransformer getXsltTransformer(String href, Collection<ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException {
+        // TODO : rewrite this, as cp: and jar: protocols are availabe and one can use new URL(cp:/...).getInputStream()
         String __href = ParametersMerger.processParametersReplacement(href, parameters);
         XsltExecutable xsl = xslCache.get(__href);
         if(xsl==null) {
@@ -542,7 +546,8 @@ public class GauloisPipe {
      */
     protected URIResolver buildUriResolver(URIResolver defaultUriResolver) {
         LOGGER.info("["+instanceName+"] BuildUriResolver");
-        return new GauloisPipeURIResolver(defaultUriResolver, buildUriMapping());
+//        return new GauloisPipeURIResolver(defaultUriResolver, buildUriMapping());
+        return new Resolver();
     }
 
     /**

@@ -10,7 +10,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     xmlns='http://efl.fr/chaine/saxon-pipe/config'
     xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config file:/home/cmarchand/devel/gaulois-pipe/src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
     <pipe nbThreads="1" mutiThreadMaxSourceSize="">
-        <xslt href="cp:/identity.xsl"/>
+        <xslt href="cp:/uppercase.xsl"/>
         <output id="pipe2">
             <folder absolute="./target/generated-test-files"></folder>
             <fileName name="${basename}-cp.xml"/>

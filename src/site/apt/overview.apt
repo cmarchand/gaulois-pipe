@@ -46,3 +46,12 @@ Gaulois-pipe
   A parameter value MUST be a <<Xdm Atomic Value>>, as defined in {{https://www.w3.org/TR/xpath-datamodel/#AtomicValue}}.\
   A parameter value MUST NOT use or references other parameters values.\
   If the same parameter is defined more than one time, the priority is the above list order.
+
+* URI Resolver
+
+  Gaulois-pipe uses {{{./dependencies.html}xmlresolver}} {{http://xmlresolver.org}} to resolve URIs. The legacy method to map URI via System properties
+  is now abandoned, and catalogs must be used instead. <<There is no backward compatibility>>.
+
+  Gaulois-pipe also uses {{{./dependencies.html}cp-protocol}}, which is a protocol implementation to load resources from classpath. Hence, if you
+  have an XSL in <<<src/main/xsl/my/package/my-xsl.xsl>>>, you may specify it via <<<cp:/my/package/my-xsl.xsl>>>
+

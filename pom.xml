@@ -36,9 +36,9 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-	    <groupId>net.sf.saxon</groupId>
-	    <artifactId>Saxon-HE</artifactId>
-	    <version>9.7.0-4</version>
+            <groupId>net.sf.saxon</groupId>
+            <artifactId>Saxon-HE</artifactId>
+            <version>9.7.0-4</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -68,9 +68,35 @@
             <artifactId>truezip-driver-zip</artifactId>
             <version>7.7.9</version>
         </dependency>
+        <!-- http://mvnrepository.com/artifact/org.xmlresolver/xmlresolver -->
+        <dependency>
+            <groupId>org.xmlresolver</groupId>
+            <artifactId>xmlresolver</artifactId>
+            <version>0.12.3</version>
+        </dependency>
+        <dependency>
+            <groupId>top.marchand.xml</groupId>
+            <artifactId>cp-protocol</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>2.1</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.tinyjee.dim</groupId>
+                            <artifactId>doxia-include-macro</artifactId>
+                            <version>1.1</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -124,6 +150,22 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin> 
+                <groupId>org.tinyjee.dim</groupId> 
+                <artifactId>doxia-include-macro</artifactId> 
+                <version>1.1</version> 
+                <executions> 
+                    <execution> 
+                        <id>initialize-doxia-include-macro</id> 
+                        <!-- Use "initialize" when the 'site' was not given as 'phase'. -->
+                        <!-- phase>initialize</phase -->
+                        <phase>pre-site</phase> 
+                        <goals> 
+                            <goal>initialize</goal> 
+                        </goals> 
+                    </execution> 
+                </executions> 
+            </plugin> 
         </plugins>
     </build>
 
