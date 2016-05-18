@@ -9,12 +9,12 @@
 Gaulois-pipe
 
   Gaulois-pipe is a XSL pipeline solution.
-  It's written on Saxon, uses the setDestination(Destination) methods.
+  It's based on Saxon ({{{http://saxonica.com}Saxonica}}), uses the <<<setDestination(Destination)>>> methods.
   Gaulois-pipe provides a way to describe the pipeline you want to execute on sources.
 
-  You can use xslt, tees, outputs, and your own java classes.
+  You can use <<xslt>>, <<tees>>, <<outputs>>, and your <<own java classes>>.
 
-  At the beginning, we were using XProc. But XProc is language which is difficult to learn, so it was coasting a lot to maintain.
+  At the beginning, we were using XProc. But XProc is a language which is difficult to learn, so it was coasting a lot to maintain.
   Furthermore, XProc implementations, although being high quality products, are quite slows.
 
   Gaulois-pipe has been written to be simple to write XSL pipelines. It is multi-threaded, it allows giving parameters to XSLs,
@@ -24,10 +24,11 @@ Gaulois-pipe
 
   Gaulois-pipe is able to process sources multi-threaded. The pipe accepts a @nbThreads attribute, to define the number of threads to use.
   When working multi-threaded, it is possible to limit the file size which can be processed in parallel ; 
-  hence, if you have huge files, they will be processed on a sole thread, and then, smal files will be processed multi-threaded ; 
-  this is to try to avoir OutOfMemory errors.
+  hence, if you have huge files, they will be processed on a sole thread, and then, small files will be processed multi-threaded ; 
+  this is to try to avoir <<<OutOfMemory>>> errors.
 
-  If @mutiThreadMaxSourceSize is defined, aany files whose size exceeds this value will be processed before, on a mono-thread process. Hence, only "small" files are processed in parallel ; this is to avoid OutOfMemory errors.
+  If @mutiThreadMaxSourceSize is defined, any files whose size exceeds this value will be processed before, on a mono-thread process. Hence, only "small" files are processed in parallel ; this is to avoid <<<OutOfMemory>>> errors ;
+  if it is not defined, all files that exceed 10Mb will be processed on mono-thread.
 
 * Parameters
 
@@ -46,6 +47,8 @@ Gaulois-pipe
   A parameter value MUST be a <<Xdm Atomic Value>>, as defined in {{https://www.w3.org/TR/xpath-datamodel/#AtomicValue}}.\
   A parameter value MUST NOT use or references other parameters values.\
   If the same parameter is defined more than one time, the priority is the above list order.
+
+  You can use parameters in config file to specify sources and outputs.
 
 * URI Resolver
 
