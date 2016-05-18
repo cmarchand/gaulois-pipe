@@ -163,7 +163,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>fr.efl.chaine.xslt.SaxonPipe</mainClass>
+                            <mainClass>fr.efl.chaine.xslt.GauloisPipe</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Build-Tag>${build-tag}</Build-Tag>

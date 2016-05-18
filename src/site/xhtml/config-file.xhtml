@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Gaulois-pipe Config File</title>
+        <style type="text/css">
+            span.code { font-family: "Courier New", monospace; background-color: light-grey; }
+        </style>
+    </head>
+    <body>
+        <h2>Config File</h2>
+        <p>This section explains how a gaulois-pipe config file must be, and how it is interpreted.</p>
+        <h3>Namespace</h3>
+        <p>The whole config file is in </p><pre>http://efl.fr/chaine/saxon-pipe/config</pre>
+        <p>There is no element or attributes outside of this namespace.</p>
+        <h3>Sample file</h3>
+        <div class="source">
+            <pre>&lt;config xmlns="http://efl.fr/chaine/saxon-pipe/config"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://efl.fr/chaine/saxon-pipe/config ../../../src/main/resources/fr/efl/chaine/xslt/schemas/saxon-pipe_config.xsd"&gt;
+    &lt;pipe mutiThreadMaxSourceSize="24349456" nbThreads="4">
+        &lt;xslt href="./src/test/resources/step1.xsl">
+            &lt;param name="p-step1" value="step1"/>
+        &lt;/xslt>
+        &lt;tee>
+            &lt;pipe1>
+                &lt;xslt href="./src/test/resources/step2.xsl">
+                    &lt;param name="p-step2" value="step2"/>
+                &lt;/xslt>
+                &lt;output id="step1">
+                    &lt;folder relative="./target/generated-test-files" to="${user.dir}"/>
+                    &lt;fileName name="step1-output.xml"/>
+                &lt;/output>
+            &lt;/pipe1>
+            &lt;pipe2>
+                &lt;tee>
+                    &lt;pipe1>
+                        &lt;xslt href="./src/test/resources/step3.xsl">
+                            &lt;param name="p-step3" value="step3"/>
+                        &lt;/xslt>
+                        &lt;output id="step3">
+                            &lt;folder relative="./target/generated-test-files" to="${user.dir}"/>
+                            &lt;fileName name="step3-output.xml"/>
+                        &lt;/output>
+                    &lt;/pipe1>
+                    &lt;pipe2>
+                        &lt;output id="step2">
+                            &lt;folder relative="./target/generated-test-files" to="${user.dir}"/>
+                            &lt;fileName name="step2-output.xml"/>
+                        &lt;/output>
+                    &lt;/pipe2>
+                &lt;/tee>
+            &lt;/pipe2>
+        &lt;/tee>
+    &lt;/pipe>
+    &lt;params>
+        &lt;param name="p-general" value="GENERAL"/>
+    &lt;/params>
+    &lt;sources>
+        &lt;folder href="./src/test/resources" pattern="source.*xml"/>
+    &lt;/sources>
+&lt;/config></pre>
+        </div>
+        <p>Under <span class="code">&lt;config&gt;</span> element, we may have :</p>
+        <ul>
+            <li>A <span class="code"><a href="#pipe">pipe</a></span></li>
+            <li>A <span class="code"><a href="#params">params</a></span></li>
+            <li>A <span class="code"><a href="#sources">sources</a></span></li>
+        </ul>
+        <h3><a id="pipe"/>pipe</h3>
+        <h4>Attributes</h4>
+        <table>
+            <thead>
+            <tr><th>Attribute</th><th>Required ?</th><th>Value</th><th>Value if omitted</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>nbThreads</td>
+                    <td>No</td>
+                    <td>positive integer</td>
+                    <td>1</td>
+                </tr>
+                <tr>
+                    <td>mutiThreadMaxSourceSize</td>
+                    <td>No</td>
+                    <td>file size in bytes</td>
+                    <td>10485760 (10Mb)</td>
+                </tr>
+            </tbody>
+        </table>
+        <h4>Elements</h4>
+        <p>The pipe <strong>must</strong> start with a <a href="#xslt"><span class="code">xslt</span></a>. Then, it may
+            have <a href="#xslt"><span class="code">xslt</span></a>, <a href="#tee"><span class="code">tee</span></a>,
+            <a href="#java"><span class="code">java</span></a> and <a href="#output"><span class="code">output</span></a>.</p>
+        <p><strong>Nothing can</strong> follow an <a href="#output"><span class="code">output</span></a> ; output is always a terminal node.</p>
+        <h5><a id="xslt"/>xslt</h5>
+        <p>A <span class="code">&lt;xslt&gt;</span> is a step where transformation is made by a XSL transformation.
+            <span class="code">@href</span> specifies the XSL location ; it may be an absolute URL or a relative URL. Relative
+        URL are relative to <span class="code">System.getProperty(&quot;user.dir&quot;)</span>. 
+            <span style="text-decoration: underline;">This will change in a future minor release</span>.</p>
+        <p>There is no restriction on XSL you use, except the Saxon Release you use must be compliant with your XSL. You may want to change
+        the Saxon Release you use with Gaulois-pipe : create your own maven project, add a dependency to gaulois-pipe, and add exception on 
+            <span style="font-family: 'Courier New', mnospace;">net.sf.saxon:Saxon-HE</span> ; do not forget to add your own Saxon dependency,
+            and the license, if required.</p>
+        <h3><a id="params"/>params</h3>
+        <h3><a id="sources"/>sources</h3>
+    </body>
+</html>

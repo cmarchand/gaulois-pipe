@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:cfg="http://efl.fr/chaine/saxon-pipe/config" targetNamespace="http://efl.fr/chaine/saxon-pipe/config" elementFormDefault="qualified" vc:minVersion="1.1">
+<xs:schema 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+    xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" 
+    xmlns:cfg="http://efl.fr/chaine/saxon-pipe/config" 
+    targetNamespace="http://efl.fr/chaine/saxon-pipe/config" elementFormDefault="qualified" vc:minVersion="1.1">
     <xs:annotation>
         <xs:documentation>
 This Source Code Form is subject to the terms of 

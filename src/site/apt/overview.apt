@@ -57,4 +57,8 @@ Gaulois-pipe
 
   Gaulois-pipe also uses {{{./dependencies.html}cp-protocol}}, which is a protocol implementation to load resources from classpath. Hence, if you
   have an XSL in <<<src/main/xsl/my/package/my-xsl.xsl>>>, you may specify it via <<<cp:/my/package/my-xsl.xsl>>>
+  
+  +-------------+
+  essai de code
+  +-------------+
 

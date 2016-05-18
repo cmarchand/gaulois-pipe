@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="15.2">
+    <meta>
+        <filters directoryPatterns="" filePatterns="" positiveFilePatterns="" showHiddenFiles="false"/>
+        <options/>
+    </meta>
+    <projectTree name="gaulois-pipe-site.xpr">
+        <folder path="apt/"/>
+        <folder path="xhtml/"/>
+        <folder path="../../target/site/"/>
+        <file name="site.xml"/>
+    </projectTree>
+</project>

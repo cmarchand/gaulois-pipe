@@ -460,32 +460,44 @@ public class GauloisPipe {
         String __href = ParametersMerger.processParametersReplacement(href, parameters);
         XsltExecutable xsl = xslCache.get(__href);
         if(xsl==null) {
-            InputStream input = null;
-            if(__href.startsWith("file:")) {
-                File f = new File(new URI(__href));
-                input = new FileInputStream(f);
-            } else if(__href.startsWith("jar:")) {
-                String xslUri = href.substring(href.indexOf("!")+1);
-                if(!xslUri.startsWith("/")) xslUri = "/"+xslUri;
-                String jarUri = href.substring(4,href.length()-xslUri.length()-1);
-                if(jarUri.startsWith("file://")) {
-                    jarUri = jarUri.substring(7);
-                } else if(jarUri.startsWith("file:")) {
-                    jarUri = jarUri.substring(5);
+            try {
+                InputStream input = null;
+                if(__href.startsWith("file:")) {
+                    File f = new File(new URI(__href));
+                    input = new FileInputStream(f);
+                } else if(__href.startsWith("jar:")) {
+                    String xslUri = href.substring(href.indexOf("!")+1);
+                    if(!xslUri.startsWith("/")) xslUri = "/"+xslUri;
+                    String jarUri = href.substring(4,href.length()-xslUri.length()-1);
+                    if(jarUri.startsWith("file://")) {
+                        jarUri = jarUri.substring(7);
+                    } else if(jarUri.startsWith("file:")) {
+                        jarUri = jarUri.substring(5);
+                    }
+                    TFile f = new TFile(jarUri+xslUri);
+                    input = new TFileInputStream(f);
+                } else if(__href.startsWith("cp:")) {
+                    input = GauloisPipe.class.getResourceAsStream(__href.substring(3));
+                } else {
+                    File f = new File(__href);
+                    input = new FileInputStream(f);
                 }
-                TFile f = new TFile(jarUri+xslUri);
-                input = new TFileInputStream(f);
-            } else if(__href.startsWith("cp:")) {
-                input = GauloisPipe.class.getResourceAsStream(__href.substring(3));
-            } else {
-                File f = new File(__href);
-                input = new FileInputStream(f);
+                StreamSource source = new StreamSource(input);
+                source.setSystemId(__href);
+
+                xsl = xsltCompiler.compile(source);
+                xslCache.put(__href, xsl);
+            } catch(SaxonApiException ex) {
+                LOGGER.error("while compiling "+__href);
+                LOGGER.error("SaxonAPIException: "+ex.getSystemId()+":"+ex.getLineNumber()+" "+ex.getErrorCode()+":"+ex.getMessage());
+                if(ex.getCause()!=null) {
+                    LOGGER.error(ex.getCause().getMessage());
+                }
+                throw ex;
+            } catch(URISyntaxException|FileNotFoundException ex) {
+                LOGGER.error("while compiling "+__href);
+                throw ex;
             }
-            StreamSource source = new StreamSource(input);
-            source.setSystemId(__href);
-            
-            xsl = xsltCompiler.compile(source);
-            xslCache.put(__href, xsl);
         }
         return xsl.load();
     }
