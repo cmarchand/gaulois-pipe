@@ -489,7 +489,7 @@ public class GauloisPipe {
                 xslCache.put(__href, xsl);
             } catch(SaxonApiException ex) {
                 LOGGER.error("while compiling "+__href);
-                LOGGER.error("SaxonAPIException: "+ex.getSystemId()+":"+ex.getLineNumber()+" "+ex.getErrorCode()+":"+ex.getMessage());
+                LOGGER.error("SaxonAPIException: "+href+ex.getLineNumber()+" "+ex.getErrorCode()+":"+ex.getMessage());
                 if(ex.getCause()!=null) {
                     LOGGER.error(ex.getCause().getMessage());
                 }
