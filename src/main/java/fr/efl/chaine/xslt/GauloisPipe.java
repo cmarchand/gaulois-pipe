@@ -22,6 +22,7 @@ import fr.efl.chaine.xslt.config.Xslt;
 import fr.efl.chaine.xslt.utils.ParametersMerger;
 import fr.efl.chaine.xslt.utils.ParametrableFile;
 import fr.efl.chaine.xslt.utils.SaxonConfigurationFactory;
+import fr.efl.chaine.xslt.utils.XsltMessageListener;
 import net.sf.saxon.s9api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -487,6 +488,9 @@ public class GauloisPipe {
 
                 xsl = xsltCompiler.compile(source);
                 xslCache.put(__href, xsl);
+				XsltTransformer transformer = xsl.load();
+        		transformer.setMessageListener(new XsltMessageListener(__href));
+				return transformer;
             } catch(SaxonApiException ex) {
                 LOGGER.error("while compiling "+__href);
                 LOGGER.error("SaxonAPIException: "+ex.getSystemId()+":"+ex.getLineNumber()+" "+ex.getErrorCode()+":"+ex.getMessage());

@@ -26,6 +26,10 @@ can obtain one at https://mozilla.org/MPL/2.0/.
         </xd:desc>
     </xd:doc>
     <xsl:template match="*">
+        <xsl:message>Message sans log</xsl:message>
+        <xsl:message><log channel="MARC" level="info">Message avec log et channel</log></xsl:message>
+        <xsl:message><log level="error">Message niveau error sans channel</log></xsl:message>
+        
         <xsl:element name="{upper-case(local-name(.))}" namespace="{namespace-uri(.)}">
             <xsl:apply-templates select="node() | @*"/>
         </xsl:element>
