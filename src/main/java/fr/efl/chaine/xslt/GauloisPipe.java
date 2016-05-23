@@ -20,7 +20,7 @@ import fr.efl.chaine.xslt.config.Tee;
 import fr.efl.chaine.xslt.config.Xslt;
 import fr.efl.chaine.xslt.utils.ParametersMerger;
 import fr.efl.chaine.xslt.utils.ParametrableFile;
-import fr.efl.chaine.xslt.utils.SaxonConfigurationFactory;
+//import fr.efl.chaine.xslt.utils.SaxonConfigurationFactory;
 import net.sf.saxon.s9api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +76,7 @@ public class GauloisPipe {
     private final Map<String,XsltExecutable> xslCache;
     
     private Processor processor;
+    private Configuration configuration;
     
     /**
      * Message listener for XSLT-SAXON messages (xsl:message)
@@ -158,7 +159,7 @@ public class GauloisPipe {
         }
         boolean retCode = true;
         try {
-            Configuration saxonConfig = SaxonConfigurationFactory.buildConfiguration();
+            Configuration saxonConfig = buildConfiguration();
             saxonConfig.setURIResolver(buildUriResolver(saxonConfig.getURIResolver()));
             processor = new Processor(saxonConfig);
             xsltCompiler = processor.newXsltCompiler();
@@ -820,5 +821,12 @@ public class GauloisPipe {
             return get(key);
         }
         
+    }
+    
+    public Configuration buildConfiguration() {
+        if(configuration==null) {
+            configuration = new Configuration();
+        }
+        return configuration;
     }
 }
