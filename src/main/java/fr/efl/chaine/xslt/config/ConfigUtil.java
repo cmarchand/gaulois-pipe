@@ -50,7 +50,7 @@ public class ConfigUtil {
         this.saxonConfig = saxonConfig;
         file = new File(fileName);
         if(!file.exists() && !file.isFile()) {
-            throw new InvalidSyntaxException("fileName not found or not a regular file");
+            throw new InvalidSyntaxException(fileName+" not found or not a regular file");
         }
     }
     
