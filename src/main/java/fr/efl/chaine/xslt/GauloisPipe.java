@@ -76,7 +76,7 @@ public class GauloisPipe {
     private final Map<String,XsltExecutable> xslCache;
     
     private Processor processor;
-    private Configuration configuration;
+    protected Configuration configuration;
     
     /**
      * Message listener for XSLT-SAXON messages (xsl:message)
