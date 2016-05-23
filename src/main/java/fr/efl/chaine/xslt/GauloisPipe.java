@@ -8,7 +8,6 @@ package fr.efl.chaine.xslt;
 
 import de.schlichtherle.truezip.file.TFile;
 import de.schlichtherle.truezip.file.TFileInputStream;
-import fr.efl.chaine.xslt.utils.GauloisPipeURIResolver;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.config.CfgFile;
 import fr.efl.chaine.xslt.config.Config;
@@ -68,14 +67,6 @@ public class GauloisPipe {
     public static final String INSTANCE_DEFAULT_NAME = "instance1";
     
     private String instanceName;
-    /**
-     * The minimal number of arguments in command line.
-     */
-    private static final int MIN_ARGS_LEN = 6;
-    /**
-     * the input-file parameter qname.
-     */
-    private static final QName INPUT_FILE_NAME = new QName("input-file");
     /**
      * The uri mapping key to load mapping rule from system properties.
      */
@@ -461,7 +452,7 @@ public class GauloisPipe {
         XsltExecutable xsl = xslCache.get(__href);
         if(xsl==null) {
             try {
-                InputStream input = null;
+                InputStream input ;
                 if(__href.startsWith("file:")) {
                     File f = new File(new URI(__href));
                     input = new FileInputStream(f);
@@ -489,7 +480,7 @@ public class GauloisPipe {
                 xslCache.put(__href, xsl);
             } catch(SaxonApiException ex) {
                 LOGGER.error("while compiling "+__href);
-                LOGGER.error("SaxonAPIException: "+ex.getSystemId()+":"+ex.getLineNumber()+" "+ex.getErrorCode()+":"+ex.getMessage());
+                LOGGER.error("SaxonAPIException: "+href+":"+ex.getLineNumber()+" "+ex.getErrorCode()+":"+ex.getMessage());
                 if(ex.getCause()!=null) {
                     LOGGER.error(ex.getCause().getMessage());
                 }

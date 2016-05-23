@@ -17,7 +17,7 @@ import net.sf.saxon.Configuration;
 public class SaxonConfigurationFactory {
 
     /**
-     * Returns aConfiguration. Depending on the release of saxon, and the licence availability,
+     * Returns a Configuration. Depending on the release of saxon, and the licence availability,
      * it returns a <tt>EnterpriseConfiguration</tt>, a <tt>ProfessionalConfiguration</tt>, or
      * a <tt>Configuration</tt>
      * @return A Configuration, according to saxon release available
@@ -26,6 +26,7 @@ public class SaxonConfigurationFactory {
         // according to http://saxon.markmail.org/search/?q=#query:+page:3+mid:6g2jsds5oe7af243+state:results
         // this is enough.
         Configuration config = Configuration.newConfiguration();
+        config.displayLicenseMessage();
         return config;
     }
     
