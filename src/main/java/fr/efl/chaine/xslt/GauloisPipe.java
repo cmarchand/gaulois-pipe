@@ -169,6 +169,7 @@ public class GauloisPipe {
         boolean retCode = true;
         try {
             Configuration saxonConfig = buildConfiguration();
+            LOGGER.debug("configuration is a"+saxonConfig.getClass().getName());
             saxonConfig.setURIResolver(buildUriResolver(saxonConfig.getURIResolver()));
             processor = new Processor(saxonConfig);
             xsltCompiler = processor.newXsltCompiler();
