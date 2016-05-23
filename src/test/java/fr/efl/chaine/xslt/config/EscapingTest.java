@@ -6,6 +6,7 @@
  */
 package fr.efl.chaine.xslt.config;
 
+import fr.efl.chaine.xslt.GauloisPipe;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.util.ArrayList;
@@ -25,7 +26,8 @@ public class EscapingTest {
         Collection<ParameterValue> coll = new ArrayList<>();
         coll.add(pv);
         // n'importe lequel, aucune importance
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/same-source-file.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/same-source-file.xml");
         String result = cu.resolveEscapes("$[workDir]/collection.xml", coll);
         assertEquals("file:/home/cmarchand/devel/data/collection.xml", result);
     }

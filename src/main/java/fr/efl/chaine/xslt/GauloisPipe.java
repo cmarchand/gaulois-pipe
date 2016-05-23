@@ -71,7 +71,7 @@ public class GauloisPipe {
      * The uri mapping key to load mapping rule from system properties.
      */
     private static final String URI_MAPPING_KEY = "URIMapping-";
-    private final Config config;
+    private Config config;
     
     private final Map<String,XsltExecutable> xslCache;
     
@@ -83,7 +83,7 @@ public class GauloisPipe {
      */
     private Class<MessageListener> messageListenerclass;
     private MessageListener messageListener = null;
-    private final DocumentCache documentCache;
+    private DocumentCache documentCache;
     private XsltCompiler xsltCompiler;
     private DocumentBuilder builder = null;
 
@@ -94,6 +94,7 @@ public class GauloisPipe {
      * @param config The config to use to build pipe
      * @param instanceName The instance name to use in the logs
      */
+    @Deprecated
     public GauloisPipe(Config config, String instanceName) {
         super();
         this.config = config;
@@ -106,8 +107,15 @@ public class GauloisPipe {
      * For backward compatibility
      * @param config The config to use
      */
+    @Deprecated
     public GauloisPipe(Config config) {
         this(config,INSTANCE_DEFAULT_NAME);
+    }
+    
+    public GauloisPipe() {
+        super();
+        xslCache = new HashMap<>();
+        ProtocolInstaller.registerAdditionalProtocols();
     }
 
     /**
@@ -149,6 +157,7 @@ public class GauloisPipe {
      */
     public void launch() throws InvalidSyntaxException, FileNotFoundException, SaxonApiException, URISyntaxException, IOException {
         long start = System.currentTimeMillis();
+        documentCache = new DocumentCache(config.getMaxDocumentCacheSize());
         if (this.messageListenerclass != null) {
             try {
                 this.messageListener = this.messageListenerclass.newInstance();
@@ -634,8 +643,11 @@ public class GauloisPipe {
      */
     public static void main(String[] args) {
         try {
-            GauloisPipe saxonPipe = parseCommandLine(args);
-            saxonPipe.launch();
+            GauloisPipe gauloisPipe = new GauloisPipe();
+            Config config = gauloisPipe.parseCommandLine(args);
+            gauloisPipe.setConfig(config);
+            gauloisPipe.setInstanceName(config.__instanceName);
+            gauloisPipe.launch();
         } catch (InvalidSyntaxException ex) {
             LOGGER.error(ex.getMessage(), ex);
             System.exit(-1);
@@ -648,13 +660,13 @@ public class GauloisPipe {
         }
     }
     
-    private static GauloisPipe parseCommandLine(String[] args) throws InvalidSyntaxException {
+    public Config parseCommandLine(String[] args) throws InvalidSyntaxException {
         List<String> inputFiles = new ArrayList<>();
         List<String> inputParams = new ArrayList<>();
         List<String> inputXsls = new ArrayList<>();
         String nbThreads = null;
         String inputOutput = null;
-        String messageListener = null;
+        String _messageListener = null;
         String configFileName = null;
         String __instanceName = INSTANCE_DEFAULT_NAME;
         boolean logFileSize = false;
@@ -705,7 +717,7 @@ public class GauloisPipe {
                 case INPUT_OUTPUT:
                     inputOutput = argument; break;
                 case MESSAGE_LISTENER:
-                    messageListener = argument ; break;
+                    _messageListener = argument ; break;
                 case INSTANCE_NAME:
                     __instanceName = argument; break;
                 case CONFIG: 
@@ -729,24 +741,13 @@ public class GauloisPipe {
         if(inputOutput!=null) ConfigUtil.setOutput(config, inputOutput);
         config.setLogFileSize(logFileSize);
         config.verify();
-        GauloisPipe saxonPipe = new GauloisPipe(config, __instanceName);
-        if (messageListener != null) {
-            try {
-              Class c = Class.forName(messageListener);
-              if (MessageListener.class.isAssignableFrom(c))
-                saxonPipe.messageListenerclass = c;
-            }
-            catch (Exception ex) {
-              System.err.println("[WARN] Message Listener will not be set :");
-              ex.printStackTrace(System.err);
-            }
-        }
-        return saxonPipe;
+        config.__instanceName=__instanceName;
+        return config;
     }
 
-    private static Config parseConfig(String fileName, Collection<ParameterValue> inputParameters) throws InvalidSyntaxException {
+    private Config parseConfig(String fileName, Collection<ParameterValue> inputParameters) throws InvalidSyntaxException {
         try {
-            return new ConfigUtil(fileName).buildConfig(inputParameters);
+            return new ConfigUtil(buildConfiguration(), fileName).buildConfig(inputParameters);
         } catch (SaxonApiException ex) {
             throw new InvalidSyntaxException(ex);
         }
@@ -829,4 +830,13 @@ public class GauloisPipe {
         }
         return configuration;
     }
+
+    public void setInstanceName(String instanceName) {
+        this.instanceName = instanceName;
+    }
+
+    public void setConfig(Config config) {
+        this.config = config;
+    }
+    
 }

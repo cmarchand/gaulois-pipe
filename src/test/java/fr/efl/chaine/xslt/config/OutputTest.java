@@ -130,10 +130,12 @@ public class OutputTest {
     @Test
     public void testIndent() throws Exception {
         // checks a Tee can be an initial Step
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/outputParams.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/outputParams.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
-        GauloisPipe piper = new GauloisPipe(config, "OUTPUT_PARAMS");
+        piper.setConfig(config);
+        piper.setInstanceName("OUTPUT_PARAMS");
         piper.launch();
         File expect = new File("./target/generated-test-files/source-output-indented.xml");
         assertTrue("The file target/generated-test-files/source-output-indented.xml does not exists", expect.exists());

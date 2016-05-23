@@ -9,7 +9,6 @@ package fr.efl.chaine.xslt.config;
 import java.io.File;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
-import fr.efl.chaine.xslt.utils.SaxonConfigurationFactory;
 import java.io.FilenameFilter;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -45,8 +44,10 @@ public class ConfigUtil {
     private static final QName QN_RECURSE = new QName("recurse");
     private static final QName QN_PARAM = new QName(Config.NS,"param");
     private final File file;
-    public ConfigUtil(String fileName) throws InvalidSyntaxException {
+    private final Configuration saxonConfig;
+    public ConfigUtil(Configuration saxonConfig, String fileName) throws InvalidSyntaxException {
         super();
+        this.saxonConfig = saxonConfig;
         file = new File(fileName);
         if(!file.exists() && !file.isFile()) {
             throw new InvalidSyntaxException("fileName not found or not a regular file");
@@ -54,7 +55,6 @@ public class ConfigUtil {
     }
     
     public Config buildConfig(Collection<ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
-        Configuration saxonConfig = SaxonConfigurationFactory.buildConfiguration();
         Processor processor = new Processor(saxonConfig);
         XdmNode configRoot = processor.newDocumentBuilder().build(file);
         XPathSelector xs = processor.newXPathCompiler().compile("/*").load();

@@ -36,8 +36,10 @@ public class GauloisPipeTest {
 
     @Test
     public void testOldConfig() throws Exception {
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/old-config.xml");
-        GauloisPipe piper = new GauloisPipe(cu.buildConfig(emptyInputParams),"OLD_CONFIG");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/old-config.xml");
+        piper.setConfig(cu.buildConfig(emptyInputParams));
+        piper.setInstanceName("OLD_CONFIG");
         piper.launch();
         assertEquals(true, new File("target/generated-test-files/result.xml").exists());
         assertEquals(3, piper.getXsltCacheSize());
@@ -45,8 +47,10 @@ public class GauloisPipeTest {
     }
     @Test
     public void testNewConfig() throws Exception {
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/new-config.xml");
-        GauloisPipe piper = new GauloisPipe(cu.buildConfig(emptyInputParams),"NEW_CONFIG");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/new-config.xml");
+        piper.setConfig(cu.buildConfig(emptyInputParams));
+        piper.setInstanceName("NEW_CONFIG");
         piper.launch();
         assertTrue(new File("target/generated-test-files/step1-output.xml").exists());
         assertTrue(new File("target/generated-test-files/step2-output.xml").exists());
@@ -56,11 +60,13 @@ public class GauloisPipeTest {
     
     @Test
     public void testSameInputFile() throws Exception {
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/same-source-file.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/same-source-file.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.setLogFileSize(true);
         assertEquals(2, config.getSources().getFiles().size());
-        GauloisPipe piper = new GauloisPipe(config,"SAME_INPUT");
+        piper.setConfig(config);
+        piper.setInstanceName("SAME_INPUT");
         piper.launch();
         assertTrue(new File("target/generated-test-files/source-first-result.xml").exists());
         assertTrue(new File("target/generated-test-files/source-second-result.xml").exists());
@@ -69,30 +75,35 @@ public class GauloisPipeTest {
 
     @Test
     public void testSubstitution() throws Exception {
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/substitution.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/substitution.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.setLogFileSize(true);
         config.verify();
-        GauloisPipe piper = new GauloisPipe(config,"SUBSTITUTION");
+        piper.setConfig(config);
+        piper.setInstanceName("SUBSTITUTION");
         piper.launch();
         assertTrue(new File("./target/generated-test-files/source-substitution-result.xml").exists());
     }
 
     @Test
     public void testNoSourceFile() throws Exception {
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/no-source.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/no-source.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.setLogFileSize(true);
         config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("NO_SOURCE");
         // on veut juste s'assurer qu'on a pas d'exception
         assertTrue(true);
-        GauloisPipe piper = new GauloisPipe(config,"NO_SOURCE");
         piper.launch();
     }
     @Test
     public void validateComment() {
         try {
-            Config config = new ConfigUtil("./src/test/resources/comment-xslt.xml").buildConfig(emptyInputParams);
+            GauloisPipe piper = new GauloisPipe();
+            Config config = new ConfigUtil(piper.buildConfiguration(),"./src/test/resources/comment-xslt.xml").buildConfig(emptyInputParams);
             config.verify();
             Iterator<ParametrableStep> it = config.getPipe().getXslts();
             int count=0;
@@ -108,10 +119,12 @@ public class GauloisPipeTest {
     
     @Test
     public void testJavaStep() throws Exception {
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/FileAppenderHook.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(),"./src/test/resources/FileAppenderHook.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
-        GauloisPipe piper = new GauloisPipe(config, "STEP_JAVA");
+        piper.setConfig(config);
+        piper.setInstanceName("STEP_JAVA");
         File expect = new File("./target/generated-test-files/appendee.txt");
         if(expect.exists()) expect.delete();
         piper.launch();
@@ -123,10 +136,12 @@ public class GauloisPipeTest {
     @Test
     public void testTeeJava() throws Exception {
         // checks a Java can be in a Tee
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/java-tee.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/java-tee.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
-        GauloisPipe piper = new GauloisPipe(config, "JAVA_TEE");
+        piper.setConfig(config);
+        piper.setInstanceName("JAVA_TEE");
         File expect1 = new File("./target/generated-test-files/tee-java.txt");
         if(expect1.exists()) expect1.delete();
         File expect2 = new File("./target/generated-test-files/source-pipe1.xml");
@@ -142,30 +157,35 @@ public class GauloisPipeTest {
     @Test(expected = InvalidSyntaxException.class)
     public void testInitialJavaStepKo() throws Exception {
         // checks a Java can not be an initial step
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/java-initial-step-ko.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/java-initial-step-ko.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
     }
     @Test()
     public void testInitialJavaStepOk() throws Exception {
         // checks a Java can not be an initial step
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/java-initial-step-ok.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/java-initial-step-ok.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
     }
     @Test()
     public void testInitialTeeStep() throws Exception {
         // checks a Tee can be an initial Step
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/tee-initial-step.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/tee-initial-step.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
     }
     @Test()
     public void testXslInJar() throws Exception {
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/jar-xsl.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/jar-xsl.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
-        GauloisPipe piper = new GauloisPipe(config, "JAR_XSL");
+        piper.setConfig(config);
+        piper.setInstanceName("JAR_XSL");
         piper.launch();
         File expect = new File("./target/generated-test-files/source-jar.xml");
         assertTrue("The file target/generated-test-files/source-jar.xml does not exists", expect.exists());
@@ -173,11 +193,13 @@ public class GauloisPipeTest {
     
     @Test
     public void testXslInCp() throws Exception {
-        ConfigUtil cu = new ConfigUtil("./src/test/resources/cp-xsl.xml");
+        GauloisPipe piper = new GauloisPipe();
+        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/cp-xsl.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
         assertTrue("Problem while loading XSL from classpath", true);
-        GauloisPipe piper = new GauloisPipe(config, "CP_XSL");
+        piper.setConfig(config);
+        piper.setInstanceName("CP_XSL");
         piper.launch();
         File expect = new File("./target/generated-test-files/source-cp.xml");
         assertTrue("The file target/generated-test-files/source-cp.xml does not exists", expect.exists());

@@ -31,6 +31,11 @@ public class Config implements Verifiable {
     private int maxDocumentCacheSize = MAX_DOCUMENT_CACHE_SIZE;
     private static final Logger LOGGER = LoggerFactory.getLogger(Config.class);
     private boolean logFileSize;
+    /**
+     * This has nothing to do in Configuration, but for implementation reason,
+     * it's here...
+     */
+    public transient String __instanceName;
     
 
     public Config(XdmNode node) {
