@@ -645,7 +645,7 @@ public class GauloisPipe {
     public static void main(String[] args) {
         try {
             GauloisPipe gauloisPipe = new GauloisPipe();
-            Config config = gauloisPipe.parseCommandLine(args);
+            Config config = gauloisPipe.parseCommandLine(args, gauloisPipe.buildConfiguration());
             gauloisPipe.setConfig(config);
             gauloisPipe.setInstanceName(config.__instanceName);
             gauloisPipe.launch();
@@ -661,7 +661,7 @@ public class GauloisPipe {
         }
     }
     
-    public Config parseCommandLine(String[] args) throws InvalidSyntaxException {
+    public Config parseCommandLine(String[] args, Configuration saxonConfig) throws InvalidSyntaxException {
         List<String> inputFiles = new ArrayList<>();
         List<String> inputParams = new ArrayList<>();
         List<String> inputXsls = new ArrayList<>();
@@ -731,7 +731,7 @@ public class GauloisPipe {
         }
         Config config;
         if(configFileName!=null) {
-            config=parseConfig(configFileName, inputParameters);
+            config=parseConfig(configFileName, inputParameters, saxonConfig);
         } else {
             config = new Config();
         }
@@ -746,9 +746,9 @@ public class GauloisPipe {
         return config;
     }
 
-    private Config parseConfig(String fileName, Collection<ParameterValue> inputParameters) throws InvalidSyntaxException {
+    private Config parseConfig(String fileName, Collection<ParameterValue> inputParameters, Configuration saxonConfig) throws InvalidSyntaxException {
         try {
-            return new ConfigUtil(buildConfiguration(), fileName).buildConfig(inputParameters);
+            return new ConfigUtil(saxonConfig, fileName).buildConfig(inputParameters);
         } catch (SaxonApiException ex) {
             throw new InvalidSyntaxException(ex);
         }
@@ -827,6 +827,7 @@ public class GauloisPipe {
     
     public Configuration buildConfiguration() {
         if(configuration==null) {
+            LOGGER.debug("buildConfiguration()");
             configuration = new Configuration();
         }
         return configuration;
