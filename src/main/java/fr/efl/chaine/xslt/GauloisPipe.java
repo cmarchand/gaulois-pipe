@@ -91,7 +91,7 @@ public class GauloisPipe {
     /**
      * Constructs a new GauloisPipe.
      * This constructor is the main one, the other one is only for backward compatibility.
-     * @param configurationFactory 
+     * @param configurationFactory The configuration factory to use
      */
     public GauloisPipe(final SaxonConfigurationFactory configurationFactory) {
         super();
