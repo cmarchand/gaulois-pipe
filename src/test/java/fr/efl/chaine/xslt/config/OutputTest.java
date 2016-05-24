@@ -8,12 +8,14 @@ package fr.efl.chaine.xslt.config;
 
 import fr.efl.chaine.xslt.GauloisPipe;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
+import fr.efl.chaine.xslt.SaxonConfigurationFactory;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import net.sf.saxon.Configuration;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -27,11 +29,21 @@ import org.junit.Test;
 public class OutputTest {
     private Output output;
     private static Collection<ParameterValue> emptyInputParams;
-    
+    private static SaxonConfigurationFactory configFactory;
+
     @BeforeClass
     public static void initialize() {
         emptyInputParams = new ArrayList<>();
+        configFactory = new SaxonConfigurationFactory() {
+            Configuration config = Configuration.newConfiguration();
+            @Override
+            public Configuration getConfiguration() {
+                return config;
+            }
+        };
     }
+
+    
     @Before
     public void before() { output = new Output(); }
     @After
@@ -130,8 +142,8 @@ public class OutputTest {
     @Test
     public void testIndent() throws Exception {
         // checks a Tee can be an initial Step
-        GauloisPipe piper = new GauloisPipe();
-        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/outputParams.xml");
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/outputParams.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
         piper.setConfig(config);

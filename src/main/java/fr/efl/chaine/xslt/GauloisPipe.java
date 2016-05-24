@@ -76,7 +76,7 @@ public class GauloisPipe {
     private final Map<String,XsltExecutable> xslCache;
     
     private Processor processor;
-    protected Configuration configuration;
+    private final SaxonConfigurationFactory configurationFactory;
     
     /**
      * Message listener for XSLT-SAXON messages (xsl:message)
@@ -89,38 +89,22 @@ public class GauloisPipe {
 
     
     /**
-     * The default contructor.
-     *
-     * @param config The config to use to build pipe
-     * @param instanceName The instance name to use in the logs
+     * Constructs a new GauloisPipe.
+     * This constructor is the main one, the other one is only for backward compatibility.
+     * @param configurationFactory 
      */
-    @Deprecated
-    public GauloisPipe(Config config, String instanceName) {
+    public GauloisPipe(final SaxonConfigurationFactory configurationFactory) {
         super();
-        this.config = config;
-        this.instanceName=instanceName;
-        xslCache = new HashMap<>();
-        documentCache = new DocumentCache(config.getMaxDocumentCacheSize());
-        ProtocolInstaller.registerAdditionalProtocols();
-    }
-    /**
-     * For backward compatibility
-     * @param config The config to use
-     */
-    @Deprecated
-    public GauloisPipe(Config config) {
-        this(config,INSTANCE_DEFAULT_NAME);
-    }
-    
-    public GauloisPipe() {
-        super();
+        this.configurationFactory = configurationFactory;
         xslCache = new HashMap<>();
         ProtocolInstaller.registerAdditionalProtocols();
     }
 
     /**
      * The constructor with detail config.
+     * It shouldn't be used anymore.
      *
+     * @param configurationFactory The Saxon's Configuration factory to use
      * @param inputs the input files
      * @param outputDirectory the output directory
      * @param templatePaths the template paths
@@ -128,11 +112,10 @@ public class GauloisPipe {
      * @param instanceName The instance name to use in the logs
      * @throws fr.efl.chaine.xslt.InvalidSyntaxException If config's syntax is incorrect
      */
-    public GauloisPipe(List<String> inputs, String outputDirectory,List<String> templatePaths, int nbThreads, String instanceName) throws InvalidSyntaxException {
-        super();
+    public GauloisPipe(final SaxonConfigurationFactory configurationFactory, List<String> inputs, String outputDirectory,List<String> templatePaths, int nbThreads, String instanceName) throws InvalidSyntaxException {
+        this(configurationFactory);
         this.instanceName=instanceName;
         Config cfg = new Config();
-        xslCache = new HashMap<>();
 
         for (String input : inputs) {
             ConfigUtil.addInputFile(cfg, input);
@@ -168,8 +151,8 @@ public class GauloisPipe {
         }
         boolean retCode = true;
         try {
-            Configuration saxonConfig = buildConfiguration();
-            LOGGER.debug("configuration is a"+saxonConfig.getClass().getName());
+            Configuration saxonConfig = configurationFactory.getConfiguration();
+            LOGGER.debug("configuration is a "+saxonConfig.getClass().getName());
             saxonConfig.setURIResolver(buildUriResolver(saxonConfig.getURIResolver()));
             processor = new Processor(saxonConfig);
             xsltCompiler = processor.newXsltCompiler();
@@ -644,8 +627,14 @@ public class GauloisPipe {
      */
     public static void main(String[] args) {
         try {
-            GauloisPipe gauloisPipe = new GauloisPipe();
-            Config config = gauloisPipe.parseCommandLine(args, gauloisPipe.buildConfiguration());
+            GauloisPipe gauloisPipe = new GauloisPipe(new SaxonConfigurationFactory() {
+                Configuration configuration = Configuration.newConfiguration();
+                @Override
+                public Configuration getConfiguration() {
+                    return configuration;
+                }
+            });
+            Config config = gauloisPipe.parseCommandLine(args);
             gauloisPipe.setConfig(config);
             gauloisPipe.setInstanceName(config.__instanceName);
             gauloisPipe.launch();
@@ -661,7 +650,7 @@ public class GauloisPipe {
         }
     }
     
-    public Config parseCommandLine(String[] args, Configuration saxonConfig) throws InvalidSyntaxException {
+    public Config parseCommandLine(String[] args) throws InvalidSyntaxException {
         List<String> inputFiles = new ArrayList<>();
         List<String> inputParams = new ArrayList<>();
         List<String> inputXsls = new ArrayList<>();
@@ -731,7 +720,7 @@ public class GauloisPipe {
         }
         Config config;
         if(configFileName!=null) {
-            config=parseConfig(configFileName, inputParameters, saxonConfig);
+            config=parseConfig(configFileName, inputParameters, configurationFactory.getConfiguration());
         } else {
             config = new Config();
         }
@@ -825,14 +814,6 @@ public class GauloisPipe {
         
     }
     
-    public Configuration buildConfiguration() {
-        if(configuration==null) {
-            LOGGER.debug("buildConfiguration()");
-            configuration = new Configuration();
-        }
-        return configuration;
-    }
-
     public void setInstanceName(String instanceName) {
         this.instanceName = instanceName;
     }

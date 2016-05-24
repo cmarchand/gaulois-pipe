@@ -8,10 +8,13 @@ package fr.efl.chaine.xslt.config;
 
 import fr.efl.chaine.xslt.GauloisPipe;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
+import fr.efl.chaine.xslt.SaxonConfigurationFactory;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.util.ArrayList;
 import java.util.Collection;
+import net.sf.saxon.Configuration;
 import static org.junit.Assert.*;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -19,6 +22,17 @@ import org.junit.Test;
  * @author ext-cmarchand
  */
 public class EscapingTest {
+    private static SaxonConfigurationFactory configFactory;
+    @BeforeClass
+    public static void initialize() {
+        configFactory = new SaxonConfigurationFactory() {
+            Configuration config = Configuration.newConfiguration();
+            @Override
+            public Configuration getConfiguration() {
+                return config;
+            }
+        };
+    }
     
     @Test
     public void escapeParameter() throws InvalidSyntaxException {
@@ -26,8 +40,8 @@ public class EscapingTest {
         Collection<ParameterValue> coll = new ArrayList<>();
         coll.add(pv);
         // n'importe lequel, aucune importance
-        GauloisPipe piper = new GauloisPipe();
-        ConfigUtil cu = new ConfigUtil(piper.buildConfiguration(), "./src/test/resources/same-source-file.xml");
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/same-source-file.xml");
         String result = cu.resolveEscapes("$[workDir]/collection.xml", coll);
         assertEquals("file:/home/cmarchand/devel/data/collection.xml", result);
     }
