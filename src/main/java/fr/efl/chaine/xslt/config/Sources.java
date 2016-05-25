@@ -28,6 +28,7 @@ public class Sources implements Verifiable {
     private final List<CfgFile> files;
     private long maxFileSize = 0l;
     private Map<File,Integer> hrefCount;
+    private Listener listener;
 
     
     public Sources(String orderBy, String sort) throws InvalidSyntaxException {
@@ -136,6 +137,7 @@ public class Sources implements Verifiable {
             LOGGER.warn("No input file to process. If you have used a pattern to find files, check your regex.");
         }
         for(CfgFile f:files) f.verify();
+        if(listener!=null) listener.verify();
     }
     
     public boolean hasFileOverLimit(long limit) {
@@ -172,4 +174,13 @@ public class Sources implements Verifiable {
         LOGGER.debug("getFilesUnderLimit() -> {}", ret.size());
         return ret;
     }
+
+    public Listener getListener() {
+        return listener;
+    }
+
+    public void setListener(Listener listener) {
+        this.listener = listener;
+    }
+    
 }

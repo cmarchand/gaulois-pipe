@@ -13,6 +13,7 @@ import fr.efl.chaine.xslt.config.CfgFile;
 import fr.efl.chaine.xslt.config.Config;
 import fr.efl.chaine.xslt.config.ConfigUtil;
 import fr.efl.chaine.xslt.config.JavaStep;
+import fr.efl.chaine.xslt.config.Listener;
 import fr.efl.chaine.xslt.config.Output;
 import fr.efl.chaine.xslt.config.ParametrableStep;
 import fr.efl.chaine.xslt.config.Pipe;
@@ -170,16 +171,16 @@ public class GauloisPipe {
                     }
                     if (!files.isEmpty()) {
                         LOGGER.info("[" + instanceName + "] Running mono-thread for {} huge files", files.size());
-                        retCode = executesPipeOnMonoThread(config.getPipe(), files);
+                        retCode = executesPipeOnMultiThread(config.getPipe(), files, 1, config.getSources().getListener());
                     }
                 }
                 List<ParametrableFile> files = new ArrayList<>(sourceFiles.size());
                 for (CfgFile f : config.getSources().getFilesUnderLimit(config.getPipe().getMultithreadMaxSourceSize())) {
                     files.add(resolveInputFile(f));
                 }
-                if (!files.isEmpty()) {
+                if (!files.isEmpty() || config.getSources().getListener()!=null) {
                     LOGGER.info("[" + instanceName + "] Running multi-thread for {} regular-size files", files.size());
-                    retCode = executesPipeOnMultiThread(config.getPipe(), files, config.getPipe().getNbThreads());
+                    retCode = executesPipeOnMultiThread(config.getPipe(), files, config.getPipe().getNbThreads(), config.getSources().getListener());
                 }
             } else {
                 List<ParametrableFile> files = new ArrayList<>(sourceFiles.size());
@@ -187,7 +188,7 @@ public class GauloisPipe {
                     files.add(resolveInputFile(f));
                 }
                 LOGGER.info("[" + instanceName + "] Running mono-thread on all {} files", files.size());
-                retCode = executesPipeOnMonoThread(config.getPipe(), files);
+                retCode = executesPipeOnMultiThread(config.getPipe(), files, 1, config.getSources().getListener());
             }
 
         } catch (Throwable e) {
@@ -239,13 +240,17 @@ public class GauloisPipe {
      * @param outputDirectory the specified output directory
      * @param nbThreads the specified number of thread
      * @param processor the processor
+     * @param listener The listener to start, if not null
      * @return <tt>false</tt> if an error occurs while processing.
      */
     private boolean executesPipeOnMultiThread(
             final Pipe pipe,
             List<ParametrableFile> inputs,
-            int nbThreads) {
-        ExecutorService service = Executors.newFixedThreadPool(nbThreads);
+            int nbThreads,
+            Listener listener) {
+        ExecutorService service = (nbThreads==1) ? 
+                Executors.newSingleThreadExecutor() : 
+                Executors.newFixedThreadPool(nbThreads);
         for(ParametrableFile pf: inputs) {
             final ParametrableFile fpf = pf;
             Runnable r = new Runnable() {
@@ -260,15 +265,20 @@ public class GauloisPipe {
             };
             service.execute(r);
         }
-	// on ajoute plus rien
-	service.shutdown();
-        try {
-            service.awaitTermination(5, TimeUnit.HOURS);
-            return true;
-        } catch (InterruptedException ex) {
-            LOGGER.error("[" + instanceName + "] multi-thread processing interrupted, 5 hour limit exceed.");
+        if(listener==null) {
+            // on ajoute plus rien
+            service.shutdown();
+            try {
+                service.awaitTermination(5, TimeUnit.HOURS);
+                return true;
+            } catch (InterruptedException ex) {
+                LOGGER.error("[" + instanceName + "] multi-thread processing interrupted, 5 hour limit exceed.");
+                return false;
+            }
+        } else {
+            // TODO: start listener
+            return false;
         }
-        return false;
     }
 
     /**
@@ -281,7 +291,9 @@ public class GauloisPipe {
      * @param test the test value "oui" or "non"
      * @throws SaxonApiException when a problem occurs
      * @throws IOException when a problem occurs
+     * @Deprecated Do not use anymore, prefer <tt>executePipeOnMultiThread(Pipe, List&t;ParametrableFile&gt;,1,Listener)</tt>
      */
+    @Deprecated
     private boolean executesPipeOnMonoThread(Pipe pipe, List<ParametrableFile> inputs) {
         boolean ret = true;
         for (ParametrableFile inputFile : inputs) {

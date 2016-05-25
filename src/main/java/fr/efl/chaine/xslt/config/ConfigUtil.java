@@ -177,9 +177,20 @@ public class ConfigUtil {
                 Collection<CfgFile> files = buildFolderContent(node, parameters);
                 LOGGER.info("buildSources from folder contains {} files", files.size());
                 sources.addFiles(files);
+            } else if(Listener.QName.equals(node.getNodeName())) {
+                sources.setListener(buildListener(node, parameters));
             }
         }
         return sources;
+    }
+    private Listener buildListener(XdmNode listenerNode, Collection<ParameterValue> parameters) {
+        String tmp = listenerNode.getAttributeValue(Listener.ATTR_PORT);
+        int port = Listener.DEFAULT_PORT;
+        try {
+            port = Integer.parseInt(tmp);
+        } catch(NumberFormatException ex) {}
+        String stopKeyword = listenerNode.getAttributeValue(Listener.ATTR_STOP);
+        return new Listener(port, stopKeyword);
     }
     private Xslt buildXslt(XdmNode xsltNode, Collection<ParameterValue> parameters) {
         LOGGER.debug("buildXslt on {}", xsltNode.getNodeName());

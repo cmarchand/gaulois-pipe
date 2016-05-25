@@ -138,6 +138,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
         <xs:choice maxOccurs="unbounded">
             <xs:element name="file" type="cfg:TFile"/>
             <xs:element name="folder" type="cfg:TFolder"/>
+            <xs:element name="listener" type="cfg:TListener"/>
         </xs:choice>
         <xs:attribute name="orderBy" default="size">
             <xs:simpleType>
@@ -193,6 +194,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
                 </xs:restriction>
             </xs:simpleType>
         </xs:attribute>
+        <xs:assert test="count(listener) &lt;= 1"/>
     </xs:complexType>
 
     <xs:complexType name="TFile">
@@ -670,6 +672,25 @@ can obtain one at https://mozilla.org/MPL/2.0/.
             </xs:annotation>
         </xs:attribute>
     </xs:complexType>
+    
+    <xs:complexType name="TListener">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr">
+                Un listener permettant d'etre à l'écoute de nouveaux fichiers à traiter.
+                Un listener écoute sur une SOCKET, suivant le protocole HTTP
+                Les fichiers à ajouter se font avec une requete POST, avec comme contenu l'URL du fichier à traiter
+                L'ordre d'arret se fait par une requete DELETE avec comme contenu le mot clé spécifié 
+            </xs:documentation>
+            <xs:documentation xml:lang="en">
+                A listener that waits for new files to process.
+                A listener listens on a socket, on HTTP protocol.
+                Add a file to process with POST request with file URL as content
+                Stop order are processed on DELETE method, with the specified keyword
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="port" type="cfg:positiveInt" use="optional" default="8888"/>
+        <xs:attribute name="stopKeyword" use="required" type="cfg:TKeyword"/>
+    </xs:complexType>
 
     <xs:simpleType name="positiveInt">
         <xs:restriction base="xs:int">
@@ -700,6 +721,12 @@ can obtain one at https://mozilla.org/MPL/2.0/.
         <xs:restriction base="xs:string">
             <xs:enumeration value="yes"/>
             <xs:enumeration value="no"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:simpleType name="TKeyword">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[-_a-zA-Z0-9]{3,}"/>
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>
