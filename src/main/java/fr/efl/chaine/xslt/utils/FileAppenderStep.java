@@ -1,7 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * This Source Code Form is subject to the terms of 
+ * the Mozilla Public License, v. 2.0. If a copy of 
+ * the MPL was not distributed with this file, You 
+ * can obtain one at https://mozilla.org/MPL/2.0/.
  */
 package fr.efl.chaine.xslt.utils;
 
@@ -22,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A step to append something ina text-file
+ * A step to append something in a text-file
  * @author Christophe Marchand christophe@marchand.top
  */
 public class FileAppenderStep extends StepJava {
@@ -86,23 +87,22 @@ public class FileAppenderStep extends StepJava {
             
         }
         
-        private String getLineSeparator(final XdmValue in) {
-            if(in==null) return System.getProperty("line.separator");
-            String sIn = in.toString();
-            if(sIn.isEmpty()) return "";
-            return sIn.replaceAll("CR", "\r").replaceAll("LF", "\n");
+    }
+    static String getLineSeparator(final XdmValue in) {
+        if(in==null) return System.getProperty("line.separator");
+        String sIn = in.toString();
+        if(sIn.isEmpty()) return "";
+        return sIn.replaceAll("CR", "\r").replaceAll("LF", "\n");
+    }
+
+    static Charset getCharset(final XdmValue value) {
+        if(value==null) return Charset.forName("UTF-8");
+        String in = value.toString();
+        if(Charset.isSupported(in)) {
+            return Charset.forName(in);
+        } else {
+            return Charset.forName("UTF-8");
         }
-        
-        private Charset getCharset(final XdmValue value) {
-            if(value==null) return Charset.forName("UTF-8");
-            String in = value.toString();
-            if(Charset.isSupported(in)) {
-                return Charset.forName(in);
-            } else {
-                return Charset.forName("UTF-8");
-            }
-        }
-        
     }
     
 }

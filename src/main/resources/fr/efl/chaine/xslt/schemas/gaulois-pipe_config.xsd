@@ -3,7 +3,9 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema" 
     xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" 
     xmlns:cfg="http://efl.fr/chaine/saxon-pipe/config" 
-    targetNamespace="http://efl.fr/chaine/saxon-pipe/config" elementFormDefault="qualified" vc:minVersion="1.1">
+    targetNamespace="http://efl.fr/chaine/saxon-pipe/config"
+    elementFormDefault="qualified" vc:minVersion="1.1">
+    
     <xs:annotation>
         <xs:documentation>
 This Source Code Form is subject to the terms of 
@@ -59,12 +61,14 @@ can obtain one at https://mozilla.org/MPL/2.0/.
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element name="xslt" type="cfg:TXslt" />
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:choice minOccurs="1" maxOccurs="1">
+                <xs:element name="xslt" type="cfg:TXslt"/>
+                <xs:element name="tee" type="cfg:TTee" />
+                <xs:element name="output" type="cfg:TOutput"/>
+            </xs:choice>
+            <xs:choice minOccurs="0" maxOccurs="1">
                 <xs:element name="xslt" type="cfg:TXslt"/>
                 <xs:element name="java" type="cfg:TJava"/>
-            </xs:choice>
-            <xs:choice>
                 <xs:element name="tee" type="cfg:TTee" />
                 <xs:element name="output" type="cfg:TOutput"/>
             </xs:choice>
@@ -101,12 +105,9 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     </xs:complexType>
     <xs:complexType name="TRestrictedPipe">
         <xs:sequence>
-            <xs:element name="xslt" type="cfg:TXslt" />
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:choice minOccurs="1" maxOccurs="unbounded">
                 <xs:element name="xslt" type="cfg:TXslt" />
                 <xs:element name="java" type="cfg:TJava"/>
-            </xs:choice>
-            <xs:choice>
                 <xs:element name="tee" type="cfg:TTee" />
                 <xs:element name="output" type="cfg:TOutput"/>
             </xs:choice>
@@ -688,6 +689,26 @@ can obtain one at https://mozilla.org/MPL/2.0/.
                 Stop order are processed on DELETE method, with the specified keyword
             </xs:documentation>
         </xs:annotation>
+        <xs:sequence>
+            <xs:element name="java" type="cfg:TJava" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr">
+                        Permet de déclencher un traitement une fois que tous les fichiers soumis ont été traités.
+                        Comme ce traitement est exécuté en dehors de tout pipeline seules les méthodes <tt>open()</tt>
+                        et <tt>close()</tt> du <tt>Receiver</tt> seront appelées.
+                        De la meme façon, La méthode <tt>setDestination(Destination)</tt> du <tt>StepJava</tt> ne sera pas appelée.
+                        Le receiver ne devra donc pas assumer que la destination est toujours non nulle.
+                    </xs:documentation>
+                    <xs:documentation xml:lang="en">
+                        Allows to start a task once all submitted files are processed.
+                        This <tt>StepJava</tt> is run outside of any pipline, with no source document. Only the méthods
+                        <tt>Receiver.open()</tt> and <tt>Receiver.close()</tt> will be called.
+                        The method <tt>StepJava.setDestination(Destination)</tt> will never be call. The implemented
+                        <tt>Receiver</tt> must not rely on having a non null destination.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
         <xs:attribute name="port" type="cfg:positiveInt" use="optional" default="8888"/>
         <xs:attribute name="stopKeyword" use="required" type="cfg:TKeyword"/>
     </xs:complexType>
@@ -709,7 +730,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
                 XML Schema errata) an unprefixed xs:QName is assumed to be in the default namespace, which is 
                 not the correct assumption for XSLT. The data type is defined as a restriction of the built-in 
                 type Name, restricted so that it can only contain one colon which must not be the first or last character.
-                TODO: change this to use ClarkeForm
+                TODO: change implementation to allow use ClarkeForm
             </xs:documentation>
         </xs:annotation>
         <xs:restriction base="xs:Name">

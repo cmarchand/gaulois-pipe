@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration PUBLIC "-//Apache Software Foundation//DTD log4j Configuration 1.0//EN" "log4j.dtd">
+<log4j:configuration threshold="all" debug="false">
+  <appender name="console.appender" class="org.apache.log4j.ConsoleAppender">
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="%d %-5p [%t] %c %3x - %m%n"/>
+    </layout>
+  </appender>
+  <logger name="org.xmlresolver">
+    <level value="DEBUG"/>
+  </logger>
+  <logger name="org.apache">
+      <level value="WARN"/>
+  </logger>
+  <logger name="org.eclipse">
+      <level value="WARN"/>
+  </logger>
+  <root>
+    <level value="TRACE"/>
+    <appender-ref ref="console.appender"/>
+  </root>
+</log4j:configuration>

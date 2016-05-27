@@ -6,40 +6,101 @@
  */
 package fr.efl.chaine.xslt.listener;
 
-import fr.efl.chaine.xslt.utils.ParameterValue;
-import java.util.List;
+import fr.efl.chaine.xslt.ExecutionContext;
+import fr.efl.chaine.xslt.GauloisPipe;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * The server that receives incoming requests
+ * This class has reponsability to initiate protocol listening, and to
+ * be the commucation between {@link GauloisPipe} and protocal handler
+ * (Servlet)
+ * 
  * @author cmarchand
+ * @since 1.00.01
  */
 public class HttpListener {
-    private final long limitSize;
-    private final ExecutorService service;
+    static final transient String CONTEXT_ENTRY = "CTX_KEY";
+    static final transient String STOP_ENTRY = "STOP_KEY";
+    static final transient String LISTENER = "__XX__LISTENER__XX__";
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpListener.class);
     private final int port;
-    private final String stopKeyword;
-    static final transient String SERVICE_ENTRY = "SERVICE";
-    static final transient String STOP_ENTRY = "STOP_ENTRY";
-    
-    public HttpListener(final int port, final String stopKeyword, final ExecutorService service, final long limitSize) {
+    private final String stopKeyWord;
+    private final ExecutionContext execCtx;
+    private Server jettyServer;
+
+    public HttpListener(int port, String stopKeyWord, ExecutionContext context) {
         super();
-        this.limitSize=limitSize;
-        this.service=service;
-        this.port=port;
-        this.stopKeyword=stopKeyword;
+        this.port = port;
+        this.stopKeyWord = stopKeyWord;
+        this.execCtx = context;
     }
     
     public void run() {
-        final Server jettyServer = new Server(port);
+        jettyServer = new Server(port);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        context.getServletContext().setAttribute(STOP_ENTRY, stopKeyWord);
+        context.getServletContext().setAttribute(CONTEXT_ENTRY, execCtx);
+        context.getServletContext().setAttribute(LISTENER, this);
         context.setContextPath("");
-        context.getServletContext().setAttribute(SERVICE_ENTRY, service);
-        context.getServletContext().setAttribute(STOP_ENTRY, stopKeyword);
-        context.addServlet(new ServletHolder(FileServlet.class), "/*");
+        context.addServlet(new ServletHolder(ListenerServlet.class), "/*");
+        
+        
+        jettyServer.setHandler(context);
+        try {
+            jettyServer.start();
+            jettyServer.join();
+        } catch(Exception ex) {
+            LOGGER.error("While starting", ex);
+            try {
+                jettyServer.stop();
+            } catch(Exception ex2) {
+            } finally {
+                jettyServer.destroy();
+            }
+        }
     }
+    
+    /**
+     * This method stop the Listener
+     * and returns when the server is actually stopped.
+     * <b>Warning</b>: if the stop keyword has not been
+     * received before, the service will not be terminated.
+     */
+    void stop() {
+//        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+//        final ExecutionContext ctx = context;
+        Runnable runner = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    jettyServer.stop();
+                    try {
+                        execCtx.getService().awaitTermination(1, TimeUnit.HOURS);
+                    } catch (InterruptedException ex) {}
+                    Map<Thread,StackTraceElement[]> threads = Thread.getAllStackTraces();
+                    for(Thread t:threads.keySet()) {
+                        LOGGER.debug(t.getName());
+                        for(StackTraceElement s:threads.get(t)) {
+                            LOGGER.debug("\t"+s.toString());
+                        }
+                    }
+                } catch(Exception ex) {
+                    LOGGER.error("while stopping", ex);
+                }
+            }
+        };
+        new Thread(runner).start();
+    }
+    
+    
     
 }

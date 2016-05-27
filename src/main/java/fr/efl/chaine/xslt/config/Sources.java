@@ -92,14 +92,14 @@ public class Sources implements Verifiable {
         };
     }
     private List<CfgFile> getFiles(final String orderBy, final String sort) {
-        LOGGER.info("getFiles({}, {})", orderBy, sort);
+        LOGGER.trace("getFiles({}, {})", orderBy, sort);
         if("define".equals(orderBy)) {
             return files;
         } else {
-            LOGGER.info("getFiles() sort {} files with orderBy={} and sort={}", new Object[]{files.size(), orderBy, sort});
+            LOGGER.trace("getFiles() sort {} files with orderBy={} and sort={}", new Object[]{files.size(), orderBy, sort});
             List<CfgFile> ret = new ArrayList<CfgFile>(files);
             Collections.sort(ret, getComparator(orderBy, sort));
-            LOGGER.info("getFiles() return {} files", ret.size());
+            LOGGER.trace("getFiles() return {} files", ret.size());
             return ret;
         }
     }

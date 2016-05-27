@@ -21,6 +21,7 @@ public class Listener implements Verifiable, Serializable {
     public static final transient QName ATTR_STOP = new QName("stopKeyword");
     private final int port;
     private final String stopKeyword;
+    private JavaStep javastep;
     
     public Listener(final int port, final String stopKeyword) {
         super();
@@ -36,6 +37,9 @@ public class Listener implements Verifiable, Serializable {
         if(stopKeyword==null || stopKeyword.length()<3) {
             throw new InvalidSyntaxException("STOP keyword must be at least 3 chars length");
         }
+        if(javastep!=null) {
+            javastep.verify();
+        }
     }
 
     public int getPort() {
@@ -44,6 +48,14 @@ public class Listener implements Verifiable, Serializable {
 
     public String getStopKeyword() {
         return stopKeyword;
+    }
+
+    public JavaStep getJavastep() {
+        return javastep;
+    }
+
+    public void setJavastep(JavaStep javastep) {
+        this.javastep = javastep;
     }
     
     

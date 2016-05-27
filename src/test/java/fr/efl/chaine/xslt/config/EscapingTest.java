@@ -32,6 +32,8 @@ public class EscapingTest {
                 return config;
             }
         };
+        // to have the correct URI Resolver
+        new GauloisPipe(configFactory);
     }
     
     @Test

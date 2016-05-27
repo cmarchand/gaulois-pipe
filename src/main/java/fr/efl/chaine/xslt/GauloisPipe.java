@@ -19,6 +19,7 @@ import fr.efl.chaine.xslt.config.ParametrableStep;
 import fr.efl.chaine.xslt.config.Pipe;
 import fr.efl.chaine.xslt.config.Tee;
 import fr.efl.chaine.xslt.config.Xslt;
+import fr.efl.chaine.xslt.listener.HttpListener;
 import fr.efl.chaine.xslt.utils.ParametersMerger;
 import fr.efl.chaine.xslt.utils.ParametrableFile;
 //import fr.efl.chaine.xslt.utils.SaxonConfigurationFactory;
@@ -96,9 +97,11 @@ public class GauloisPipe {
      */
     public GauloisPipe(final SaxonConfigurationFactory configurationFactory) {
         super();
-        this.configurationFactory = configurationFactory;
-        xslCache = new HashMap<>();
         ProtocolInstaller.registerAdditionalProtocols();
+        this.configurationFactory = configurationFactory;
+        Configuration saxonConfig=configurationFactory.getConfiguration();
+        saxonConfig.setURIResolver(buildUriResolver(saxonConfig.getURIResolver()));
+        xslCache = new HashMap<>();
     }
 
     /**
@@ -154,7 +157,8 @@ public class GauloisPipe {
         try {
             Configuration saxonConfig = configurationFactory.getConfiguration();
             LOGGER.debug("configuration is a "+saxonConfig.getClass().getName());
-            saxonConfig.setURIResolver(buildUriResolver(saxonConfig.getURIResolver()));
+            // this is now done in constructor
+            // saxonConfig.setURIResolver(buildUriResolver(saxonConfig.getURIResolver()));
             processor = new Processor(saxonConfig);
             xsltCompiler = processor.newXsltCompiler();
             builder = processor.newDocumentBuilder();
@@ -201,9 +205,11 @@ public class GauloisPipe {
             }
         }
         try {
-            long duration = System.currentTimeMillis() - start;
-            Duration duree = DatatypeFactory.newInstance().newDuration(duration);
-            LOGGER.info("[" + instanceName + "] Process terminated: "+duree.toString());
+            if(config.getSources().getListener()==null) {
+                long duration = System.currentTimeMillis() - start;
+                Duration duree = DatatypeFactory.newInstance().newDuration(duration);
+                LOGGER.info("[" + instanceName + "] Process terminated: "+duree.toString());
+            }
         } catch(Exception ex) {
             LOGGER.info("[" + instanceName + "] Process terminated.");
         }
@@ -276,8 +282,16 @@ public class GauloisPipe {
                 return false;
             }
         } else {
-            // TODO: start listener
-            return false;
+            ExecutionContext context = new ExecutionContext(this, pipe, messageListener, service);
+            final HttpListener httpListener = new HttpListener(listener.getPort(), listener.getStopKeyword(), context);
+            Runnable runner = new Runnable() {
+                @Override
+                public void run() {
+                    httpListener.run();
+                }
+            };
+            new Thread(runner).start();
+            return true;
         }
     }
 
@@ -309,17 +323,20 @@ public class GauloisPipe {
 
     /**
      * Execute the pipe for the specified input stream to the specified
-     * serializer.
+     * serializer.<br>
+     * <b>Warning</b>: this method is public for implementation reasons,
+     * and <b>must not</b> be called outside of GauloisPipe
      *
      * @param pipe the pipe to run
      * @param input the specified input stream
-     * @param inputFilePath the input file path of the specified input stream
-     * @param parameters the parameters
      * @param listener the message listener to use
-     * @return the result
      * @throws SaxonApiException when a problem occurs
+     * @throws java.net.MalformedURLException When an URL is not correctly formed
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException When config file is invalid
+     * @throws java.net.URISyntaxException When URI is invalid
+     * @throws java.io.FileNotFoundException And when the file can not be found !
      */
-    private void execute(Pipe pipe, ParametrableFile input, MessageListener listener)
+    public void execute(Pipe pipe, ParametrableFile input, MessageListener listener)
             throws SaxonApiException, MalformedURLException, InvalidSyntaxException, URISyntaxException, FileNotFoundException {
         boolean avoidCache = input.getAvoidCache();
         long start = System.currentTimeMillis();
@@ -554,28 +571,33 @@ public class GauloisPipe {
      * @return the uri resolver built
      */
     protected URIResolver buildUriResolver(URIResolver defaultUriResolver) {
-        LOGGER.info("["+instanceName+"] BuildUriResolver");
-//        return new GauloisPipeURIResolver(defaultUriResolver, buildUriMapping());
         return new Resolver();
     }
-
-    /**
-     * Build URI mapping from system property.
-     *
-     * @return The URI mapping to use by the URI resolver
-     */
-    protected Map<String, String> buildUriMapping() {
-        LOGGER.info("["+instanceName+"] BuildUriMapping");
-        Map<String, String> uriMapping = new HashMap<>();
-        for (String propertyName : System.getProperties().stringPropertyNames()) {
-            if (propertyName.startsWith(URI_MAPPING_KEY)) {
-                String filename = propertyName.substring(URI_MAPPING_KEY.length());
-                String filepath = System.getProperty(propertyName);
-                LOGGER.debug("["+instanceName+"] BuildUriMapping urimapping with {} to {}", filename, filepath);
-                uriMapping.put(filename, filepath);
+    
+    public void doPostCloseService(ExecutionContext context) {
+        try {
+            context.getService().awaitTermination(5, TimeUnit.HOURS);
+            if(config.getSources().getListener().getJavastep()!=null) {
+                JavaStep javaStep = config.getSources().getListener().getJavastep();
+                try {
+                    StepJava stepJava = javaStep.getStepClass().newInstance();
+                    for(ParameterValue pv:javaStep.getParams()) {
+                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
+                    }
+                    for(ParameterValue pv:config.getParams()) {
+                        // la substitution a été faite avant, dans le merge
+                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
+                    }
+                    Receiver r = stepJava.getReceiver(configurationFactory.getConfiguration());
+                    r.open();
+                    r.close();
+                } catch (XPathException | SaxonApiException | InstantiationException | IllegalAccessException ex) {
+                    LOGGER.error("while preparing doPostCloseService",ex);
+                }
             }
+        } catch (InterruptedException ex) {
+            LOGGER.error("[" + instanceName + "] multi-thread processing interrupted, 5 hour limit exceed.");
         }
-        return uriMapping;
     }
 
 
@@ -832,6 +854,10 @@ public class GauloisPipe {
 
     public void setConfig(Config config) {
         this.config = config;
+    }
+
+    public String getInstanceName() {
+        return instanceName;
     }
     
 }

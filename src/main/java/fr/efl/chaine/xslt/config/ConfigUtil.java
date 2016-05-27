@@ -9,7 +9,9 @@ package fr.efl.chaine.xslt.config;
 import java.io.File;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -17,6 +19,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
+import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
@@ -29,6 +38,10 @@ import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 /**
  * A helper class to build the configuration.
@@ -56,6 +69,29 @@ public class ConfigUtil {
     
     public Config buildConfig(Collection<ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
         Processor processor = new Processor(saxonConfig);
+        try {
+            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Source schemaSource = saxonConfig.getURIResolver().resolve("cp:/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd", null);
+            Schema schema = schemaFactory.newSchema(schemaSource);
+            SchemaValidationErrorListener errListener = new SchemaValidationErrorListener();
+            Validator validator = schema.newValidator();
+            validator.setErrorHandler(errListener);
+//            try (FileInputStream fis = new FileInputStream(file)) {
+//                SAXSource saxSource = new SAXSource(new InputSource(fis));
+//                validator.validate(saxSource);
+//            }
+            if(errListener.hasErrors()) {
+                throw new InvalidSyntaxException(file.getName()+" does not respect gaulois-pipe schema");
+            }
+        } catch(SAXException | TransformerException ex) {
+            LOGGER.error("while verifying schema conformity",ex);
+//        } catch(IOException ex) {
+            // should never happen, already tested before
+        } catch(Error er) {
+            LOGGER.error("java.protocol.handler.pkgs="+System.getProperty("java.protocol.handler.pkgs"));
+            LOGGER.error("while parsing cofnig",er);
+            throw er;
+        }
         XdmNode configRoot = processor.newDocumentBuilder().build(file);
         XPathSelector xs = processor.newXPathCompiler().compile("/*").load();
         xs.setContextItem(configRoot);
@@ -99,7 +135,7 @@ public class ConfigUtil {
         return buildPipe(pipeNode, parameters, null);
     }
     private Pipe buildPipe(XdmNode pipeNode, Collection<ParameterValue> parameters, Tee parentTee) throws IllegalStateException, InvalidSyntaxException {
-        LOGGER.debug("buildPipe on "+pipeNode.getNodeName());
+        LOGGER.trace("buildPipe on "+pipeNode.getNodeName());
         Pipe pipe = new Pipe(parentTee);
         try {
             int nbThreads = Integer.parseInt(resolveEscapes(pipeNode.getAttributeValue(new QName(Pipe.ATTR_NB_THREADS)),parameters));
@@ -136,7 +172,7 @@ public class ConfigUtil {
     }
     
     private Tee buildTee(XdmNode teeNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
-        LOGGER.debug("buildTee on "+teeNode.getNodeName());
+        LOGGER.trace("buildTee on "+teeNode.getNodeName());
         Tee tee = new Tee();
         XdmSequenceIterator seq = teeNode.axisIterator(Axis.CHILD);
         while(seq.hasNext()) {
@@ -158,16 +194,16 @@ public class ConfigUtil {
     private Sources buildSources(XdmNode sourcesNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
         String orderBy = sourcesNode.getAttributeValue(Sources.ATTR_ORDERBY);
         String sort = sourcesNode.getAttributeValue(Sources.ATTR_SORT);
-        LOGGER.info("buildSources from {} with orderBy={} and sort={}", new Object[]{sourcesNode.getNodeName(), orderBy, sort});
+        LOGGER.trace("buildSources from {} with orderBy={} and sort={}", new Object[]{sourcesNode.getNodeName(), orderBy, sort});
         Sources sources = new Sources(orderBy, sort);
         XdmSequenceIterator it = sourcesNode.axisIterator(Axis.CHILD);
         while(it.hasNext()) {
             XdmNode node = (XdmNode)it.next();
-            LOGGER.debug("buildSource from {}", node.getNodeName());
+            LOGGER.trace("buildSource from {}", node.getNodeName());
             if(CfgFile.QNAME.equals(node.getNodeName())) {
                 try {
                     CfgFile localFile = buildFile(node, parameters);
-                    LOGGER.debug("add source {}", localFile);
+                    LOGGER.trace("add source {}", localFile);
                     sources.addFile(localFile);
                 } catch (URISyntaxException ex) {
                     LOGGER.error(ex.getMessage(),ex);
@@ -175,7 +211,7 @@ public class ConfigUtil {
                 }
             } else if(CfgFile.QN_FOLDER.equals(node.getNodeName())) {
                 Collection<CfgFile> files = buildFolderContent(node, parameters);
-                LOGGER.info("buildSources from folder contains {} files", files.size());
+                LOGGER.trace("buildSources from folder contains {} files", files.size());
                 sources.addFiles(files);
             } else if(Listener.QName.equals(node.getNodeName())) {
                 sources.setListener(buildListener(node, parameters));
@@ -183,17 +219,22 @@ public class ConfigUtil {
         }
         return sources;
     }
-    private Listener buildListener(XdmNode listenerNode, Collection<ParameterValue> parameters) {
+    private Listener buildListener(XdmNode listenerNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
         String tmp = listenerNode.getAttributeValue(Listener.ATTR_PORT);
         int port = Listener.DEFAULT_PORT;
         try {
             port = Integer.parseInt(tmp);
         } catch(NumberFormatException ex) {}
         String stopKeyword = listenerNode.getAttributeValue(Listener.ATTR_STOP);
-        return new Listener(port, stopKeyword);
+        Listener list = new Listener(port, stopKeyword);
+        XdmSequenceIterator it = listenerNode.axisIterator(Axis.CHILD, JavaStep.QNAME);
+        if(it.hasNext()) {
+            list.setJavastep(buildJavaStep((XdmNode)it.next(), parameters));
+        }
+        return list;
     }
     private Xslt buildXslt(XdmNode xsltNode, Collection<ParameterValue> parameters) {
-        LOGGER.debug("buildXslt on {}", xsltNode.getNodeName());
+        LOGGER.trace("buildXslt on {}", xsltNode.getNodeName());
         Xslt ret = new Xslt(resolveEscapes(xsltNode.getAttributeValue(Xslt.ATTR_HREF),parameters));
         XdmSequenceIterator it = xsltNode.axisIterator(Axis.CHILD, QN_PARAM);
         while(it.hasNext()) {
@@ -202,7 +243,7 @@ public class ConfigUtil {
         return ret;
     }
     private JavaStep buildJavaStep(XdmNode javaNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
-        LOGGER.debug("buildJavaStep on {}", javaNode.getNodeName());
+        LOGGER.trace("buildJavaStep on {}", javaNode.getNodeName());
         JavaStep ret = new JavaStep(resolveEscapes(javaNode.getAttributeValue(JavaStep.ATTR_CLASS), parameters));
         XdmSequenceIterator it = javaNode.axisIterator(Axis.CHILD, QN_PARAM);
         while(it.hasNext()) {
@@ -211,12 +252,12 @@ public class ConfigUtil {
         return ret;
     }
     private ParameterValue buildParameter(XdmNode param, Collection<ParameterValue> parameters) {
-        LOGGER.debug("buildParameter on "+param.getNodeName());
+        LOGGER.trace("buildParameter on "+param.getNodeName());
         return new ParameterValue(resolveEscapes(param.getAttributeValue(PARAM_NAME),parameters), resolveEscapes(param.getAttributeValue(PARAM_VALUE),parameters));
     }
     private CfgFile buildFile(XdmNode node, Collection<ParameterValue> parameters) throws URISyntaxException {
         String href = node.getAttributeValue(CfgFile.ATTR_HREF);
-        LOGGER.debug("buildFile from {} with href={}", node.getNodeName(), href);
+        LOGGER.trace("buildFile from {} with href={}", node.getNodeName(), href);
         File f;
         href = resolveEscapes(href, parameters);
         if(href.startsWith("file:")) {
@@ -224,7 +265,7 @@ public class ConfigUtil {
         } else {
             f = new File(href);
         }
-        LOGGER.debug("buildFile on {}", f.getName());
+        LOGGER.trace("buildFile on {}", f.getName());
         CfgFile ret = new CfgFile(f);
         XdmSequenceIterator it = node.axisIterator(Axis.CHILD, QN_PARAM);
         while(it.hasNext()) {
@@ -243,7 +284,7 @@ public class ConfigUtil {
         return ret;
     }
     private Collection<CfgFile> buildFolderContent(XdmNode node, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
-        LOGGER.debug("buildFolderContent on "+node.getNodeName());
+        LOGGER.trace("buildFolderContent on "+node.getNodeName());
         String pattern = resolveEscapes(node.getAttributeValue(QN_PATTERN), parameters);
         final boolean recurse = getBooleanValue(node.getAttributeValue(QN_RECURSE));
         HashMap<String, ParameterValue> params = new HashMap<>();
@@ -254,7 +295,7 @@ public class ConfigUtil {
         }
         if(pattern==null) pattern="$.*^";
         final Pattern regex = Pattern.compile(pattern);
-        LOGGER.debug("checking filenames to "+regex.toString());
+        LOGGER.trace("checking filenames to "+regex.toString());
         FilenameFilter filter;
         filter = new FilenameFilter() {
             @Override
@@ -262,7 +303,7 @@ public class ConfigUtil {
                 if(recurse) return true;
                 boolean match = regex.matcher(filename).matches();
                 if(!match) {
-                    LOGGER.debug(filename+" not matched");
+                    LOGGER.trace(filename+" not matched");
                 }
                 return match;
             }
@@ -271,7 +312,7 @@ public class ConfigUtil {
         if(!dir.isDirectory()) {
             throw new InvalidSyntaxException(dir.getAbsolutePath()+" is not a valid directory");
         }
-        LOGGER.debug("dir="+dir+", filter="+filter+", recurse="+recurse);
+        LOGGER.trace("dir="+dir+", filter="+filter+", recurse="+recurse);
         List<CfgFile> files = getFilesFromDirectory(dir,filter,recurse);
         for(CfgFile sourceFile:files) {
             for(ParameterValue p:params.values()) {
@@ -281,7 +322,7 @@ public class ConfigUtil {
         return files;
     }
     private Output buildOutput(XdmNode node, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
-        LOGGER.debug("buildOutput from {}", node.getNodeName());
+        LOGGER.trace("buildOutput from {}", node.getNodeName());
         Output ret = new Output();
         // searching for output parameters
         XdmSequenceIterator attributes = node.axisIterator(Axis.ATTRIBUTE);
@@ -428,6 +469,28 @@ public class ConfigUtil {
             }
         }
         return ret;
+    }
+    
+    private class SchemaValidationErrorListener implements ErrorHandler {
+        private boolean errors = false;
+        public boolean hasErrors() { return errors; }
+
+        @Override
+        public void warning(SAXParseException exception) throws SAXException {
+            ConfigUtil.LOGGER.warn("validating configFile: "+exception.getMessage());
+        }
+
+        @Override
+        public void error(SAXParseException exception) throws SAXException {
+            ConfigUtil.LOGGER.warn("validating configFile: "+exception.getMessage());
+            errors = true;
+        }
+
+        @Override
+        public void fatalError(SAXParseException exception) throws SAXException {
+            ConfigUtil.LOGGER.warn("validating configFile: "+exception.getMessage());
+            errors = true;
+        }
     }
 
 }
