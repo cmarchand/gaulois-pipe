@@ -246,6 +246,20 @@ public class GauloisPipe {
             List<ParametrableFile> inputs,
             int nbThreads) {
         ExecutorService service = Executors.newFixedThreadPool(nbThreads);
+        // a try to solve multi-thraed compiling problem...
+        // that's a pretty dirty hack, but just a try, to test...
+        if(xslCache.isEmpty()) {
+            try {
+                XsltTransformer transformer = buildTransformer(
+                    pipe, 
+                    inputs.get(0).getFile(), 
+                    inputs.get(0).getFile().toURI().toURL().toExternalForm(), 
+                    ParametersMerger.merge(inputs.get(0).getParameters(), config.getParams()),
+                    messageListener);
+            } catch(Exception ex) {
+                LOGGER.error("while pre-compiling for a multi-thread use...");
+            }
+        }
         for(ParametrableFile pf: inputs) {
             final ParametrableFile fpf = pf;
             Runnable r = new Runnable() {
