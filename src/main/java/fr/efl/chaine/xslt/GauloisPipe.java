@@ -259,7 +259,9 @@ public class GauloisPipe {
                 Executors.newFixedThreadPool(nbThreads);
         // a try to solve multi-thraed compiling problem...
         // that's a pretty dirty hack, but just a try, to test...
-        if(xslCache.isEmpty()) {
+        if(xslCache.isEmpty() && !inputs.isEmpty()) {
+            // in the opposite case, there is only a listener, and probably the first
+            // file will be proccess alone...
             try {
                 XsltTransformer transformer = buildTransformer(
                     pipe, 
@@ -267,7 +269,7 @@ public class GauloisPipe {
                     inputs.get(0).getFile().toURI().toURL().toExternalForm(), 
                     ParametersMerger.merge(inputs.get(0).getParameters(), config.getParams()),
                     messageListener);
-            } catch(Exception ex) {
+            } catch(MalformedURLException | InvalidSyntaxException | URISyntaxException | SaxonApiException | FileNotFoundException ex) {
                 LOGGER.error("while pre-compiling for a multi-thread use...");
             }
         }
