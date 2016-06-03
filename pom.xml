@@ -43,15 +43,21 @@
     </properties>
 
     <dependencies>
-        <!--dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-            <version>2.11.0</version>
-        </dependency-->
         <dependency>
             <groupId>org.opengis.cite.xerces</groupId>
             <artifactId>xercesImpl-xsd11</artifactId>
             <version>2.12-beta-r1667115</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opengis.cite.eclipse.webtools.sse</groupId>
+            <artifactId>org.eclipse.wst.xml.xpath2.processor</artifactId>
+            <version>1.1.5-738bb7b85d</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.xerces</groupId>
+                    <artifactId>org.apache.xerces</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

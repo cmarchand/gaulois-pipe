@@ -66,7 +66,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
                 <xs:element name="tee" type="cfg:TTee" />
                 <xs:element name="output" type="cfg:TOutput"/>
             </xs:choice>
-            <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
                 <xs:element name="xslt" type="cfg:TXslt"/>
                 <xs:element name="java" type="cfg:TJava"/>
                 <xs:element name="tee" type="cfg:TTee" />

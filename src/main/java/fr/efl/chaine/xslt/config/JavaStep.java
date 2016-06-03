@@ -62,7 +62,7 @@ public class JavaStep implements ParametrableStep {
      * Returns true if {@link toTest} is or extends {@link isA}
      * @param toTest
      * @param isA
-     * @return 
+     * @return <tt>true</tt> if the <tt>toTest</tt> class extends the <tt>isA</tt> class.
      */
     private static boolean isDerivedFrom(Class toTest, Class isA) {
         Class hierarch = toTest;

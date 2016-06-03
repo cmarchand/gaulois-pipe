@@ -70,22 +70,23 @@ public class ConfigUtil {
     public Config buildConfig(Collection<ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
         Processor processor = new Processor(saxonConfig);
         try {
-            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            System.setProperty("javax.xml.validation.SchemaFactory:http://www.w3.org/2001/XMLSchema/v1.1","org.apache.xerces.jaxp.validation.XMLSchema11Factory");
+            SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema/v1.1");
             Source schemaSource = saxonConfig.getURIResolver().resolve("cp:/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd", null);
             Schema schema = schemaFactory.newSchema(schemaSource);
             SchemaValidationErrorListener errListener = new SchemaValidationErrorListener();
             Validator validator = schema.newValidator();
             validator.setErrorHandler(errListener);
-//            try (FileInputStream fis = new FileInputStream(file)) {
-//                SAXSource saxSource = new SAXSource(new InputSource(fis));
-//                validator.validate(saxSource);
-//            }
+            try (FileInputStream fis = new FileInputStream(file)) {
+                SAXSource saxSource = new SAXSource(new InputSource(fis));
+                validator.validate(saxSource);
+            }
             if(errListener.hasErrors()) {
                 throw new InvalidSyntaxException(file.getName()+" does not respect gaulois-pipe schema");
             }
         } catch(SAXException | TransformerException ex) {
             LOGGER.error("while verifying schema conformity",ex);
-//        } catch(IOException ex) {
+        } catch(IOException ex) {
             // should never happen, already tested before
         } catch(Error er) {
             LOGGER.error("java.protocol.handler.pkgs="+System.getProperty("java.protocol.handler.pkgs"));

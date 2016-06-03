@@ -43,7 +43,7 @@ public class GauloisPipeTest {
         };
     }
 
-    @Test
+    @Test(expected = InvalidSyntaxException.class)
     public void testOldConfig() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/old-config.xml");
