@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
-import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
@@ -221,12 +220,12 @@ public class ConfigUtil {
         return sources;
     }
     private Listener buildListener(XdmNode listenerNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
-        String tmp = listenerNode.getAttributeValue(Listener.ATTR_PORT);
+        String tmp = resolveEscapes(listenerNode.getAttributeValue(Listener.ATTR_PORT),parameters);
         int port = Listener.DEFAULT_PORT;
         try {
             port = Integer.parseInt(tmp);
         } catch(NumberFormatException ex) {}
-        String stopKeyword = listenerNode.getAttributeValue(Listener.ATTR_STOP);
+        String stopKeyword = resolveEscapes(listenerNode.getAttributeValue(Listener.ATTR_STOP),parameters);
         Listener list = new Listener(port, stopKeyword);
         XdmSequenceIterator it = listenerNode.axisIterator(Axis.CHILD, JavaStep.QNAME);
         if(it.hasNext()) {

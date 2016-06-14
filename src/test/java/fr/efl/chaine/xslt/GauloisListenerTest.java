@@ -52,13 +52,15 @@ public class GauloisListenerTest {
         Config config = cu.buildConfig(emptyInputParams);
         config.setLogFileSize(true);
         config.verify();
+        assertEquals("Port escape does not work", 8123, config.getSources().getListener().getPort());
+        assertEquals("STOP keyword escape does not work", "ARRETE", config.getSources().getListener().getStopKeyword());
         piper.setConfig(config);
         piper.setInstanceName("LISTENER_1");
         piper.launch();
         DefaultHttpClient httpClient = new DefaultHttpClient();
         File userDir = new File(System.getProperty("user.dir"));
         File source = new File(userDir,"src/test/resources/source.xml");
-        HttpPut put = new HttpPut("http://localhost:"+Listener.DEFAULT_PORT+"/?url="+URLEncoder.encode(source.toURI().toURL().toExternalForm(), "UTF-8"));
+        HttpPut put = new HttpPut("http://localhost:8123/?url="+URLEncoder.encode(source.toURI().toURL().toExternalForm(), "UTF-8"));
         HttpResponse response = httpClient.execute(put);
         System.out.println(response.getStatusLine().toString());
         assertEquals(200,response.getStatusLine().getStatusCode());
@@ -68,7 +70,7 @@ public class GauloisListenerTest {
         File outputDir = new File("target/generated-test-files");
         File target = new File(outputDir,"source-listen1.xml");
         assertTrue("File "+target.toString()+" does not exists",target.exists());
-        HttpDelete delete = new HttpDelete("http://localhost:"+Listener.DEFAULT_PORT+"/?keyword=STOP");
+        HttpDelete delete = new HttpDelete("http://localhost:8123/?keyword=ARRETE");
         response = httpClient.execute(delete);
         System.out.println(response.getStatusLine().toString());
         assertEquals(200, response.getStatusLine().getStatusCode());

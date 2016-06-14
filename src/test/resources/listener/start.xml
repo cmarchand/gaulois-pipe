@@ -16,8 +16,12 @@ can obtain one at https://mozilla.org/MPL/2.0/.
             <fileName name="${basename}-listen1.xml"/>
         </output>
     </pipe>
+    <params>
+        <param name="myPort" value="8123"/>
+        <param name="stopKey" value="ARRETE"/>
+    </params>
     <sources>
-        <listener stopKeyword="STOP">
+        <listener stopKeyword="$[stopKey]" port="$[myPort]">
         	<java class="fr.efl.chaine.xslt.utils.FileAppenderTerminalStep">
         		<param name="filePath" value="./target/generated-test-files/listener-appendee.txt"/>
         		<param name="value" value="EOF"/>

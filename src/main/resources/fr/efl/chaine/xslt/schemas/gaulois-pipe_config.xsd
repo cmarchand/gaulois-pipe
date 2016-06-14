@@ -714,8 +714,8 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     </xs:complexType>
 
     <xs:simpleType name="positiveInt">
-        <xs:restriction base="xs:int">
-            <xs:minInclusive value="1"/>
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]+|$\[.*\]"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -747,7 +747,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     
     <xs:simpleType name="TKeyword">
         <xs:restriction base="xs:string">
-            <xs:pattern value="[-_a-zA-Z0-9]{3,}"/>
+            <!--xs:pattern value="[-_a-zA-Z0-9]{3,}"/-->
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>
