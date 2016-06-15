@@ -33,15 +33,13 @@ Here is a very simple config file :
     </pipe>
     <params>
         <param name="p-general" value="GENERAL"/>
+        <param name="xslDir" value="./src/test/resources"/>
+        <param name="destDir" value="./target/generated-test-files"/>
     </params>
     <sources>
         <file href="./src/test/resources/source.xml">
             <param name="p-file" value="substitution"/>
         </file>	       
     </sources>
-    <params>
-        <param name="xslDir" value="./src/test/resources"/>
-        <param name="destDir" value="./target/generated-test-files"/>
-    </params>
 </config>
 ```
