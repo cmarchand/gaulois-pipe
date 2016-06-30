@@ -90,6 +90,7 @@ public class GauloisPipe {
     private DocumentBuilder builder = null;
     
     private URIResolver uriResolver;
+    private static transient boolean protocolInstalled = false;
 
     
     /**
@@ -99,7 +100,10 @@ public class GauloisPipe {
      */
     public GauloisPipe(final SaxonConfigurationFactory configurationFactory) {
         super();
-        ProtocolInstaller.registerAdditionalProtocols();
+        if(!protocolInstalled) {
+            ProtocolInstaller.registerAdditionalProtocols();
+            protocolInstalled = true;
+        }
         this.configurationFactory = configurationFactory;
         Configuration saxonConfig=configurationFactory.getConfiguration();
         saxonConfig.setURIResolver(getUriResolver());
@@ -678,6 +682,11 @@ public class GauloisPipe {
      * @param args the arguments
      */
     public static void main(String[] args) {
+        if(!protocolInstalled) {
+            ProtocolInstaller.registerAdditionalProtocols();
+            protocolInstalled = true;
+        }
+        LOGGER.info("Additionals protocols installed");
         try {
             GauloisPipe gauloisPipe = new GauloisPipe(new SaxonConfigurationFactory() {
                 Configuration configuration = Configuration.newConfiguration();
@@ -686,6 +695,7 @@ public class GauloisPipe {
                     return configuration;
                 }
             });
+            LOGGER.debug("gauloisPipe instanciated");
             Config config = gauloisPipe.parseCommandLine(args);
             gauloisPipe.setConfig(config);
             gauloisPipe.setInstanceName(config.__instanceName);
