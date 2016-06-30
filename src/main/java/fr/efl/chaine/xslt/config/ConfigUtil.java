@@ -12,8 +12,10 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.URIResolver;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -55,79 +58,102 @@ public class ConfigUtil {
     private static final QName QN_PATTERN = new QName("pattern");
     private static final QName QN_RECURSE = new QName("recurse");
     private static final QName QN_PARAM = new QName(Config.NS,"param");
-    private final File file;
+//    private final File file;
     private final Configuration saxonConfig;
-    public ConfigUtil(Configuration saxonConfig, String fileName) throws InvalidSyntaxException {
+    private final URIResolver uriResolver;
+    private final String configUri;
+    
+    public ConfigUtil(Configuration saxonConfig, URIResolver uriResolver, String configUri) throws InvalidSyntaxException {
         super();
         this.saxonConfig = saxonConfig;
-        file = new File(fileName);
-        if(!file.exists() && !file.isFile()) {
-            throw new InvalidSyntaxException(fileName+" not found or not a regular file");
+        this.uriResolver=uriResolver;
+        if(configUri.contains(":")) {
+            try {
+                URL url = new URL(configUri);
+                InputStream is = url.openStream();
+                if(is==null) {
+                    throw new InvalidSyntaxException(configUri+" not found or can not be open");
+                }
+            } catch (IOException ex) {
+                throw new InvalidSyntaxException(configUri+" not found or can not be open");
+            }
+        } else {
+            File file = new File(configUri);
+            if(!file.exists() && !file.isFile()) {
+                throw new InvalidSyntaxException(configUri+" not found or not a regular file");
+            }
         }
+        this.configUri=configUri;
     }
     
     public Config buildConfig(Collection<ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
-        Processor processor = new Processor(saxonConfig);
         try {
-            System.setProperty("javax.xml.validation.SchemaFactory:http://www.w3.org/2001/XMLSchema/v1.1","org.apache.xerces.jaxp.validation.XMLSchema11Factory");
-            SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema/v1.1");
-            Source schemaSource = saxonConfig.getURIResolver().resolve("cp:/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd", null);
-            Schema schema = schemaFactory.newSchema(schemaSource);
-            SchemaValidationErrorListener errListener = new SchemaValidationErrorListener();
-            Validator validator = schema.newValidator();
-            validator.setErrorHandler(errListener);
-            try (FileInputStream fis = new FileInputStream(file)) {
-                SAXSource saxSource = new SAXSource(new InputSource(fis));
+            Processor processor = new Processor(saxonConfig);
+            try {
+                System.setProperty("javax.xml.validation.SchemaFactory:http://www.w3.org/2001/XMLSchema/v1.1","org.apache.xerces.jaxp.validation.XMLSchema11Factory");
+                SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema/v1.1");
+                Source schemaSource = saxonConfig.getURIResolver().resolve("cp:/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd", null);
+                Schema schema = schemaFactory.newSchema(schemaSource);
+                SchemaValidationErrorListener errListener = new SchemaValidationErrorListener();
+                Validator validator = schema.newValidator();
+                validator.setErrorHandler(errListener);
+                SAXSource saxSource = new SAXSource(
+                        configUri.contains(":") ? new InputSource(new URL(configUri).openStream()) :
+                                new InputSource(new FileInputStream(new File(configUri)))
+                );
                 validator.validate(saxSource);
-            }
-            if(errListener.hasErrors()) {
-                throw new InvalidSyntaxException(file.getName()+" does not respect gaulois-pipe schema");
-            }
-        } catch(SAXException | TransformerException ex) {
-            LOGGER.error("while verifying schema conformity",ex);
-        } catch(IOException ex) {
-            // should never happen, already tested before
-        } catch(Error er) {
-            LOGGER.error("java.protocol.handler.pkgs="+System.getProperty("java.protocol.handler.pkgs"));
-            LOGGER.error("while parsing cofnig",er);
-            throw er;
-        }
-        XdmNode configRoot = processor.newDocumentBuilder().build(file);
-        XPathSelector xs = processor.newXPathCompiler().compile("/*").load();
-        xs.setContextItem(configRoot);
-        XdmNode root = (XdmNode)xs.evaluateSingle();
-        if(CONFIG_EL.equals(root.getNodeName())) {
-            Config config = new Config(root);
-            // params
-            XdmSequenceIterator it = root.axisIterator(Axis.CHILD, Config.PARAMS_CHILD);
-            while(it.hasNext()) {
-                XdmNode params = (XdmNode)it.next();
-                XdmSequenceIterator itp = params.axisIterator(Axis.CHILD, new QName(Config.NS, "param"));
-                while(itp.hasNext()) {
-                    config.addParameter(buildParameter((XdmNode)itp.next(),null));
+                if(errListener.hasErrors()) {
+                    throw new InvalidSyntaxException(configUri+" does not respect gaulois-pipe schema");
                 }
+            } catch(SAXException | TransformerException | IOException ex) {
+                LOGGER.error("while verifying schema conformity",ex);
+            } catch(Error er) {
+                LOGGER.error("java.protocol.handler.pkgs="+System.getProperty("java.protocol.handler.pkgs"));
+                LOGGER.error("while parsing config",er);
+                throw er;
             }
-            Collection<ParameterValue> allParameters = new ArrayList<>(config.getParams());
-            allParameters.addAll(inputParameters);
-            // pipe
-            config.setPipe(buildPipe((XdmNode)(root.axisIterator(Axis.CHILD, Pipe.QNAME).next()),allParameters));
-            // sources
-            config.setSources(buildSources((XdmNode)(root.axisIterator(Axis.CHILD, Sources.QNAME).next()), allParameters));
-            // output
-            // pour compatibilité ascendante, si on a un output sous la config, on essaie de le mettre sur le pipe
-            // possible uniquement si le pipe est rectiligne
-            XdmSequenceIterator outputIt = root.axisIterator(Axis.CHILD, Output.QNAME);
-            if(outputIt.hasNext()) {
-                LOGGER.warn("Defining <output/> in config is now deprecated - but still works. You should define it in <pipe/>");
-                if(config.getPipe().getOutput()==null) {
-                    config.getPipe().setOutput(buildOutput((XdmNode)(outputIt.next()), allParameters));
-                } else {
-                    throw new InvalidSyntaxException("Using output outside of pipe is deprecated but supported, only if pipe has no output defined");
+            XdmNode configRoot = 
+                    configUri.contains(":") ? 
+                    processor.newDocumentBuilder().build(uriResolver.resolve(configUri,null)) :
+                    processor.newDocumentBuilder().build(new File(configUri));
+            XPathSelector xs = processor.newXPathCompiler().compile("/*").load();
+            xs.setContextItem(configRoot);
+            XdmNode root = (XdmNode)xs.evaluateSingle();
+            if(CONFIG_EL.equals(root.getNodeName())) {
+                Config config = new Config(root);
+                // params
+                XdmSequenceIterator it = root.axisIterator(Axis.CHILD, Config.PARAMS_CHILD);
+                while(it.hasNext()) {
+                    XdmNode params = (XdmNode)it.next();
+                    XdmSequenceIterator itp = params.axisIterator(Axis.CHILD, new QName(Config.NS, "param"));
+                    while(itp.hasNext()) {
+                        config.addParameter(buildParameter((XdmNode)itp.next(),null));
+                    }
                 }
+                Collection<ParameterValue> allParameters = new ArrayList<>(config.getParams());
+                allParameters.addAll(inputParameters);
+                // pipe
+                config.setPipe(buildPipe((XdmNode)(root.axisIterator(Axis.CHILD, Pipe.QNAME).next()),allParameters));
+                // sources
+                config.setSources(buildSources((XdmNode)(root.axisIterator(Axis.CHILD, Sources.QNAME).next()), allParameters));
+                // output
+                // pour compatibilité ascendante, si on a un output sous la config, on essaie de le mettre sur le pipe
+                // possible uniquement si le pipe est rectiligne
+                XdmSequenceIterator outputIt = root.axisIterator(Axis.CHILD, Output.QNAME);
+                if(outputIt.hasNext()) {
+                    LOGGER.warn("Defining <output/> in config is now deprecated - but still works. You should define it in <pipe/>");
+                    if(config.getPipe().getOutput()==null) {
+                        config.getPipe().setOutput(buildOutput((XdmNode)(outputIt.next()), allParameters));
+                    } else {
+                        throw new InvalidSyntaxException("Using output outside of pipe is deprecated but supported, only if pipe has no output defined");
+                    }
+                }
+                return config;
+            } else {
+                throw new InvalidSyntaxException("The file "+configUri+" does not respect schema saxon-pipe_config.xsd");
             }
-            return config;
-        } else {
-            throw new InvalidSyntaxException("The file "+file.getAbsolutePath()+" does not respect schema saxon-pipe_config.xsd");
+        } catch(TransformerException ex) {
+            throw new InvalidSyntaxException(configUri+" can not be read.");
         }
     }
     

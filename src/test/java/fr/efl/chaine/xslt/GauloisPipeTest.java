@@ -46,7 +46,7 @@ public class GauloisPipeTest {
     @Test(expected = InvalidSyntaxException.class)
     public void testOldConfig() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/old-config.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/old-config.xml");
         piper.setConfig(cu.buildConfig(emptyInputParams));
         piper.setInstanceName("OLD_CONFIG");
         piper.launch();
@@ -57,7 +57,7 @@ public class GauloisPipeTest {
     @Test
     public void testNewConfig() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/new-config.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/new-config.xml");
         piper.setConfig(cu.buildConfig(emptyInputParams));
         piper.setInstanceName("NEW_CONFIG");
         piper.launch();
@@ -70,7 +70,7 @@ public class GauloisPipeTest {
     @Test
     public void testSameInputFile() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/same-source-file.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/same-source-file.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.setLogFileSize(true);
         assertEquals(2, config.getSources().getFiles().size());
@@ -85,7 +85,7 @@ public class GauloisPipeTest {
     @Test
     public void testSubstitution() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/substitution.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/substitution.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.setLogFileSize(true);
         config.verify();
@@ -98,7 +98,7 @@ public class GauloisPipeTest {
     @Test
     public void testNoSourceFile() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/no-source.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/no-source.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.setLogFileSize(true);
         config.verify();
@@ -112,7 +112,7 @@ public class GauloisPipeTest {
     public void validateComment() {
         try {
             GauloisPipe piper = new GauloisPipe(configFactory);
-            Config config = new ConfigUtil(configFactory.getConfiguration(),"./src/test/resources/comment-xslt.xml").buildConfig(emptyInputParams);
+            Config config = new ConfigUtil(configFactory.getConfiguration(),piper.getUriResolver(), "./src/test/resources/comment-xslt.xml").buildConfig(emptyInputParams);
             config.verify();
             Iterator<ParametrableStep> it = config.getPipe().getXslts();
             int count=0;
@@ -129,7 +129,7 @@ public class GauloisPipeTest {
     @Test
     public void testJavaStep() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(),"./src/test/resources/FileAppenderHook.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/FileAppenderHook.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
         piper.setConfig(config);
@@ -146,7 +146,7 @@ public class GauloisPipeTest {
     public void testTeeJava() throws Exception {
         // checks a Java can be in a Tee
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/java-tee.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/java-tee.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
         piper.setConfig(config);
@@ -167,7 +167,7 @@ public class GauloisPipeTest {
     public void testInitialJavaStepKo() throws Exception {
         // checks a Java can not be an initial step
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/java-initial-step-ko.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/java-initial-step-ko.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
     }
@@ -175,7 +175,7 @@ public class GauloisPipeTest {
     public void testInitialJavaStepOk() throws Exception {
         // checks a Java can not be an initial step
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/java-initial-step-ok.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/java-initial-step-ok.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
     }
@@ -183,14 +183,14 @@ public class GauloisPipeTest {
     public void testInitialTeeStep() throws Exception {
         // checks a Tee can be an initial Step
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/tee-initial-step.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/tee-initial-step.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
     }
     @Test()
     public void testXslInJar() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/jar-xsl.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/jar-xsl.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
         piper.setConfig(config);
@@ -203,7 +203,7 @@ public class GauloisPipeTest {
     @Test
     public void testXslInCp() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/cp-xsl.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/cp-xsl.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
         assertTrue("Problem while loading XSL from classpath", true);

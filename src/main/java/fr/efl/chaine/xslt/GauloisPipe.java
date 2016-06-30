@@ -88,6 +88,8 @@ public class GauloisPipe {
     private DocumentCache documentCache;
     private XsltCompiler xsltCompiler;
     private DocumentBuilder builder = null;
+    
+    private URIResolver uriResolver;
 
     
     /**
@@ -100,7 +102,7 @@ public class GauloisPipe {
         ProtocolInstaller.registerAdditionalProtocols();
         this.configurationFactory = configurationFactory;
         Configuration saxonConfig=configurationFactory.getConfiguration();
-        saxonConfig.setURIResolver(buildUriResolver(saxonConfig.getURIResolver()));
+        saxonConfig.setURIResolver(getUriResolver());
         xslCache = new HashMap<>();
     }
 
@@ -787,10 +789,17 @@ public class GauloisPipe {
 
     private Config parseConfig(String fileName, Collection<ParameterValue> inputParameters, Configuration saxonConfig) throws InvalidSyntaxException {
         try {
-            return new ConfigUtil(saxonConfig, fileName).buildConfig(inputParameters);
+            return new ConfigUtil(saxonConfig, getUriResolver(), fileName).buildConfig(inputParameters);
         } catch (SaxonApiException ex) {
             throw new InvalidSyntaxException(ex);
         }
+    }
+
+    public URIResolver getUriResolver() {
+        if(uriResolver==null) {
+            uriResolver = buildUriResolver(configurationFactory.getConfiguration().getURIResolver());
+        }
+        return uriResolver;
     }
 
     private static final transient String USAGE_PROMPT = "\nUSAGE:\njava " + GauloisPipe.class.getName() + "\n"

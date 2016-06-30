@@ -143,7 +143,7 @@ public class OutputTest {
     public void testIndent() throws Exception {
         // checks a Tee can be an initial Step
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/outputParams.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/outputParams.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
         piper.setConfig(config);

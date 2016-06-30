@@ -43,7 +43,7 @@ public class EscapingTest {
         coll.add(pv);
         // n'importe lequel, aucune importance
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/same-source-file.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/same-source-file.xml");
         String result = cu.resolveEscapes("$[workDir]/collection.xml", coll);
         assertEquals("file:/home/cmarchand/devel/data/collection.xml", result);
     }

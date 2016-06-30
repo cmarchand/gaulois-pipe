@@ -8,7 +8,6 @@ package fr.efl.chaine.xslt;
 
 import fr.efl.chaine.xslt.config.Config;
 import fr.efl.chaine.xslt.config.ConfigUtil;
-import fr.efl.chaine.xslt.config.Listener;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,7 +47,7 @@ public class GauloisListenerTest {
     @Test
     public void listenerStart() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), "./src/test/resources/listener/start.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/listener/start.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.setLogFileSize(true);
         config.verify();
