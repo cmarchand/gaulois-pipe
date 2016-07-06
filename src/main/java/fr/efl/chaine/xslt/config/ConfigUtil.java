@@ -58,15 +58,21 @@ public class ConfigUtil {
     private static final QName QN_PATTERN = new QName("pattern");
     private static final QName QN_RECURSE = new QName("recurse");
     private static final QName QN_PARAM = new QName(Config.NS,"param");
+    private static final QName QN_NULL = new QName(Config.NS, "null");
 //    private final File file;
     private final Configuration saxonConfig;
     private final URIResolver uriResolver;
     private final String configUri;
+    private final boolean skipSchemaValidation;
     
     public ConfigUtil(Configuration saxonConfig, URIResolver uriResolver, String configUri) throws InvalidSyntaxException {
+        this(saxonConfig, uriResolver, configUri, false);
+    }
+    public ConfigUtil(Configuration saxonConfig, URIResolver uriResolver, String configUri, final boolean skipSchemaValidation) throws InvalidSyntaxException {
         super();
         this.saxonConfig = saxonConfig;
         this.uriResolver=uriResolver;
+        this.skipSchemaValidation=skipSchemaValidation;
         if(configUri.contains(":")) {
             try {
                 URL url = new URL(configUri);
@@ -89,28 +95,30 @@ public class ConfigUtil {
     public Config buildConfig(Collection<ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
         try {
             Processor processor = new Processor(saxonConfig);
-            try {
-                System.setProperty("javax.xml.validation.SchemaFactory:http://www.w3.org/2001/XMLSchema/v1.1","org.apache.xerces.jaxp.validation.XMLSchema11Factory");
-                SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema/v1.1");
-                Source schemaSource = saxonConfig.getURIResolver().resolve("cp:/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd", null);
-                Schema schema = schemaFactory.newSchema(schemaSource);
-                SchemaValidationErrorListener errListener = new SchemaValidationErrorListener();
-                Validator validator = schema.newValidator();
-                validator.setErrorHandler(errListener);
-                SAXSource saxSource = new SAXSource(
-                        configUri.contains(":") ? new InputSource(new URL(configUri).openStream()) :
-                                new InputSource(new FileInputStream(new File(configUri)))
-                );
-                validator.validate(saxSource);
-                if(errListener.hasErrors()) {
-                    throw new InvalidSyntaxException(configUri+" does not respect gaulois-pipe schema");
+            if(!skipSchemaValidation) {
+                try {
+                    System.setProperty("javax.xml.validation.SchemaFactory:http://www.w3.org/2001/XMLSchema/v1.1","org.apache.xerces.jaxp.validation.XMLSchema11Factory");
+                    SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema/v1.1");
+                    Source schemaSource = saxonConfig.getURIResolver().resolve("cp:/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd", null);
+                    Schema schema = schemaFactory.newSchema(schemaSource);
+                    SchemaValidationErrorListener errListener = new SchemaValidationErrorListener();
+                    Validator validator = schema.newValidator();
+                    validator.setErrorHandler(errListener);
+                    SAXSource saxSource = new SAXSource(
+                            configUri.contains(":") ? new InputSource(new URL(configUri).openStream()) :
+                                    new InputSource(new FileInputStream(new File(configUri)))
+                    );
+                    validator.validate(saxSource);
+                    if(errListener.hasErrors()) {
+                        throw new InvalidSyntaxException(configUri+" does not respect gaulois-pipe schema");
+                    }
+                } catch(SAXException | TransformerException | IOException ex) {
+                    LOGGER.error("while verifying schema conformity",ex);
+                } catch(Error er) {
+                    LOGGER.error("java.protocol.handler.pkgs="+System.getProperty("java.protocol.handler.pkgs"));
+                    LOGGER.error("while parsing config",er);
+                    throw er;
                 }
-            } catch(SAXException | TransformerException | IOException ex) {
-                LOGGER.error("while verifying schema conformity",ex);
-            } catch(Error er) {
-                LOGGER.error("java.protocol.handler.pkgs="+System.getProperty("java.protocol.handler.pkgs"));
-                LOGGER.error("while parsing config",er);
-                throw er;
             }
             XdmNode configRoot = 
                     configUri.contains(":") ? 
@@ -356,20 +364,26 @@ public class ConfigUtil {
             XdmNode attr = (XdmNode)attributes.next();
             ret.setOutputProperty(attr.getNodeName().getLocalName(), resolveEscapes(attr.getStringValue(),parameters));
         }
-        XdmNode folder = (XdmNode)node.axisIterator(Axis.CHILD, CfgFile.QN_FOLDER).next();
-        String relative = resolveEscapes(folder.getAttributeValue(new QName("relative")),parameters);
-        String to = resolveEscapes(folder.getAttributeValue(new QName("to")), parameters);
-        String absolute = resolveEscapes(folder.getAttributeValue(new QName("absolute")), parameters);
-        if(relative!=null) ret.setRelativePath(relative);
-        if(to!=null) ret.setRelativeTo(to);
-        if(absolute!=null) ret.setAbsolute(absolute);
-        XdmNode filename = (XdmNode)node.axisIterator(Axis.CHILD, new QName(Config.NS,"fileName")).next();
-        String prefix = resolveEscapes(filename.getAttributeValue(new QName("prefix")),parameters);
-        String name = resolveEscapes(filename.getAttributeValue(new QName("name")),parameters);
-        String suffix = resolveEscapes(filename.getAttributeValue(new QName("suffix")), parameters);
-        if(prefix!=null) ret.setPrefix(prefix);
-        if(name!=null) ret.setName(name);
-        if(suffix!=null) ret.setSuffix(suffix);
+        boolean nullOutput = node.axisIterator(Axis.CHILD, QN_NULL).hasNext();
+        if(nullOutput) {
+            ret.setNull(true);
+        } else {
+            XdmNode folder = (XdmNode)node.axisIterator(Axis.CHILD, CfgFile.QN_FOLDER).next();
+            String relative = resolveEscapes(folder.getAttributeValue(new QName("relative")),parameters);
+            String temp = folder.getAttributeValue(new QName("to"));
+            String to = resolveEscapes(temp, parameters);
+            String absolute = resolveEscapes(folder.getAttributeValue(new QName("absolute")), parameters);
+            if(relative!=null) ret.setRelativePath(relative);
+            if(to!=null) ret.setRelativeTo(to);
+            if(absolute!=null) ret.setAbsolute(absolute);
+            XdmNode filename = (XdmNode)node.axisIterator(Axis.CHILD, new QName(Config.NS,"fileName")).next();
+            String prefix = resolveEscapes(filename.getAttributeValue(new QName("prefix")),parameters);
+            String name = resolveEscapes(filename.getAttributeValue(new QName("name")),parameters);
+            String suffix = resolveEscapes(filename.getAttributeValue(new QName("suffix")), parameters);
+            if(prefix!=null) ret.setPrefix(prefix);
+            if(name!=null) ret.setName(name);
+            if(suffix!=null) ret.setSuffix(suffix);
+        }
         return ret;
     }
     private List<CfgFile> getFilesFromDirectory(File directory, FilenameFilter filter, boolean recurse) {

@@ -31,6 +31,7 @@ public class Config implements Verifiable {
     private int maxDocumentCacheSize = MAX_DOCUMENT_CACHE_SIZE;
     private static final Logger LOGGER = LoggerFactory.getLogger(Config.class);
     private boolean logFileSize;
+    private boolean skipSchemaValidation;
     /**
      * This has nothing to do in Configuration, but for implementation reason,
      * it's here...
@@ -110,6 +111,10 @@ public class Config implements Verifiable {
 
     public void setLogFileSize(boolean logFileSize) {
         this.logFileSize = logFileSize;
+    }
+    
+    public void skipSchemaValidation(final boolean skipSchemaValidation) {
+        this.skipSchemaValidation=skipSchemaValidation;
     }
     
 }

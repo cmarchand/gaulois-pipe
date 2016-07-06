@@ -213,5 +213,18 @@ public class GauloisPipeTest {
         File expect = new File("./target/generated-test-files/source-cp.xml");
         assertTrue("The file target/generated-test-files/source-cp.xml does not exists", expect.exists());
     }
+    
+    @Test
+    public void testNullOutput() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/null.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        assertTrue("Output is not a null output", config.getPipe().getOutput().isNullOutput());
+        piper.setConfig(config);
+        piper.setInstanceName("NULL OUTPUT");
+        piper.launch();
+        // it's difficult to check that no file has been written anywhere...
+    }
 
 }

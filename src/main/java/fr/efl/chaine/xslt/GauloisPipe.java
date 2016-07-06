@@ -54,6 +54,7 @@ import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.trans.XPathException;
+import org.apache.commons.io.output.NullOutputStream;
 import org.xmlresolver.Resolver;
 import top.marchand.xml.protocols.ProtocolInstaller;
 
@@ -557,6 +558,9 @@ public class GauloisPipe {
     }
     
     private Destination buildSerializer(Output output, File inputFile, List<ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
+        if(output.isNullOutput()) {
+            return processor.newSerializer(new NullOutputStream());
+        }
         final File destinationFile = output.getDestinationFile(inputFile, parameters);
         final Serializer ret = processor.newSerializer(destinationFile);
         Properties outputProps = output.getOutputProperties();
@@ -722,6 +726,7 @@ public class GauloisPipe {
         String configFileName = null;
         String __instanceName = INSTANCE_DEFAULT_NAME;
         boolean logFileSize = false;
+        boolean skipSchemaValidation = false;
         int inputMode = -1;
         for (String argument : args) {
             if (null != argument) {
@@ -754,6 +759,8 @@ public class GauloisPipe {
                         inputMode = CONFIG;
                     case "--logFileSize":
                         logFileSize=true;
+                    case "--skipSchemaValidation":
+                        skipSchemaValidation=true;
                 }
             }
                 
@@ -782,7 +789,7 @@ public class GauloisPipe {
         }
         Config config;
         if(configFileName!=null) {
-            config=parseConfig(configFileName, inputParameters, configurationFactory.getConfiguration());
+            config=parseConfig(configFileName, inputParameters, configurationFactory.getConfiguration(), skipSchemaValidation);
         } else {
             config = new Config();
         }
@@ -792,14 +799,15 @@ public class GauloisPipe {
         if(nbThreads!=null) ConfigUtil.setNbThreads(config, nbThreads);
         if(inputOutput!=null) ConfigUtil.setOutput(config, inputOutput);
         config.setLogFileSize(logFileSize);
+        config.skipSchemaValidation(skipSchemaValidation);
         config.verify();
         config.__instanceName=__instanceName;
         return config;
     }
 
-    private Config parseConfig(String fileName, Collection<ParameterValue> inputParameters, Configuration saxonConfig) throws InvalidSyntaxException {
+    private Config parseConfig(String fileName, Collection<ParameterValue> inputParameters, Configuration saxonConfig, final boolean skipSchemaValidation) throws InvalidSyntaxException {
         try {
-            return new ConfigUtil(saxonConfig, getUriResolver(), fileName).buildConfig(inputParameters);
+            return new ConfigUtil(saxonConfig, getUriResolver(), fileName, skipSchemaValidation).buildConfig(inputParameters);
         } catch (SaxonApiException ex) {
             throw new InvalidSyntaxException(ex);
         }

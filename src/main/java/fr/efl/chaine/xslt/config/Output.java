@@ -35,6 +35,7 @@ public class Output implements Verifiable {
     private String absolute;
     private String prefix, suffix, name;
     private final OutputProperties outputProperties;
+    private boolean nullOutput = false;
     
     static {
         VALID_OUTPUT_PROPERTIES.put("byte-order-mark", new OutputPropertyEntry(Serializer.Property.BYTE_ORDER_MARK, "yes", "no"));
@@ -108,6 +109,9 @@ public class Output implements Verifiable {
     private boolean isAbsolute() {
         return absolute!=null;
     }
+    public void setNull(final boolean nullOutput) {
+        this.nullOutput = nullOutput;
+    }
     /**
      * Defines outputProperties, based on <tt>props</tt> values.
      * It does not modify {@link #outputProperties} <tt>Properties</tt> object, it defines the values in.
@@ -134,6 +138,13 @@ public class Output implements Verifiable {
     }
     public void unsetOutputProperty(final String key) {
         outputProperties.remove(key);
+    }
+    /**
+     * Returns <tt>true</tt> if the output should not be written anywhere
+     * @return 
+     */
+    public boolean isNullOutput() {
+        return nullOutput;
     }
     /**
      * Returns a copy of outputProperties
@@ -187,7 +198,7 @@ public class Output implements Verifiable {
             else if(relativeTo.startsWith("${")) {
                 directory = new File(System.getProperty(relativeTo.substring(2).substring(0,relativeTo.length()-3)));
             } else {
-                throw new InvalidSyntaxException("relativeTo must be either source-file or ${xxx} where xxx is a system-property name");
+                throw new InvalidSyntaxException("folder/@to must be either source-file or ${xxx} where xxx is a system-property name. "+relativeTo+" is not a valid value");
             }
             directory = new File(directory, relativePath);
             ret = new File(directory, getFileName(sourceFile, parameters));
@@ -209,6 +220,7 @@ public class Output implements Verifiable {
 
     @Override
     public void verify() throws InvalidSyntaxException {
+        if(nullOutput) return;
         if(!isAbsolute() && (relativePath==null || relativeTo==null)) throw new InvalidSyntaxException("output is neither absolute nor relative");
         if(name==null) throw new InvalidSyntaxException("no strategy to calculate output filename is defined");
     }
