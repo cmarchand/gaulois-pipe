@@ -22,7 +22,6 @@ import fr.efl.chaine.xslt.config.Xslt;
 import fr.efl.chaine.xslt.listener.HttpListener;
 import fr.efl.chaine.xslt.utils.ParametersMerger;
 import fr.efl.chaine.xslt.utils.ParametrableFile;
-//import fr.efl.chaine.xslt.utils.SaxonConfigurationFactory;
 import net.sf.saxon.s9api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +43,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -69,10 +69,6 @@ public class GauloisPipe {
     public static final String INSTANCE_DEFAULT_NAME = "instance1";
     
     private String instanceName;
-    /**
-     * The uri mapping key to load mapping rule from system properties.
-     */
-    private static final String URI_MAPPING_KEY = "URIMapping-";
     private Config config;
     
     private final Map<String,XsltExecutable> xslCache;
@@ -91,6 +87,8 @@ public class GauloisPipe {
     
     private URIResolver uriResolver;
     private static transient boolean protocolInstalled = false;
+    
+    private List<Exception> errors;
 
     
     /**
@@ -149,7 +147,9 @@ public class GauloisPipe {
      * @throws java.net.URISyntaxException Because MVN forces to have comments...
      */
     public void launch() throws InvalidSyntaxException, FileNotFoundException, SaxonApiException, URISyntaxException, IOException {
+        Runtime.getRuntime().addShutdownHook(new Thread(new ErrorCollector(errors)));
         long start = System.currentTimeMillis();
+        errors = Collections.synchronizedList(new  ArrayList<Exception>());
         documentCache = new DocumentCache(config.getMaxDocumentCacheSize());
         if (this.messageListenerclass != null) {
             try {
@@ -276,7 +276,9 @@ public class GauloisPipe {
                     ParametersMerger.merge(inputs.get(0).getParameters(), config.getParams()),
                     messageListener);
             } catch(MalformedURLException | InvalidSyntaxException | URISyntaxException | SaxonApiException | FileNotFoundException ex) {
-                LOGGER.error("while pre-compiling for a multi-thread use...");
+                String msg = "while pre-compiling for a multi-thread use...";
+                LOGGER.error(msg);
+                errors.add(new GauloisRunException(msg, ex));
             }
         }
         for(ParametrableFile pf: inputs) {
@@ -287,7 +289,9 @@ public class GauloisPipe {
                     try {
                         execute(pipe, fpf, messageListener);
                     } catch(SaxonApiException | MalformedURLException | InvalidSyntaxException | URISyntaxException | FileNotFoundException ex) {
-                        LOGGER.error("[" + instanceName + "] while processing "+fpf.getFile().getName(), ex);
+                        String msg = "[" + instanceName + "] while processing "+fpf.getFile().getName();
+                        LOGGER.error(msg, ex);
+                        errors.add(new GauloisRunException(msg, fpf.getFile()));
                     }
                 }
             };
@@ -341,6 +345,10 @@ public class GauloisPipe {
             }
         }
         return ret;
+    }
+    
+    public List<Exception> getErrors() {
+        return errors;
     }
 
     /**
@@ -687,28 +695,27 @@ public class GauloisPipe {
             protocolInstalled = true;
         }
         LOGGER.info("Additionals protocols installed");
+        GauloisPipe gauloisPipe = new GauloisPipe(new SaxonConfigurationFactory() {
+            Configuration configuration = Configuration.newConfiguration();
+            @Override
+            public Configuration getConfiguration() {
+                return configuration;
+            }
+        });
         try {
-            GauloisPipe gauloisPipe = new GauloisPipe(new SaxonConfigurationFactory() {
-                Configuration configuration = Configuration.newConfiguration();
-                @Override
-                public Configuration getConfiguration() {
-                    return configuration;
-                }
-            });
             LOGGER.debug("gauloisPipe instanciated");
             Config config = gauloisPipe.parseCommandLine(args);
             gauloisPipe.setConfig(config);
             gauloisPipe.setInstanceName(config.__instanceName);
-            gauloisPipe.launch();
         } catch (InvalidSyntaxException ex) {
             LOGGER.error(ex.getMessage(), ex);
             System.exit(-1);
-        } catch (SaxonApiException ex) {
-            System.exit(1);
-        } catch (URISyntaxException ex) {
-            System.exit(2);
-        } catch (IOException ex) {
-            System.exit(3);
+        }
+        try {
+            gauloisPipe.launch();
+        } catch (InvalidSyntaxException | SaxonApiException | URISyntaxException | IOException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            gauloisPipe.getErrors().add(ex);
         }
     }
     
@@ -883,6 +890,26 @@ public class GauloisPipe {
         
     }
     
+    private class ErrorCollector implements Runnable {
+        private final List<Exception> errorsContainer;
+        public ErrorCollector(List<Exception> errorsContainer) {
+            super();
+            this.errorsContainer=errorsContainer;
+        }
+        @Override
+        public void run() {
+            if(errorsContainer==null || errorsContainer.isEmpty()) {
+                GauloisPipe.LOGGER.info("Gaulois-Pipe is exiting without error");
+                System.exit(0);
+            } else {
+                for(Exception ex:errorsContainer) {
+                    GauloisPipe.LOGGER.error("",ex);
+                }
+                GauloisPipe.LOGGER.info("Gaulois-Pipe is exiting with error");
+                System.exit(errorsContainer.size());
+            }
+        }
+    }
     public void setInstanceName(String instanceName) {
         this.instanceName = instanceName;
     }

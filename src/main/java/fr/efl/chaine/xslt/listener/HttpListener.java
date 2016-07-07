@@ -81,15 +81,16 @@ public class HttpListener {
                 try {
                     jettyServer.stop();
                     try {
-                        execCtx.getService().awaitTermination(1, TimeUnit.HOURS);
+                        execCtx.getService().awaitTermination(5, TimeUnit.HOURS);
                     } catch (InterruptedException ex) {}
-                    Map<Thread,StackTraceElement[]> threads = Thread.getAllStackTraces();
-                    for(Thread t:threads.keySet()) {
-                        LOGGER.debug(t.getName());
-                        for(StackTraceElement s:threads.get(t)) {
-                            LOGGER.debug("\t"+s.toString());
-                        }
-                    }
+//                    Map<Thread,StackTraceElement[]> threads = Thread.getAllStackTraces();
+//                    for(Thread t:threads.keySet()) {
+//                        LOGGER.debug(t.getName());
+//                        for(StackTraceElement s:threads.get(t)) {
+//                            LOGGER.debug("\t"+s.toString());
+//                        }
+//                    }
+                    LOGGER.info("asynchronous processing terminated, JVM is going to terminate");
                 } catch(Exception ex) {
                     LOGGER.error("while stopping", ex);
                 }
@@ -97,7 +98,4 @@ public class HttpListener {
         };
         new Thread(runner).start();
     }
-    
-    
-    
 }

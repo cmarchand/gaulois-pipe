@@ -7,6 +7,7 @@
 package fr.efl.chaine.xslt.listener;
 
 import fr.efl.chaine.xslt.ExecutionContext;
+import fr.efl.chaine.xslt.GauloisRunException;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.utils.ParametrableFile;
@@ -101,7 +102,9 @@ public class ListenerServlet extends HttpServlet {
                                 try {
                                     iCtx.getGaulois().execute(iCtx.getPipe(), fpf, iCtx.getMsgListener());
                                 } catch(SaxonApiException | MalformedURLException | InvalidSyntaxException | URISyntaxException | FileNotFoundException ex) {
-                                    LOGGER.error("[" + iCtx.getGaulois().getInstanceName() + "] while processing "+fpf.getFile().getName(), ex);
+                                    String msg = "[" + iCtx.getGaulois().getInstanceName() + "] while processing "+fpf.getFile().getName();
+                                    LOGGER.error(msg, ex);
+                                    iCtx.getGaulois().getErrors().add(new GauloisRunException(msg, fpf.getFile()));
                                 }
                             }
                         };
