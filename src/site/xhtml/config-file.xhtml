@@ -145,10 +145,14 @@
         <h5><a id="output"></a>output</h5>
         <p>An <span class="code">&lt;output&gt;</span> is used to define where the pipe result have
             to be written. An <span class="code">&lt;output&gt;</span> is defined by a <a
-                href="#outputFolder">folder</a> and a <a href="#fileName">fileName</a>. It may
+                href="#outputFolder">folder</a> and a <a href="#fileName">fileName</a>, or is a null output, 
+            and contains only a <a href="#nullOutput">null</a>. It may
             define as attributes all the saxon-supported output properties. See <a
                 href="http://www.saxonica.com/html/documentation/javadoc/net/sf/saxon/lib/SaxonOutputKeys.html"
                 >SaxonOutputKeys</a>.</p>
+        <h6><a id="nullOutput"></a>null</h6>
+        <p><span class="code">&lt;null /&gt;</span> defines that output is lost and must not be written. When using null, all other elements
+        or forbidden.</p>
         <h6><a id="outputFolder"></a>folder</h6>
         <p><span class="code">&lt;folder&gt;</span> defines the folder where to write output files.
             It can be a relative reference, or an absolute URI. If <span class="code"
