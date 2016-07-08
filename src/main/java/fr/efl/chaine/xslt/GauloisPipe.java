@@ -713,7 +713,7 @@ public class GauloisPipe {
             gauloisPipe.setInstanceName(config.__instanceName);
         } catch (InvalidSyntaxException ex) {
             LOGGER.error(ex.getMessage(), ex);
-            System.exit(-1);
+            System.exit(1);
         }
         try {
             gauloisPipe.launch();
