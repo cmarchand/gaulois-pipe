@@ -425,20 +425,24 @@ public class GauloisPipe {
     }
     
     private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+        LOGGER.trace("in buildTransformer(Pipe,...)");
         XsltTransformer first = null;
         Iterator<ParametrableStep> it = pipe.getXslts();
         Object previousTransformer = null;
         while(it.hasNext()) {
+            LOGGER.trace("...in buildTransformer.tee.while");
             ParametrableStep step = it.next();
             if(step instanceof Xslt) {
                 Xslt xsl = (Xslt)step;
                 XsltTransformer currentTransformer = getXsltTransformer(xsl.getHref(), parameters);
                 if(listener!=null) {
+                    LOGGER.trace(xsl.getHref()+" setting messageListener "+listener);
                     currentTransformer.setMessageListener(listener);
                 }
                 for(ParameterValue pv:xsl.getParams()) {
                     // on substitue les paramètres globaux dans ceux de la XSL
                     String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters);
+                    LOGGER.trace("Setting parameter ("+pv.getKey()+","+value+")");
                     currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(value));
                 }
                 for(ParameterValue pv:parameters) {
@@ -452,6 +456,7 @@ public class GauloisPipe {
                     assignStepToDestination(previousTransformer, currentTransformer);
                 }
                 previousTransformer = currentTransformer;
+                LOGGER.trace(xsl.getHref()+" constructed andd added to pipe");
             } else if(step instanceof JavaStep) {
                 JavaStep javaStep = (JavaStep)step;
                 try {
@@ -476,8 +481,10 @@ public class GauloisPipe {
         }
         Destination nextStep = null;
         if(pipe.getTee()!=null) {
+            LOGGER.trace("after having construct xslts, build tee");
             nextStep = buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener);
         } else if(pipe.getOutput()!=null) {
+            LOGGER.trace("after having construct xslts, build output");
             nextStep = buildSerializer(pipe.getOutput(),inputFile,parameters);
         }
         if(nextStep!=null) {
@@ -503,8 +510,10 @@ public class GauloisPipe {
     private XsltTransformer getXsltTransformer(String href, Collection<ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException {
         // TODO : rewrite this, as cp: and jar: protocols are availabe and one can use new URL(cp:/...).getInputStream()
         String __href = ParametersMerger.processParametersReplacement(href, parameters);
+        LOGGER.debug("loading "+__href);
         XsltExecutable xsl = xslCache.get(__href);
         if(xsl==null) {
+            LOGGER.trace(__href+" not in cache");
             try {
                 InputStream input ;
                 if(__href.startsWith("file:")) {
@@ -527,6 +536,7 @@ public class GauloisPipe {
                     File f = new File(__href);
                     input = new FileInputStream(f);
                 }
+                LOGGER.trace("input is "+input);
                 StreamSource source = new StreamSource(input);
                 source.setSystemId(__href);
 
@@ -542,12 +552,16 @@ public class GauloisPipe {
             } catch(URISyntaxException|FileNotFoundException ex) {
                 LOGGER.error("while compiling "+__href);
                 throw ex;
+            } catch(Exception ex) {
+                LOGGER.error("while compiling "+__href,ex);
+                throw ex;
             }
         }
         return xsl.load();
     }
     
     private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+        LOGGER.trace("in buildTransformer(Tee,...)");
         Destination dest1 = buildShortPipeTransformer(tee.getPipe1(), inputFile, inputFileUri, parameters, listener);
         Destination dest2 = buildShortPipeTransformer(tee.getPipe2(), inputFile, inputFileUri, parameters, listener);
         TeeDestination teeDest = new TeeDestination(dest1, dest2);
