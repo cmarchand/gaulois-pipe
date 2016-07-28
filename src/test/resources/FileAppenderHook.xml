@@ -14,7 +14,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
 		</xslt>
 		<java class="fr.efl.chaine.xslt.utils.FileAppenderStep">
 			<param name="filePath" value="./target/generated-test-files/appendee.txt"/>
-			<param name="value" value="Hahaha !"/>
+			<param name="value" value="$[input-name]"/>
 		</java>
 		<output id="main">
 			<folder absolute="${user.dir}/$[destDir]"/>

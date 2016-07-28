@@ -441,13 +441,15 @@ public class GauloisPipe {
                 }
                 for(ParameterValue pv:xsl.getParams()) {
                     // on substitue les paramètres globaux dans ceux de la XSL
-                    String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters);
+                    String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile);
                     LOGGER.trace("Setting parameter ("+pv.getKey()+","+value+")");
                     currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(value));
                 }
                 for(ParameterValue pv:parameters) {
-                    // la substitution a été faite avant, dans le merge
-                    currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
+                    // la substitution a été faite avant, dans le merge, but there is input-file relative parameters...
+                    currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
+                            ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile)
+                    ));
                 }
                 if(first==null) {
                     first = currentTransformer;
@@ -462,11 +464,15 @@ public class GauloisPipe {
                 try {
                     StepJava stepJava = javaStep.getStepClass().newInstance();
                     for(ParameterValue pv:javaStep.getParams()) {
-                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
+                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
+                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile)
+                        ));
                     }
                     for(ParameterValue pv:parameters) {
                         // la substitution a été faite avant, dans le merge
-                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
+                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
+                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile)
+                        ));
                     }
                     if(previousTransformer!=null) {
                         assignStepToDestination(previousTransformer, stepJava);

@@ -6,6 +6,7 @@
  */
 package fr.efl.chaine.xslt.utils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -49,5 +50,22 @@ public class ParametersMerger {
         }
         return ret;
     }
-    
+    /**
+     * Replaces the parameters in string
+     * @param initialValue The String to change parameters in
+     * @param parameters The parameters values
+     * @param inputFile The input file actually processed. input-basename, input-name and input-extension are added, so can be used.
+     * 
+     * @return The initialValue with all parameters replaced
+     */
+    public static String processParametersReplacement(String initialValue, final Collection<ParameterValue> parameters, final File inputFile) {
+        Collection<ParameterValue> fileParams = new ArrayList<>(3);
+        String name = inputFile.getName();
+        String basename = name.substring(0, name.lastIndexOf("."));
+        String extension = name.substring(basename.length()+1);
+        fileParams.add(new ParameterValue("input-basename", basename));
+        fileParams.add(new ParameterValue("input-name", name));
+        fileParams.add(new ParameterValue("input-extension", extension));
+        return processParametersReplacement(initialValue, merge(parameters, fileParams));
+    }
 }
