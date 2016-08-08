@@ -84,8 +84,12 @@ public class Sources implements Verifiable {
                         } else if(pv1==null) ret--;
                         else ret++;
                     }
-                    if(ret!=0) return (int)ret;
-                    else return t.getSource().getAbsolutePath().compareTo(t1.getSource().getAbsolutePath());
+                    if(ret!=0) {
+                        // les fichiers ont la meme tailee, les paramètres sont identique, on s'intéresse aux chemins absolus.
+                        ret = t.getSource().getAbsolutePath().compareTo(t1.getSource().getAbsolutePath());
+                    }
+                    LOGGER.trace("comparing "+t.getSource().getName()+" and "+t1.getSource().getName()+" -> "+ret);
+                    return (int)ret;
                 }
                 else if (ret<0l) return -1;
                 else return 1;
