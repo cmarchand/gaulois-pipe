@@ -10,7 +10,9 @@ import fr.efl.chaine.xslt.config.Config;
 import fr.efl.chaine.xslt.config.ConfigUtil;
 import fr.efl.chaine.xslt.config.ParametrableStep;
 import fr.efl.chaine.xslt.utils.ParameterValue;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -138,8 +140,13 @@ public class GauloisPipeTest {
         if(expect.exists()) expect.delete();
         piper.launch();
         assertTrue("Le fichier ./target/generated-test-files/appendee.txt n'existe pas", expect.exists());
+        BufferedReader reader = new BufferedReader(new FileReader(expect));
+        String content = reader.readLine();
+        String expectedContent = "./target/generated-test-files/source.xml";
+        assertEquals("Le fichier ./target/generated-test-files/appendee.txt ne contient pas ./target/generated-test-files/source.xml", expectedContent, content);
         expect = new File("./target/generated-test-files/source-identity-result.xml");
         assertTrue("Le fichier ./target/generated-test-files/source-identity-result.xml n'existe pas", expect.exists());
+        
     }
     
     @Test

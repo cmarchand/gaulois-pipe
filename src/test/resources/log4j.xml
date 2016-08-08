@@ -7,7 +7,7 @@
     </layout>
   </appender>
   <logger name="org.xmlresolver">
-    <level value="DEBUG"/>
+    <level value="WARN"/>
   </logger>
   <logger name="org.apache">
       <level value="WARN"/>
@@ -16,7 +16,7 @@
       <level value="WARN"/>
   </logger>
   <root>
-    <level value="TRACE"/>
+    <level value="INFO"/>
     <appender-ref ref="console.appender"/>
   </root>
 </log4j:configuration>

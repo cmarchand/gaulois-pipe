@@ -84,7 +84,8 @@ public class Sources implements Verifiable {
                         } else if(pv1==null) ret--;
                         else ret++;
                     }
-                    return (int)ret;
+                    if(ret!=0) return (int)ret;
+                    else return t.getSource().getAbsolutePath().compareTo(t1.getSource().getAbsolutePath());
                 }
                 else if (ret<0l) return -1;
                 else return 1;

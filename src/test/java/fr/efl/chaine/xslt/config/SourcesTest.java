@@ -37,8 +37,8 @@ public class SourcesTest {
                 "files mismatch",
                 Arrays.asList(
                         new File("./src/test/resources/sources-getfiles/titi.txt").getAbsolutePath(),
-                        new File("./src/test/resources/sources-getfiles/toto.txt").getAbsolutePath(),
-                        new File("./src/test/resources/sources-getfiles/tata.txt").getAbsolutePath()
+                        new File("./src/test/resources/sources-getfiles/tata.txt").getAbsolutePath(),
+                        new File("./src/test/resources/sources-getfiles/toto.txt").getAbsolutePath()
                 ).toArray(),
                 filesInString.toArray()
         );

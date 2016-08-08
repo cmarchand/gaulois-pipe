@@ -928,7 +928,7 @@ public class GauloisPipe {
         public void run() {
             if(errorsContainer==null || errorsContainer.isEmpty()) {
                 GauloisPipe.LOGGER.info("Gaulois-Pipe is exiting without error");
-                Runtime.getRuntime().halt(0);
+//                Runtime.getRuntime().halt(0);
             } else {
                 for(Exception ex:errorsContainer) {
                     GauloisPipe.LOGGER.error("",ex);
