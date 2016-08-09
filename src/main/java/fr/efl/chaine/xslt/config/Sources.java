@@ -65,30 +65,30 @@ public class Sources implements Verifiable {
                 if("desc".equals(sort)) ret = -ret;
                 if(ret==0l) {
                     // on compare les paramètres !
-                    TreeSet<String> tsParams = new TreeSet<>();
-                    HashMap<String,ParameterValue> map1 = new HashMap<>();
-                    HashMap<String,ParameterValue> map2 = new HashMap<>();
-                    for(ParameterValue pv:t.getParams()) {
-                        tsParams.add(pv.getKey());
-                        map1.put(pv.getKey(), pv);
-                    }
-                    for(ParameterValue pv:t1.getParams()) {
-                        tsParams.add(pv.getKey());
-                        map2.put(pv.getKey(), pv);
-                    }
-                    for(String key:tsParams) {
-                        ParameterValue pv1 = map1.get(key);
-                        ParameterValue pv2 = map2.get(key);
-                        if(pv1!=null && pv2!=null) {
-                            ret += pv1.getValue().compareTo(pv2.getValue());
-                        } else if(pv1==null) ret--;
-                        else ret++;
-                    }
-                    if(ret!=0) {
-                        // les fichiers ont la meme tailee, les paramètres sont identique, on s'intéresse aux chemins absolus.
-                        ret = t.getSource().getAbsolutePath().compareTo(t1.getSource().getAbsolutePath());
-                    }
-                    LOGGER.trace("comparing "+t.getSource().getName()+" and "+t1.getSource().getName()+" -> "+ret);
+//                    TreeSet<String> tsParams = new TreeSet<>();
+//                    HashMap<String,ParameterValue> map1 = new HashMap<>();
+//                    HashMap<String,ParameterValue> map2 = new HashMap<>();
+//                    for(ParameterValue pv:t.getParams()) {
+//                        tsParams.add(pv.getKey());
+//                        map1.put(pv.getKey(), pv);
+//                    }
+//                    for(ParameterValue pv:t1.getParams()) {
+//                        tsParams.add(pv.getKey());
+//                        map2.put(pv.getKey(), pv);
+//                    }
+//                    for(String key:tsParams) {
+//                        ParameterValue pv1 = map1.get(key);
+//                        ParameterValue pv2 = map2.get(key);
+//                        if(pv1!=null && pv2!=null) {
+//                            ret += pv1.getValue().compareTo(pv2.getValue());
+//                        } else if(pv1==null) ret--;
+//                        else ret++;
+//                    }
+//                    if(ret==0) {
+//                        // les fichiers ont la meme tailee, les paramètres sont identique, on s'intéresse aux chemins absolus.
+//                        ret = t.getSource().getAbsolutePath().compareTo(t1.getSource().getAbsolutePath());
+//                    }
+//                    LOGGER.trace("comparing "+t.getSource().getName()+" and "+t1.getSource().getName()+" -> "+ret);
                     return (int)ret;
                 }
                 else if (ret<0l) return -1;
