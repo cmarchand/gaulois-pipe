@@ -458,7 +458,7 @@ public class GauloisPipe {
                     assignStepToDestination(previousTransformer, currentTransformer);
                 }
                 previousTransformer = currentTransformer;
-                LOGGER.trace(xsl.getHref()+" constructed andd added to pipe");
+                LOGGER.trace(xsl.getHref()+" constructed and added to pipe");
             } else if(step instanceof JavaStep) {
                 JavaStep javaStep = (JavaStep)step;
                 try {
