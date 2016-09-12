@@ -20,9 +20,11 @@ public class Pipe implements Verifiable {
     static final QName QNAME = new QName(Config.NS, "pipe");
     static final String ATTR_NB_THREADS = "nbThreads";
     static final String ATTR_MAX = "mutiThreadMaxSourceSize";
+    static final String ATTR_TRACE = "traceOutput";
     // par défaut, 10Mo
     private int multithreadMaxSourceSize = 10*1024*1024;
     private int nbThreads = 1;
+    private String traceOutput;
     private final List<ParametrableStep> xslts;
     private Output output;
     private Tee tee;
@@ -118,6 +120,18 @@ public class Pipe implements Verifiable {
      */
     public boolean isStraight() {
         return tee==null;
+    }
+
+    /**
+     * Retuns the trace output. Valid values are #default, #logger, or an URI
+     * @return 
+     */
+    public String getTraceOutput() {
+        return traceOutput;
+    }
+
+    void setTraceOutput(String traceOutput) {
+        this.traceOutput = traceOutput;
     }
     
 

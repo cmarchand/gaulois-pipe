@@ -179,6 +179,13 @@
             overwritten by command-line parameters.</p>
         <p>Once a param is defined, you can use it everywhere, with this escape syntax : <span
                 class="code">$[paramName]</span></p>
+        <p>There are three pre-defined parameters, per-input file :</p>
+        <ul>
+           <li><tt>input-name</tt> : the original input file name</li>
+           <li><tt>input-basename</tt> : the original input file name, without extension</li>
+           <li><tt>input-extension</tt> : the original input file extension</li>
+        </ul>
+        <p>These pre-defined parameters may be used everywhere, the values are computed for each input file.</p>
         <h3><a id="sources"></a>sources</h3>
         <p><span class="code">&lt;sources&gt;</span> allows to define which files are to be
             processed by the pipeline. </p>

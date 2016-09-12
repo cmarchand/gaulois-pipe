@@ -180,7 +180,7 @@ public class Output implements Verifiable {
                 String propertyName = __abs.substring(pos+2, closingPos);
                 String propertyValue = System.getProperty(propertyName);
                 if(propertyValue!=null) {
-                    LOGGER.info("Replace system property {} with value {} in {} produce {}", new String[]{propertyName, propertyValue, __abs, __abs.replaceAll("\\$\\{"+propertyName+"\\}", Matcher.quoteReplacement(propertyValue))});
+                    LOGGER.debug("Replace system property {} with value {} in {} produces {}", new String[]{propertyName, propertyValue, __abs, __abs.replaceAll("\\$\\{"+propertyName+"\\}", Matcher.quoteReplacement(propertyValue))});
                     __abs = __abs.replaceAll("\\$\\{"+propertyName+"\\}", Matcher.quoteReplacement(propertyValue));
                 } else {
                     LOGGER.warn("System property "+propertyName+" is not defined");

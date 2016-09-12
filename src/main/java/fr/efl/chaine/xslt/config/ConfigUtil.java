@@ -179,6 +179,7 @@ public class ConfigUtil {
             int max = Integer.parseInt(resolveEscapes(pipeNode.getAttributeValue(new QName(Pipe.ATTR_MAX)),parameters));
             pipe.setMultithreadMaxSourceSize(max);
         } catch(Throwable t) {}
+        pipe.setTraceOutput(resolveEscapes(pipeNode.getAttributeValue(new QName(Pipe.ATTR_TRACE)),parameters));
         XdmSequenceIterator it = pipeNode.axisIterator(Axis.CHILD);
         while(it.hasNext()) {
             XdmItem item = it.next();
@@ -270,6 +271,9 @@ public class ConfigUtil {
     private Xslt buildXslt(XdmNode xsltNode, Collection<ParameterValue> parameters) {
         LOGGER.trace("buildXslt on {}", xsltNode.getNodeName());
         Xslt ret = new Xslt(resolveEscapes(xsltNode.getAttributeValue(Xslt.ATTR_HREF),parameters));
+        if("true".equals(xsltNode.getAttributeValue(Xslt.ATTR_TRACE_ACTIVE))) {
+            ret.setTraceToAdd(true);
+        }
         XdmSequenceIterator it = xsltNode.axisIterator(Axis.CHILD, QN_PARAM);
         while(it.hasNext()) {
             ret.addParameter(buildParameter((XdmNode)it.next(),parameters));
