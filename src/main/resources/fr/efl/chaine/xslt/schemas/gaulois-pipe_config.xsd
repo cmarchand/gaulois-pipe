@@ -557,6 +557,7 @@
                 </xs:annotation>
             </xs:element>
         </xs:sequence>
+        <xs:attribute name="id" type="xs:ID" use="optional"/>
         <xs:attribute name="href" type="xs:anyURI" use="required">
             <xs:annotation>
                 <xs:documentation xml:lang="fr">La référence à la XSL qui doit être
@@ -576,6 +577,18 @@
                 </xs:restriction>
             </xs:simpleType>
         </xs:attribute>
+        <xs:attribute name="debug" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="en">If set, the result of this XSL is written to a file called id-$[input-name]</xs:documentation>
+                <xs:documentation xml:lang="fr">Si définit, le résultat de cette XSL est écrit dans un fichier nommé id-$[input-name]</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:boolean">
+                    <xs:pattern value="true"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:assert test="if(@debug) then not(empty(@id)) else true()"/>
     </xs:complexType>
 
     <xs:complexType name="TJava">

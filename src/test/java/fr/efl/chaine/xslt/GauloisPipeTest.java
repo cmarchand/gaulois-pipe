@@ -254,4 +254,18 @@ public class GauloisPipeTest {
         assertTrue("The file target/generated-test-files/trace. does not exists", expect.exists());
     }
 
+    @Test
+    public void testDebug() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/debug.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("DEBUG");
+        piper.launch();
+        File expect = new File("debug-source.xml");
+        boolean exists = expect.exists();
+        expect.deleteOnExit();
+        assertTrue("The file debug-source.xml. does not exists", exists);
+    }
 }

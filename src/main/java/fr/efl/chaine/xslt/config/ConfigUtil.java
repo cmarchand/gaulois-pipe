@@ -274,6 +274,10 @@ public class ConfigUtil {
         if("true".equals(xsltNode.getAttributeValue(Xslt.ATTR_TRACE_ACTIVE))) {
             ret.setTraceToAdd(true);
         }
+        if("true".equals(xsltNode.getAttributeValue(Xslt.ATTR_DEBUG))) {
+            ret.setDebug(true);
+            ret.setId(xsltNode.getAttributeValue(Xslt.ATTR_ID));
+        }
         XdmSequenceIterator it = xsltNode.axisIterator(Axis.CHILD, QN_PARAM);
         while(it.hasNext()) {
             ret.addParameter(buildParameter((XdmNode)it.next(),parameters));

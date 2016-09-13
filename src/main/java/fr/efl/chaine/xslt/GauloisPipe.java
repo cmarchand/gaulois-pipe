@@ -22,6 +22,7 @@ import fr.efl.chaine.xslt.config.Xslt;
 import fr.efl.chaine.xslt.listener.HttpListener;
 import fr.efl.chaine.xslt.utils.ParametersMerger;
 import fr.efl.chaine.xslt.utils.ParametrableFile;
+import fr.efl.chaine.xslt.utils.TeeDebugDestination;
 import net.sf.saxon.s9api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -444,6 +445,7 @@ public class GauloisPipe {
             if(step instanceof Xslt) {
                 Xslt xsl = (Xslt)step;
                 XsltTransformer currentTransformer = getXsltTransformer(xsl.getHref(), parameters);
+                Destination currentDestination = currentTransformer;
                 if(xsl.isTraceToAdd()) {
                     currentTransformer.setTraceListener(traceListener);
                 }
@@ -463,13 +465,17 @@ public class GauloisPipe {
                             ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile)
                     ));
                 }
+                if(xsl.isDebug()) {
+                    Serializer debug = processor.newSerializer(new File(xsl.getId()+"-"+inputFile.getName()));
+                    currentTransformer.setDestination(currentDestination=new TeeDebugDestination(debug));
+                }
                 if(first==null) {
                     first = currentTransformer;
                 }
                 if(previousTransformer!=null) {
-                    assignStepToDestination(previousTransformer, currentTransformer);
+                    assignStepToDestination(previousTransformer, currentDestination);
                 }
-                previousTransformer = currentTransformer;
+                previousTransformer = currentDestination;
                 LOGGER.trace(xsl.getHref()+" constructed andd added to pipe");
             } else if(step instanceof JavaStep) {
                 JavaStep javaStep = (JavaStep)step;
@@ -520,6 +526,8 @@ public class GauloisPipe {
             ((XsltTransformer)assignee).setDestination(assigned);
         } else if(assignee instanceof StepJava) {
             ((StepJava)assignee).setDestination(assigned);
+        } else if(assignee instanceof TeeDebugDestination) {
+            ((TeeDebugDestination)assignee).setDestination(assigned);
         } else {
             throw new IllegalArgumentException("assignee must be either a XsltTransformer or a StepJava instance");
         }
