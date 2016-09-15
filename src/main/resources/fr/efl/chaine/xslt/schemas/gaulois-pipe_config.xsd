@@ -113,12 +113,11 @@
 
     <xs:complexType name="TTee">
         <xs:annotation>
-            <xs:documentation xml:lang="fr"> Permet de router un flux vers deux pipes différents </xs:documentation>
-            <xs:documentation xml:lang="en"> Allows a fork in the pipe. </xs:documentation>
+            <xs:documentation xml:lang="fr"> Permet de router un flux vers deux pipes différents. Il n'y a pas de limitation au nombre de sous-pipe qu'on peut mettre, mais il ne faut pas abuser ! </xs:documentation>
+            <xs:documentation xml:lang="en"> Allows a fork in the pipe. There no limit upper limit to sub-pipes, but be reasonable !</xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element name="pipe1" type="cfg:TRestrictedPipe"/>
-            <xs:element name="pipe2" type="cfg:TRestrictedPipe"/>
+            <xs:element name="pipe" type="cfg:TRestrictedPipe" minOccurs="2" maxOccurs="unbounded"/>
         </xs:sequence>
     </xs:complexType>
 

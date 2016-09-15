@@ -209,20 +209,11 @@ public class ConfigUtil {
     private Tee buildTee(XdmNode teeNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildTee on "+teeNode.getNodeName());
         Tee tee = new Tee();
-        XdmSequenceIterator seq = teeNode.axisIterator(Axis.CHILD);
+        XdmSequenceIterator seq = teeNode.axisIterator(Axis.CHILD,Pipe.QNAME);
         while(seq.hasNext()) {
             XdmNode node = (XdmNode)seq.next();
-            QName nodeName = node.getNodeName();
-            if(Tee.PIPE1.equals(nodeName) || Tee.PIPE2.equals(nodeName)) {
-                Pipe pipe = buildPipe(node, parameters, tee);
-                if(Tee.PIPE1.equals(nodeName)) {
-                    tee.setPipe1(pipe);
-                } else {
-                    tee.setPipe2(pipe);
-                }
-            } else if(node.getNodeKind()!=XdmNodeKind.TEXT) {
-                throw new InvalidSyntaxException("tee must only contains a pipe1 and a pipe2 element. Unexpected element: "+nodeName);
-            }
+            Pipe pipe = buildPipe(node, parameters, tee);
+            tee.addPipe(pipe);
         }
         return tee;
     }

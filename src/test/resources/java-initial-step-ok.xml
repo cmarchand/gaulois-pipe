@@ -10,7 +10,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     xmlns='http://efl.fr/chaine/saxon-pipe/config'>
     <pipe nbThreads="1" mutiThreadMaxSourceSize="">
         <tee>
-            <pipe1>
+            <pipe>
                 <xslt href="src/test/resources/identity.xsl"/>
                 <java class="fr.efl.chaine.xslt.utils.FileAppenderStep">
                     <param name="filePath" value="./target/generated-test-files/tee-java.txt"/>
@@ -20,13 +20,13 @@ can obtain one at https://mozilla.org/MPL/2.0/.
                     <folder absolute="./target/generated-test-files"/>
                     <fileName name="${basename}-pipe1.xml"/>
                 </output>
-            </pipe1>
-            <pipe2 >
+            </pipe>
+            <pipe>
                 <output id="pipe2">
                     <folder absolute="./target/generated-test-files"></folder>
                     <fileName name="${basename}-pipe2.xml"/>
                 </output>
-            </pipe2>
+            </pipe>
         </tee>
     </pipe>
     <sources orderBy="size" sort="desc">

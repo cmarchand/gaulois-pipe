@@ -145,7 +145,22 @@ public class Xslt implements ParametrableStep {
     public void setId(String id) {
         this.id = id;
     }
-    
+
+    @Override
+    public String toString(String prefix) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix).append("xslt href=").append(href);
+        if(id!=null) {
+            sb.append(" id=").append(id);
+        }
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        return toString("");
+    }
     
     
 }

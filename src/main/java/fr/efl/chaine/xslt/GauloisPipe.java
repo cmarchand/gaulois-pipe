@@ -400,21 +400,20 @@ public class GauloisPipe {
                         source = builder.build(input.getFile());
                         if(!avoidCache && config.getSources().getFileUsage(input.getFile())>1) {
                             // on ne le met en cache que si il est utilisé plusieurs fois !
-                            LOGGER.debug("["+instanceName+"] mise en cache de "+key);
+                            LOGGER.debug("["+instanceName+"] caching "+key);
                             documentCache.put(key, source);
                         } else {
                             documentCache.ignoreLoading(key);
                             if(avoidCache){
-                                LOGGER.debug("["+instanceName+"] "+key+" est explicitement exclu du cache");
+                                LOGGER.trace("["+instanceName+"] "+key+" exclued from cache");
                             } else {
-                                LOGGER.debug("["+instanceName+"] "+key+" n'est utilisé qu'une fois : pas de mise en cache");
+                                LOGGER.trace("["+instanceName+"] "+key+" used only once, no cache");
                             }
                         }
                     }
                 }
             }
         }
-
         XsltTransformer transformer = buildTransformer(
                 pipe, 
                 input.getFile(), 
@@ -585,10 +584,23 @@ public class GauloisPipe {
     
     private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
         LOGGER.trace("in buildTransformer(Tee,...)");
-        Destination dest1 = buildShortPipeTransformer(tee.getPipe1(), inputFile, inputFileUri, parameters, listener);
-        Destination dest2 = buildShortPipeTransformer(tee.getPipe2(), inputFile, inputFileUri, parameters, listener);
-        TeeDestination teeDest = new TeeDestination(dest1, dest2);
-        return teeDest;
+        List<Destination> dests = new ArrayList<>();
+        if(tee==null) {
+            throw new InvalidSyntaxException("tee est null !");
+        }
+        if(tee.getPipes()==null) {
+            throw new InvalidSyntaxException("tee.getPipes() est null !");
+        }
+        for(Pipe pipe:tee.getPipes()) {
+            dests.add(buildShortPipeTransformer(pipe, inputFile, inputFileUri, parameters, listener));
+        }
+        while(dests.size()>1) {
+            Destination d1 = dests.remove(0);
+            Destination d2 = dests.remove(0);
+            if(d1==d2) throw new IllegalArgumentException("d1 et d2 sont le meme destination");
+            dests.add(new TeeDestination(d2, d1));
+        }
+        return dests.get(0);
     }
     private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
         if(!pipe.getXslts().hasNext()) {

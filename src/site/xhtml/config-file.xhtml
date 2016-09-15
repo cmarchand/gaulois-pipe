@@ -144,12 +144,11 @@
         <p>A <span class="code">&lt;java&gt;</span> may have parameters defined as <span
                 class="code"><a href="#param">param</a></span> sub-elements.</p>
         <h5><a id="tee"></a>tee</h5>
-        <p>A <span class="code">&lt;tee&gt;</span> allows to fork the pipe to two other
-            destinations, each destination terminated by an <a href="output">output</a>. At this
-            point, tee model isn't pretty beautifull, and you must provide <span class="code"
-                >&lt;pipe1&gt;</span> and a <span class="code">&lt;pipe2&gt;</span> as the two
-            branches ; in a near future, this will be turned into <span class="code">pipe[2,
-                ...]</span>, but with a backward compatibility.</p>
+        <p>A <span class="code">&lt;tee&gt;</span> allows to fork the pipe to two or plus other
+            destinations, each destination terminated by an <a href="output">output</a>. 
+            You must provide a <span class="code">pipe[2,...]</span> sub-pipes.</p>
+        <p><strong>Warning: </strong> there is no backward compatibility from previous releases, where you used
+            <span class="code">pipe1</span> and <span class="code">pipe2</span> childs.</p>
         <h5><a id="output"></a>output</h5>
         <p>An <span class="code">&lt;output&gt;</span> is used to define where the pipe result have
             to be written. An <span class="code">&lt;output&gt;</span> is defined by a <a

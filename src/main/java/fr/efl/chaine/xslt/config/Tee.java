@@ -7,6 +7,8 @@
 package fr.efl.chaine.xslt.config;
 
 import fr.efl.chaine.xslt.InvalidSyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import net.sf.saxon.s9api.QName;
 
 /**
@@ -15,36 +17,33 @@ import net.sf.saxon.s9api.QName;
  */
 public class Tee implements Verifiable {
     static final QName QNAME = new QName(Config.NS, "tee");
-    static final QName PIPE1 = new QName(Config.NS, "pipe1");
-    static final QName PIPE2 = new QName(Config.NS, "pipe2");
-    private Pipe pipe1, pipe2;
+    static final QName PIPE = new QName(Config.NS, "pipe");
+    private List<Pipe> pipes = new ArrayList<>();
     
     public Tee() {
         super();
     }
 
-    public Pipe getPipe1() {
-        return pipe1;
+    public List<Pipe> getPipes() {
+        return pipes;
     }
 
-    public void setPipe1(Pipe pipe1) {
-        this.pipe1 = pipe1;
+    public void addPipe(Pipe pipe) {
+        pipes.add(pipe);
     }
-
-    public Pipe getPipe2() {
-        return pipe2;
-    }
-
-    public void setPipe2(Pipe pipe2) {
-        this.pipe2 = pipe2;
-    }
-    
     @Override
     public void verify() throws InvalidSyntaxException {
-        if(pipe1==null) throw new InvalidSyntaxException("pipe1 n'est pas définit");
-        if(pipe2==null) throw new InvalidSyntaxException("pipe2 n'est pas définit");
-        pipe1.verify();
-        pipe2.verify();
+        if(pipes.size()<2) throw new InvalidSyntaxException("At least 2 sub-pipes are required");
+        for(Pipe pipe:pipes) pipe.verify();
+    }
+    public String toString(String prefix) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix).append("tee").append("\n");
+        String _p = prefix.concat("  ");
+        for(Pipe pipe:pipes) {
+            sb.append(pipe.toString(_p));
+        }
+        return sb.toString();
     }
     
 }

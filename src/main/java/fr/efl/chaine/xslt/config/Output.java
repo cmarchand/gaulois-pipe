@@ -251,4 +251,10 @@ public class Output implements Verifiable {
     public abstract class OutputProperties extends Properties {
         public abstract Object defineProperty(String key, String value) throws InvalidSyntaxException;
     }
+    public String toString(final String prefix) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix).append(toString());
+        return sb.toString();
+    }
+    
 }
