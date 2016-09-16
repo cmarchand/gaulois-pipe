@@ -10,6 +10,7 @@ import de.schlichtherle.truezip.file.TFile;
 import de.schlichtherle.truezip.file.TFileInputStream;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.config.CfgFile;
+import fr.efl.chaine.xslt.config.ChooseStep;
 import fr.efl.chaine.xslt.config.Config;
 import fr.efl.chaine.xslt.config.ConfigUtil;
 import fr.efl.chaine.xslt.config.JavaStep;
@@ -18,6 +19,7 @@ import fr.efl.chaine.xslt.config.Output;
 import fr.efl.chaine.xslt.config.ParametrableStep;
 import fr.efl.chaine.xslt.config.Pipe;
 import fr.efl.chaine.xslt.config.Tee;
+import fr.efl.chaine.xslt.config.WhenEntry;
 import fr.efl.chaine.xslt.config.Xslt;
 import fr.efl.chaine.xslt.listener.HttpListener;
 import fr.efl.chaine.xslt.utils.ParametersMerger;
@@ -95,6 +97,7 @@ public class GauloisPipe {
     private static transient boolean protocolInstalled = false;
     
     private List<Exception> errors;
+    private XPathCompiler xpathCompiler;
 
     
     /**
@@ -285,7 +288,7 @@ public class GauloisPipe {
                     inputs.get(0).getFile(), 
                     inputs.get(0).getFile().toURI().toURL().toExternalForm(), 
                     ParametersMerger.merge(inputs.get(0).getParameters(), config.getParams()),
-                    messageListener);
+                    messageListener,null);
             } catch(MalformedURLException | InvalidSyntaxException | URISyntaxException | SaxonApiException | FileNotFoundException ex) {
                 String msg = "while pre-compiling for a multi-thread use...";
                 LOGGER.error(msg);
@@ -419,7 +422,7 @@ public class GauloisPipe {
                 input.getFile(), 
                 input.getFile().toURI().toURL().toExternalForm(), 
                 ParametersMerger.merge(input.getParameters(), config.getParams()),
-                listener);
+                listener, source);
         LOGGER.debug("["+instanceName+"] transformer build");
         transformer.setInitialContextNode(source);
         transformer.transform();
@@ -433,7 +436,7 @@ public class GauloisPipe {
         }
     }
     
-    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
         LOGGER.trace("in buildTransformer(Pipe,...)");
         XsltTransformer first = null;
         Iterator<ParametrableStep> it = pipe.getXslts();
@@ -475,7 +478,36 @@ public class GauloisPipe {
                     assignStepToDestination(previousTransformer, currentDestination);
                 }
                 previousTransformer = currentDestination;
-                LOGGER.trace(xsl.getHref()+" constructed andd added to pipe");
+                LOGGER.trace(xsl.getHref()+" constructed and added to pipe");
+            } else if(step instanceof ChooseStep) {
+                ChooseStep cStep = (ChooseStep)step;
+                XPathCompiler xpc = getXPathCompiler();
+                if(documentTree==null) {
+                    // here, we are in a pre-compile xsl step, ignore the choose...
+                } else {
+                    for(WhenEntry when:cStep.getConditions()) {
+                        XPathSelector select = xpc.compile(when.getTest()).load();
+                        select.setContextItem(documentTree);
+                        XdmValue result = select.evaluate();
+                        if(result.size()!=1) {
+                            throw new InvalidSyntaxException(when.getTest()+" does not produce a xs:boolean result");
+                        }
+                        if("true".equals(result.itemAt(0).getStringValue())) {
+                            // use this WHEN !
+                            // on ne peut pas faire ça, il n'y a pas de terminal step.
+                            Pipe fakePipe = new Pipe();
+                            for(ParametrableStep innerStep:when.getSteps()) {
+                                fakePipe.addXslt(innerStep);
+                            }
+                            Destination currentDestination = buildTransformer(fakePipe, inputFile, inputFileUri, parameters, listener, documentTree, true);
+                            if(previousTransformer!=null) {
+                                assignStepToDestination(previousTransformer, currentDestination);
+                            }
+                            previousTransformer = currentDestination;
+                            break;
+                        }
+                    }
+                }
             } else if(step instanceof JavaStep) {
                 JavaStep javaStep = (JavaStep)step;
                 try {
@@ -505,14 +537,14 @@ public class GauloisPipe {
         Destination nextStep = null;
         if(pipe.getTee()!=null) {
             LOGGER.trace("after having construct xslts, build tee");
-            nextStep = buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener);
+            nextStep = buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener, documentTree);
         } else if(pipe.getOutput()!=null) {
             LOGGER.trace("after having construct xslts, build output");
             nextStep = buildSerializer(pipe.getOutput(),inputFile,parameters);
         }
         if(nextStep!=null) {
             assignStepToDestination(previousTransformer, nextStep);
-        } else {
+        } else if(isFake.length==0 || !isFake[0]) {
             throw new InvalidSyntaxException("Pipe "+pipe.toString()+" has no terminal Step.");
         }
         return first;
@@ -582,7 +614,7 @@ public class GauloisPipe {
         return xsl.load();
     }
     
-    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
         LOGGER.trace("in buildTransformer(Tee,...)");
         List<Destination> dests = new ArrayList<>();
         if(tee==null) {
@@ -592,7 +624,7 @@ public class GauloisPipe {
             throw new InvalidSyntaxException("tee.getPipes() est null !");
         }
         for(Pipe pipe:tee.getPipes()) {
-            dests.add(buildShortPipeTransformer(pipe, inputFile, inputFileUri, parameters, listener));
+            dests.add(buildShortPipeTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree));
         }
         while(dests.size()>1) {
             Destination d1 = dests.remove(0);
@@ -602,15 +634,15 @@ public class GauloisPipe {
         }
         return dests.get(0);
     }
-    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
         if(!pipe.getXslts().hasNext()) {
             if(pipe.getOutput()!=null) {
                 return buildSerializer(pipe.getOutput(),inputFile, parameters);
             } else {
-                return buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener);
+                return buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener, documentTree);
             }
         } else {
-            return buildTransformer(pipe, inputFile, inputFileUri, parameters, listener);
+            return buildTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree);
         }
     }
     
@@ -1016,5 +1048,13 @@ public class GauloisPipe {
         tracer.setOutputDestination(logger);
         return tracer;
     }
-    
+    private XPathCompiler getXPathCompiler() {
+        if(xpathCompiler==null) {
+            xpathCompiler = processor.newXPathCompiler();
+            for(String prefix:config.getNamespaces().getMappings().keySet()) {
+                xpathCompiler.declareNamespace(prefix, config.getNamespaces().getMappings().get(prefix));
+            }
+        }
+        return xpathCompiler;
+    }
 }

@@ -32,6 +32,7 @@ public class Config implements Verifiable {
     private static final Logger LOGGER = LoggerFactory.getLogger(Config.class);
     private boolean logFileSize;
     private boolean skipSchemaValidation;
+    public Namespaces namespaces;
     /**
      * This has nothing to do in Configuration, but for implementation reason,
      * it's here...
@@ -88,6 +89,9 @@ public class Config implements Verifiable {
         pipe.verify();
         if(sources==null) throw new InvalidSyntaxException("No input file defined");
         sources.verify();
+        if(namespaces!=null) {
+            namespaces.verify();
+        }
     }
     /**
      * Returns <tt>true</tt> if input files with size over multi-thread limit exist.
@@ -115,6 +119,14 @@ public class Config implements Verifiable {
     
     public void skipSchemaValidation(final boolean skipSchemaValidation) {
         this.skipSchemaValidation=skipSchemaValidation;
+    }
+
+    public Namespaces getNamespaces() {
+        return namespaces;
+    }
+
+    public void setNamespaces(Namespaces namespaces) {
+        this.namespaces = namespaces;
     }
     
 }

@@ -129,8 +129,23 @@ public class ConfigUtil {
             XdmNode root = (XdmNode)xs.evaluateSingle();
             if(CONFIG_EL.equals(root.getNodeName())) {
                 Config config = new Config(root);
+                // namespaces
+                XdmSequenceIterator it = root.axisIterator(Axis.CHILD, Namespaces.QNAME);
+                Namespaces namespaces = new Namespaces();
+                while(it.hasNext()) {
+                    XdmNode ns = (XdmNode)it.next();
+                    XdmSequenceIterator itm = ns.axisIterator(Axis.CHILD, Namespaces.QN_MAPPING);
+                    while(itm.hasNext()) {
+                        XdmNode node = (XdmNode)itm.next();
+                        String prefix = node.getAttributeValue(Namespaces.ATTR_PREFIX);
+                        String uri = node.getAttributeValue(Namespaces.ATTR_URI);
+                        namespaces.getMappings().put(prefix, uri);
+                    }
+                }
+                config.setNamespaces(namespaces);
+                it.close();
                 // params
-                XdmSequenceIterator it = root.axisIterator(Axis.CHILD, Config.PARAMS_CHILD);
+                it = root.axisIterator(Axis.CHILD, Config.PARAMS_CHILD);
                 while(it.hasNext()) {
                     XdmNode params = (XdmNode)it.next();
                     XdmSequenceIterator itp = params.axisIterator(Axis.CHILD, new QName(Config.NS, "param"));
@@ -190,6 +205,8 @@ public class ConfigUtil {
                     pipe.addXslt(buildXslt(node,parameters));
                 } else if(JavaStep.QNAME.equals(node.getNodeName())) {
                     pipe.addXslt(buildJavaStep(node, parameters));
+                } else if(ChooseStep.QNAME.equals(node.getNodeName())) {
+                    pipe.addXslt(buildChooseStep(node, parameters));
                 } else if(Tee.QNAME.equals(node.getNodeName())) {
                     pipe.setTee(buildTee(node, parameters));
                 } else if(Output.QNAME.equals(node.getNodeName())) {
@@ -283,6 +300,50 @@ public class ConfigUtil {
             ret.addParameter(buildParameter((XdmNode)it.next(),parameters));
         }
         return ret;
+    }
+    private ChooseStep buildChooseStep(XdmNode chooseNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+        LOGGER.trace("buildChooseStep on {}", chooseNode.getNodeName());
+        ChooseStep chooseStep = new ChooseStep();
+        XdmSequenceIterator it = chooseNode.axisIterator(Axis.CHILD, WhenEntry.QNAME);
+        while(it.hasNext()) {
+            XdmNode whenNode = (XdmNode)it.next();
+            chooseStep.addWhen(buildWhen(whenNode, parameters));
+        }
+        it = chooseNode.axisIterator(Axis.CHILD, WhenEntry.QN_OTHERWISE);
+        while(it.hasNext()) {
+            XdmNode whenNode = (XdmNode)it.next();
+            chooseStep.addWhen(buildWhen(whenNode, parameters));
+        }
+        return chooseStep;
+    }
+    private WhenEntry buildWhen(XdmNode whenNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+        String test = whenNode.getAttributeValue(WhenEntry.ATTR_TEST);
+        // particular case of the otherwise, which is implemented as a when[@test='true()']
+        if((test==null || test.length()==0) && WhenEntry.QN_OTHERWISE.equals(whenNode.getNodeName()) ) {
+            test="true()";
+        }
+        WhenEntry when = new WhenEntry(test);
+        XdmSequenceIterator it = whenNode.axisIterator(Axis.CHILD);
+        while(it.hasNext()) {
+            XdmItem item = it.next();
+            if(item instanceof XdmNode) {
+                XdmNode node = (XdmNode)item;
+                if(Xslt.QNAME.equals(node.getNodeName())) {
+                    when.addStep(buildXslt(node,parameters));
+                } else if(JavaStep.QNAME.equals(node.getNodeName())) {
+                    when.addStep(buildJavaStep(node, parameters));
+                } else if(ChooseStep.QNAME.equals(node.getNodeName())) {
+                    when.addStep(buildChooseStep(node, parameters));
+                } else if(node.getNodeKind()==XdmNodeKind.TEXT) {
+                    // on ignore
+                } else if(node.getNodeKind()==XdmNodeKind.COMMENT) {
+                    // on ignore
+                } else {
+                    throw new InvalidSyntaxException(node.getNodeKind().toString()+" - "+ node.getNodeName()+": unexpected element in "+Pipe.QNAME);
+                }
+            }
+        }
+        return when;
     }
     private ParameterValue buildParameter(XdmNode param, Collection<ParameterValue> parameters) {
         LOGGER.trace("buildParameter on "+param.getNodeName());

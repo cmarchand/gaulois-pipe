@@ -27,6 +27,7 @@
                 apply this pipe</xs:documentation>
         </xs:annotation>
         <xs:sequence>
+            <xs:element name="namespaces" type="cfg:TNamespaces" minOccurs="0"/>
             <xs:element name="pipe" type="cfg:TPipe"/>
             <xs:element name="params" type="cfg:TParams" minOccurs="0"/>
             <xs:element name="sources" type="cfg:TSource" minOccurs="0"/>
@@ -53,11 +54,13 @@
         </xs:annotation>
         <xs:sequence>
             <xs:choice minOccurs="1" maxOccurs="1">
+                <xs:element name="choose" type="cfg:TChoose"/>
                 <xs:element name="xslt" type="cfg:TXslt"/>
                 <xs:element name="tee" type="cfg:TTee"/>
                 <xs:element name="output" type="cfg:TOutput"/>
             </xs:choice>
             <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="choose" type="cfg:TChoose"/>
                 <xs:element name="xslt" type="cfg:TXslt"/>
                 <xs:element name="java" type="cfg:TJava"/>
                 <xs:element name="tee" type="cfg:TTee"/>
@@ -93,11 +96,9 @@
         <xs:assert
             xpathDefaultNamespace="http://efl.fr/chaine/saxon-pipe/config"
             test="
-            if(not(@traceOutput)) then empty(descendant::cfg:xslt[@traceActive]) else true()" xmlns:cfg="http://efl.fr/chaine/saxon-pipe/config">
-            
-        </xs:assert>
-        
+            if(not(@traceOutput)) then empty(descendant::cfg:xslt[@traceActive]) else true()" xmlns:cfg="http://efl.fr/chaine/saxon-pipe/config"/>
     </xs:complexType>
+    
     <xs:complexType name="TRestrictedPipe">
         <xs:sequence>
             <xs:choice minOccurs="1" maxOccurs="unbounded">
@@ -207,6 +208,7 @@
             </xs:annotation>
         </xs:attribute>
     </xs:complexType>
+    
     <xs:complexType name="TFolder">
         <xs:annotation>
             <xs:documentation xml:lang="fr"> La définition d'un contenu de fichiers, basée sur un
@@ -246,6 +248,7 @@
             </xs:annotation>
         </xs:attribute>
     </xs:complexType>
+    
     <xs:complexType name="TOutput">
         <xs:annotation>
             <xs:documentation xml:lang="fr"> Permet de définir la stratégie à appliquer pour
@@ -440,6 +443,7 @@
             </xs:simpleType>
         </xs:attribute>
     </xs:complexType>
+    
     <xs:complexType name="TOutputFolder">
         <xs:annotation>
             <xs:documentation xml:lang="fr"> Permet de définir le folder de sortie </xs:documentation>
@@ -483,6 +487,7 @@
         <xs:assert test="not(@relative and @absolute)"/>
         <xs:assert test="(@absolute and not(@to)) or not(@absolute)"/>
     </xs:complexType>
+
     <xs:complexType name="TFileName">
         <xs:attribute name="prefix" type="xs:string">
             <xs:annotation>
@@ -514,6 +519,7 @@
             </xs:annotation>
         </xs:attribute>
     </xs:complexType>
+
     <xs:complexType name="TParams">
         <xs:annotation>
             <xs:documentation xml:lang="fr"> Permet de passer tous ces paramètres à tous les Steps
@@ -673,7 +679,91 @@
         <xs:attribute name="port" type="cfg:positiveInt" use="optional" default="8888"/>
         <xs:attribute name="stopKeyword" use="required" type="cfg:TKeyword"/>
     </xs:complexType>
+    
+    <xs:complexType name="TNamespaces">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">A declaration of prefixes &amp; namespaces mapping that may be used in choose/when/@test</xs:documentation>
+            <xs:documentation xml:lang="fr">La liste des namespace mappings utilisables dans //choose/when/@test</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="mapping">
+                <xs:complexType>
+                    <xs:attribute name="prefix">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:pattern value="[a-z][a-z0-9]*"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:attribute>
+                    <xs:attribute name="uri" type="xs:anyURI"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <xs:complexType name="TChoose">
+        <xs:annotation>
+            <xs:documentation xml:lang="en">
+                A xslt-like choose, which allows to construct the pipe, depending on input document XPath 
+                tests results. Each when/@test is evaluated ; the first that returns true is processed.
+                In case none of when are evaluated to true, the otherwise is processed. otherwise is required.
+            </xs:documentation>
+            <xs:documentation xml:lang="fr">
+                Un choose commen en XSL, qui permet de construire un pipe différent basé sur des tests XPath
+                réalisés sur le document traité.
+                Chaque when/@test est évalué ; le premier évalué à true est a son contenu ajouté au pipe. Si 
+                aucun when n'est évalué à true, le contenu du otherwise est ajouté au pipe.
+                otherwise est obligatoire.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="when" type="cfg:TWhen" maxOccurs="unbounded"/>
+            <xs:element name="otherwise" type="cfg:TOtherwise"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <xs:complexType name="TWhen">
+        <xs:annotation>
+            <xs:documentation xml:lang="fr">Un cas de test</xs:documentation>
+            <xs:documentation xml:lang="en">Test case</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element name="xslt" type="cfg:TXslt"/>
+                <xs:element name="java" type="cfg:TJava"/>
+                <xs:element name="tee" type="cfg:TTee"/>
+            </xs:choice>
+        </xs:sequence>
+        <xs:attribute name="test" type="xs:string">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr">
+                    Une expression XPath qui doit retourner un boolean.
+                    On peut utiliser des espaces de nommages, si ils sont déclarés dans le
+                    /config/namespaces
+                    Si l'expression renvoie autre chose qu'un boolean, une erreur est levée.
+                </xs:documentation>
+                <xs:documentation xml:lang="en">
+                    An XPath expression, tha tmust return a boolean.
+                    If it returns anything else than a boolean, throws an error.
+                    Namespaces may be used, if there are defined in /config/namespaces.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
 
+    <xs:complexType name="TOtherwise">
+        <xs:complexContent>
+            <xs:restriction base="cfg:TWhen">
+                <xs:sequence>
+                    <xs:choice maxOccurs="unbounded">
+                        <xs:element name="xslt" type="cfg:TXslt"/>
+                        <xs:element name="java" type="cfg:TJava"/>
+                        <xs:element name="tee" type="cfg:TTee"/>
+                    </xs:choice>
+                </xs:sequence>
+            </xs:restriction>
+        </xs:complexContent>
+    </xs:complexType>
     <xs:simpleType name="positiveInt">
         <xs:restriction base="xs:string">
             <xs:pattern value="[0-9]+|$\[.*\]"/>
