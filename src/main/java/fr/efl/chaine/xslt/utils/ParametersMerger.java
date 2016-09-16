@@ -7,28 +7,33 @@
 package fr.efl.chaine.xslt.utils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Merges parameters
  * @author Christophe Marchand
  */
 public class ParametersMerger {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ParametersMerger.class);
 
     /**
      * Merges the two lists into a new list, and let the two original lists unchanged.
-     * @param l1 First list of parameters
-     * @param l2 Second list of parameters
+     * @param highPriority First list of parameters
+     * @param lowPriority Second list of parameters
      * @return A new list that contains all elements from <tt>l1</tt> and <tt>l2</tt>
      */
-    public static List<ParameterValue> merge(final Collection<ParameterValue> l1, final Collection<ParameterValue> l2) {
-        ArrayList<ParameterValue> ret = new ArrayList<>(l1.size()+l2.size());
-        ret.addAll(l2);
-        ret.addAll(l1);
+    public static HashMap<String,ParameterValue> merge(final HashMap<String,ParameterValue> highPriority, final HashMap<String,ParameterValue> lowPriority) {
+        LOGGER.debug("merging : "+highPriority+" with "+lowPriority);
+        HashMap<String,ParameterValue> ret = new HashMap<>();
+        ret.putAll(highPriority);
+        for(ParameterValue pv: lowPriority.values()) {
+            if(!ret.containsKey(pv.getKey()))
+                ret.put(pv.getKey(), pv);
+        }
         // on fait les éventuelles substitutions, pour ne les faire qu'une fois.
-        for(ParameterValue pv:ret) {
+        for(ParameterValue pv:ret.values()) {
             pv.setValue(processParametersReplacement(pv.getValue(), ret));
         }
         return ret;
@@ -40,10 +45,10 @@ public class ParametersMerger {
      * @param parameters The parameters values
      * @return The initialValue with all parameters replaced
      */
-    public static String processParametersReplacement(String initialValue, final Collection<ParameterValue> parameters) {
+    public static String processParametersReplacement(String initialValue, final HashMap<String,ParameterValue> parameters) {
         String ret = initialValue;
         if(ret.contains("$[")) {
-            for(ParameterValue pv: parameters) {
+            for(ParameterValue pv: parameters.values()) {
                 ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
                 if(!ret.contains("$[")) break;
             }
@@ -58,14 +63,14 @@ public class ParametersMerger {
      * 
      * @return The initialValue with all parameters replaced
      */
-    public static String processParametersReplacement(String initialValue, final Collection<ParameterValue> parameters, final File inputFile) {
-        Collection<ParameterValue> fileParams = new ArrayList<>(3);
+    public static String processParametersReplacement(String initialValue, final HashMap<String,ParameterValue> parameters, final File inputFile) {
+        HashMap<String,ParameterValue> fileParams = new HashMap<>();
         String name = inputFile.getName();
         String basename = name.substring(0, name.lastIndexOf("."));
         String extension = name.substring(basename.length()+1);
-        fileParams.add(new ParameterValue("input-basename", basename));
-        fileParams.add(new ParameterValue("input-name", name));
-        fileParams.add(new ParameterValue("input-extension", extension));
+        fileParams.put("input-basename", new ParameterValue("input-basename", basename));
+        fileParams.put("input-name", new ParameterValue("input-name", name));
+        fileParams.put("input-extension", new ParameterValue("input-extension", extension));
         return processParametersReplacement(initialValue, merge(parameters, fileParams));
     }
 }

@@ -8,9 +8,7 @@ package fr.efl.chaine.xslt.config;
 
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 import org.slf4j.Logger;
@@ -26,7 +24,7 @@ public class Config implements Verifiable {
     static final String NS = "http://efl.fr/chaine/saxon-pipe/config";
     static final QName PARAMS_CHILD = new QName(NS, "params");
     private Pipe pipe;
-    private final Map<String,ParameterValue> params;
+    private final HashMap<String,ParameterValue> params;
     private Sources sources;
     private int maxDocumentCacheSize = MAX_DOCUMENT_CACHE_SIZE;
     private static final Logger LOGGER = LoggerFactory.getLogger(Config.class);
@@ -67,12 +65,14 @@ public class Config implements Verifiable {
         this.pipe = pipe;
     }
 
-    public Collection<ParameterValue> getParams() {
-        return params.values();
+    public HashMap<String,ParameterValue> getParams() {
+        return params;
     }
 
     public void addParameter(ParameterValue p) {
-        params.put(p.getKey(),p);
+        if(p!=null) {
+            params.put(p.getKey(),p);
+        }
     }
 
     public Sources getSources() {

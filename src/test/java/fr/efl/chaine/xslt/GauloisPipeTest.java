@@ -13,8 +13,7 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -27,7 +26,7 @@ import org.junit.BeforeClass;
  * @author Christophe Marchand
  */
 public class GauloisPipeTest {
-    private static Collection<ParameterValue> emptyInputParams;
+    private static HashMap<String,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
     
     public GauloisPipeTest() {
@@ -35,7 +34,7 @@ public class GauloisPipeTest {
     
     @BeforeClass
     public static void initialize() {
-        emptyInputParams = new ArrayList<>();
+        emptyInputParams = new HashMap<>();
         configFactory = new SaxonConfigurationFactory() {
             Configuration config = Configuration.newConfiguration();
             @Override

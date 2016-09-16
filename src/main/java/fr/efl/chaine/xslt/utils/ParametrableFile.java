@@ -7,25 +7,24 @@
 package fr.efl.chaine.xslt.utils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 /**
  * Used to carry a file and the parameters to give to pipe when processing this file
  * @author ext-cmarchand
  */
 public class ParametrableFile {
-    private final List<ParameterValue> parameters;
+    private final HashMap<String,ParameterValue> parameters;
     private final File file;
     private boolean avoidCache;
     
     public ParametrableFile(final File file) {
         super();
         this.file=file;
-        parameters = new ArrayList<>();
+        parameters = new HashMap<>();
     }
 
-    public List<ParameterValue> getParameters() {
+    public HashMap<String,ParameterValue> getParameters() {
         return parameters;
     }
 
@@ -43,7 +42,7 @@ public class ParametrableFile {
         }
         if(!parameters.isEmpty()) {
             sb.append("(");
-            for(ParameterValue pv: parameters) {
+            for(ParameterValue pv: parameters.values()) {
                 sb.append(pv).append(",");
             }
             sb.deleteCharAt(sb.length()-1);

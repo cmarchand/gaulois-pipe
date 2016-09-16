@@ -92,7 +92,7 @@ public class ConfigUtil {
         this.configUri=configUri;
     }
     
-    public Config buildConfig(Collection<ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
+    public Config buildConfig(HashMap<String,ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
         try {
             Processor processor = new Processor(saxonConfig);
             if(!skipSchemaValidation) {
@@ -145,20 +145,19 @@ public class ConfigUtil {
                 config.setNamespaces(namespaces);
                 it.close();
                 // params
+                config.getParams().putAll(inputParameters);
                 it = root.axisIterator(Axis.CHILD, Config.PARAMS_CHILD);
                 while(it.hasNext()) {
                     XdmNode params = (XdmNode)it.next();
                     XdmSequenceIterator itp = params.axisIterator(Axis.CHILD, new QName(Config.NS, "param"));
                     while(itp.hasNext()) {
-                        config.addParameter(buildParameter((XdmNode)itp.next(),null));
+                        config.addParameter(buildParameter((XdmNode)itp.next(),inputParameters));
                     }
                 }
-                Collection<ParameterValue> allParameters = new ArrayList<>(config.getParams());
-                allParameters.addAll(inputParameters);
                 // pipe
-                config.setPipe(buildPipe((XdmNode)(root.axisIterator(Axis.CHILD, Pipe.QNAME).next()),allParameters));
+                config.setPipe(buildPipe((XdmNode)(root.axisIterator(Axis.CHILD, Pipe.QNAME).next()),config.getParams()));
                 // sources
-                config.setSources(buildSources((XdmNode)(root.axisIterator(Axis.CHILD, Sources.QNAME).next()), allParameters));
+                config.setSources(buildSources((XdmNode)(root.axisIterator(Axis.CHILD, Sources.QNAME).next()), config.getParams()));
                 // output
                 // pour compatibilité ascendante, si on a un output sous la config, on essaie de le mettre sur le pipe
                 // possible uniquement si le pipe est rectiligne
@@ -166,7 +165,7 @@ public class ConfigUtil {
                 if(outputIt.hasNext()) {
                     LOGGER.warn("Defining <output/> in config is now deprecated - but still works. You should define it in <pipe/>");
                     if(config.getPipe().getOutput()==null) {
-                        config.getPipe().setOutput(buildOutput((XdmNode)(outputIt.next()), allParameters));
+                        config.getPipe().setOutput(buildOutput((XdmNode)(outputIt.next()), config.getParams()));
                     } else {
                         throw new InvalidSyntaxException("Using output outside of pipe is deprecated but supported, only if pipe has no output defined");
                     }
@@ -180,10 +179,10 @@ public class ConfigUtil {
         }
     }
     
-    private Pipe buildPipe(XdmNode pipeNode, Collection<ParameterValue> parameters) throws IllegalStateException, InvalidSyntaxException {
+    private Pipe buildPipe(XdmNode pipeNode, HashMap<String,ParameterValue> parameters) throws IllegalStateException, InvalidSyntaxException {
         return buildPipe(pipeNode, parameters, null);
     }
-    private Pipe buildPipe(XdmNode pipeNode, Collection<ParameterValue> parameters, Tee parentTee) throws IllegalStateException, InvalidSyntaxException {
+    private Pipe buildPipe(XdmNode pipeNode, HashMap<String,ParameterValue> parameters, Tee parentTee) throws IllegalStateException, InvalidSyntaxException {
         LOGGER.trace("buildPipe on "+pipeNode.getNodeName());
         Pipe pipe = new Pipe(parentTee);
         try {
@@ -223,7 +222,7 @@ public class ConfigUtil {
         return pipe;
     }
     
-    private Tee buildTee(XdmNode teeNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+    private Tee buildTee(XdmNode teeNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildTee on "+teeNode.getNodeName());
         Tee tee = new Tee();
         XdmSequenceIterator seq = teeNode.axisIterator(Axis.CHILD,Pipe.QNAME);
@@ -234,7 +233,7 @@ public class ConfigUtil {
         }
         return tee;
     }
-    private Sources buildSources(XdmNode sourcesNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+    private Sources buildSources(XdmNode sourcesNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
         String orderBy = sourcesNode.getAttributeValue(Sources.ATTR_ORDERBY);
         String sort = sourcesNode.getAttributeValue(Sources.ATTR_SORT);
         LOGGER.trace("buildSources from {} with orderBy={} and sort={}", new Object[]{sourcesNode.getNodeName(), orderBy, sort});
@@ -262,7 +261,7 @@ public class ConfigUtil {
         }
         return sources;
     }
-    private Listener buildListener(XdmNode listenerNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+    private Listener buildListener(XdmNode listenerNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
         String tmp = resolveEscapes(listenerNode.getAttributeValue(Listener.ATTR_PORT),parameters);
         int port = Listener.DEFAULT_PORT;
         try {
@@ -276,7 +275,7 @@ public class ConfigUtil {
         }
         return list;
     }
-    private Xslt buildXslt(XdmNode xsltNode, Collection<ParameterValue> parameters) {
+    private Xslt buildXslt(XdmNode xsltNode, HashMap<String,ParameterValue> parameters) {
         LOGGER.trace("buildXslt on {}", xsltNode.getNodeName());
         Xslt ret = new Xslt(resolveEscapes(xsltNode.getAttributeValue(Xslt.ATTR_HREF),parameters));
         if("true".equals(xsltNode.getAttributeValue(Xslt.ATTR_TRACE_ACTIVE))) {
@@ -292,7 +291,7 @@ public class ConfigUtil {
         }
         return ret;
     }
-    private JavaStep buildJavaStep(XdmNode javaNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+    private JavaStep buildJavaStep(XdmNode javaNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildJavaStep on {}", javaNode.getNodeName());
         JavaStep ret = new JavaStep(resolveEscapes(javaNode.getAttributeValue(JavaStep.ATTR_CLASS), parameters));
         XdmSequenceIterator it = javaNode.axisIterator(Axis.CHILD, QN_PARAM);
@@ -301,7 +300,7 @@ public class ConfigUtil {
         }
         return ret;
     }
-    private ChooseStep buildChooseStep(XdmNode chooseNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+    private ChooseStep buildChooseStep(XdmNode chooseNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildChooseStep on {}", chooseNode.getNodeName());
         ChooseStep chooseStep = new ChooseStep();
         XdmSequenceIterator it = chooseNode.axisIterator(Axis.CHILD, WhenEntry.QNAME);
@@ -316,7 +315,7 @@ public class ConfigUtil {
         }
         return chooseStep;
     }
-    private WhenEntry buildWhen(XdmNode whenNode, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+    private WhenEntry buildWhen(XdmNode whenNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
         String test = whenNode.getAttributeValue(WhenEntry.ATTR_TEST);
         // particular case of the otherwise, which is implemented as a when[@test='true()']
         if((test==null || test.length()==0) && WhenEntry.QN_OTHERWISE.equals(whenNode.getNodeName()) ) {
@@ -345,11 +344,14 @@ public class ConfigUtil {
         }
         return when;
     }
-    private ParameterValue buildParameter(XdmNode param, Collection<ParameterValue> parameters) {
+    private ParameterValue buildParameter(XdmNode param, HashMap<String,ParameterValue> parameters) {
         LOGGER.trace("buildParameter on "+param.getNodeName());
-        return new ParameterValue(resolveEscapes(param.getAttributeValue(PARAM_NAME),parameters), resolveEscapes(param.getAttributeValue(PARAM_VALUE),parameters));
+        // attributes already presents will no be added, so return null
+        ParameterValue pv = new ParameterValue(resolveEscapes(param.getAttributeValue(PARAM_NAME),parameters), resolveEscapes(param.getAttributeValue(PARAM_VALUE),parameters));
+        if(parameters.containsKey(pv.getKey())) return null;
+        else return pv;
     }
-    private CfgFile buildFile(XdmNode node, Collection<ParameterValue> parameters) throws URISyntaxException {
+    private CfgFile buildFile(XdmNode node, HashMap<String,ParameterValue> parameters) throws URISyntaxException {
         String href = node.getAttributeValue(CfgFile.ATTR_HREF);
         LOGGER.trace("buildFile from {} with href={}", node.getNodeName(), href);
         File f;
@@ -367,17 +369,21 @@ public class ConfigUtil {
         }
         return ret;
     }
-    String resolveEscapes(String input, Collection<ParameterValue> params) {
+    String resolveEscapes(String input, HashMap<String,ParameterValue> params) {
+        LOGGER.debug("resolveEscapes in "+input+" with "+params);
+//        if("$[xslDir]/identity.xsl".equals(input)) {
+//            new Exception().printStackTrace(System.out);
+//        }
         if(input==null) return input;
         String ret = input;
         if(params!=null) {
-            for(ParameterValue pv: params) {
+            for(ParameterValue pv: params.values()) {
                 ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
             }
         }
         return ret;
     }
-    private Collection<CfgFile> buildFolderContent(XdmNode node, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+    private Collection<CfgFile> buildFolderContent(XdmNode node, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildFolderContent on "+node.getNodeName());
         String pattern = resolveEscapes(node.getAttributeValue(QN_PATTERN), parameters);
         final boolean recurse = getBooleanValue(node.getAttributeValue(QN_RECURSE));
@@ -415,7 +421,7 @@ public class ConfigUtil {
         }
         return files;
     }
-    private Output buildOutput(XdmNode node, Collection<ParameterValue> parameters) throws InvalidSyntaxException {
+    private Output buildOutput(XdmNode node, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildOutput from {}", node.getNodeName());
         Output ret = new Output();
         // searching for output parameters

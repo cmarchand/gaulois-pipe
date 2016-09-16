@@ -12,7 +12,6 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -170,8 +169,8 @@ public class Output implements Verifiable {
      * @throws InvalidSyntaxException If this output has no been correctly defined
      * @throws java.net.URISyntaxException If the constructed URI is no valid
      */
-    public File getDestinationFile(File sourceFile, Collection<ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
-        File ret = null;
+    public File getDestinationFile(File sourceFile, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
+        File ret;
         if(isAbsolute()) {
             String __abs = absolute;
             int pos = __abs.indexOf("${");
@@ -187,7 +186,7 @@ public class Output implements Verifiable {
                 }
                 pos = __abs.indexOf("${", pos+1);
             }
-            for(ParameterValue pv:parameters) {
+            for(ParameterValue pv:parameters.values()) {
                 __abs = __abs.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
             }
             File directory = __abs.startsWith("file:") ? new File(new URI(__abs)) : new File(__abs);
@@ -205,14 +204,14 @@ public class Output implements Verifiable {
         }
         return ret;
     }
-    private String getFileName(File sourceFile, Collection<ParameterValue> parameters) {
+    private String getFileName(File sourceFile, HashMap<String,ParameterValue> parameters) {
         String filename = (prefix!=null?prefix:"") + name + (suffix!=null?suffix:"");
         String sourceName = sourceFile.getName();
         int ix = sourceName.lastIndexOf(".");
         String extension = sourceName.substring(ix);
         String basename = sourceName.substring(0, ix);
         String ret = filename.replaceAll("\\$\\{name\\}", sourceName).replaceAll("\\$\\{basename\\}", basename).replaceAll("\\$\\{extension\\}", extension);
-        for(ParameterValue pv:parameters) {
+        for(ParameterValue pv:parameters.values()) {
             ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
         }
         return ret;

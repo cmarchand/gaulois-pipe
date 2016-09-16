@@ -13,8 +13,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import net.sf.saxon.Configuration;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -29,12 +28,12 @@ import org.junit.Test;
  * @author cmarchand
  */
 public class GauloisListenerTest {
-    private static Collection<ParameterValue> emptyInputParams;
+    private static HashMap<String,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
 
     @BeforeClass
     public static void initialize() {
-        emptyInputParams = new ArrayList<>();
+        emptyInputParams = new HashMap<>();
         configFactory = new SaxonConfigurationFactory() {
             Configuration config = Configuration.newConfiguration();
             @Override
