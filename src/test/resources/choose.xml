@@ -15,7 +15,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     <pipe nbThreads="1" mutiThreadMaxSourceSize="">
         <xslt href="cp:/identity.xsl"/>
         <choose>
-            <when test="/n:DocumentPaye/n:Annee/xs:integer((@V,0)[1]) gt 2012">
+            <when test="/n:DocumentPaye/n:Annee/@V/xs:integer(.) gt 2012">
                 <xslt href="cp:/uppercase.xsl"/>
             </when>
             <otherwise>

@@ -98,6 +98,7 @@
                 </tr>
             </tbody>
         </table>
+
         <h4>Elements</h4>
         <p>The pipe <strong>must</strong> start with a <a href="#xslt"><span class="code"
                     >xslt</span></a>. Then, it may have <a href="#xslt"><span class="code"
@@ -106,6 +107,7 @@
                 href="#output"><span class="code">output</span></a>.</p>
         <p><strong>Nothing can</strong> follow an <a href="#output"><span class="code"
                 >output</span></a> ; output is always a terminal node.</p>
+
         <h5><a id="xslt"></a>xslt</h5>
         <p>A <span class="code">&lt;xslt&gt;</span> is a step where transformation is made by a XSL
             transformation. <span class="code">@href</span> specifies the XSL location ; it may be
@@ -123,6 +125,7 @@
         <p>You can set the <tt>debug="true"</tt> attribute - you must define the <tt>@id</tt> attribute in this case - the result of the Xslt will be written in the current directoy, in a name called <tt>id-$[input-name]</tt>.</p>
         <p>A <span class="code">&lt;xsl&gt;</span> may have parameters defined as <span class="code"
                     ><a href="#param">param</a></span> sub-elements.</p>
+
         <h5><a id="java"></a>java</h5>
         <p>A <span class="code">&lt;java&gt;</span> step is a class that may filter or transform the
             events send by Saxon processor. A Java Step must extends <a
@@ -143,12 +146,34 @@
                 >FileAppenderTerminalStep</a> is such a step sample you can use.</p>
         <p>A <span class="code">&lt;java&gt;</span> may have parameters defined as <span
                 class="code"><a href="#param">param</a></span> sub-elements.</p>
+
+        <h5><a id="choose"/>choose</h5>
+        <p>A choose allows you to control the structure of the pipe, depending on XPath expression evaluations. It's very similar to XSL 
+            syntax, except that otherwise is required. A choose must always "return" a sub-pipe.</p>
+        <pre>
+            &lt;xslt href="cp:/pre-process.xsl"/>
+            &lt;choose>
+                &lt;when test="/mydoc/meta/@pubYear/xs:integer(.) lt 2000">
+                    &lt;xslt href="cp:/very-old-fashion.xsl"/>
+                &lt;/when>
+                &lt;when test="/mydoc/meta/@pubYear/xs:integer(.) lt 2000">
+                    &lt;xslt href="cp:/old-fashion.xsl"/>
+                &lt;/when>
+                &lt;otherwise>
+                    &lt;xsl href="cp:/current.xsl"/>
+                &lt;/otherwise>
+            &lt;/choose>
+            &lt;output id="main">...&lt;/output>
+        </pre>
+        <p>The XPath expressions are evaluated on the input document, and are not evaluated on the result document of the previous step.</p>
+
         <h5><a id="tee"></a>tee</h5>
         <p>A <span class="code">&lt;tee&gt;</span> allows to fork the pipe to two or plus other
             destinations, each destination terminated by an <a href="output">output</a>. 
             You must provide a <span class="code">pipe[2,...]</span> sub-pipes.</p>
         <p><strong>Warning: </strong> there is no backward compatibility from previous releases, where you used
             <span class="code">pipe1</span> and <span class="code">pipe2</span> childs.</p>
+
         <h5><a id="output"></a>output</h5>
         <p>An <span class="code">&lt;output&gt;</span> is used to define where the pipe result have
             to be written. An <span class="code">&lt;output&gt;</span> is defined by a <a
