@@ -25,7 +25,7 @@ public class ParametersMerger {
      * @return A new list that contains all elements from <tt>l1</tt> and <tt>l2</tt>
      */
     public static HashMap<String,ParameterValue> merge(final HashMap<String,ParameterValue> highPriority, final HashMap<String,ParameterValue> lowPriority) {
-        LOGGER.debug("merging : "+highPriority+" with "+lowPriority);
+//        LOGGER.debug("merging : "+highPriority+" with "+lowPriority);
         HashMap<String,ParameterValue> ret = new HashMap<>();
         ret.putAll(highPriority);
         for(ParameterValue pv: lowPriority.values()) {
@@ -57,13 +57,12 @@ public class ParametersMerger {
     }
     /**
      * Replaces the parameters in string
-     * @param initialValue The String to change parameters in
      * @param parameters The parameters values
      * @param inputFile The input file actually processed. input-basename, input-name and input-extension are added, so can be used.
      * 
-     * @return The initialValue with all parameters replaced
+     * @return The parameters whith inpu-name, input-basename and input-extension added
      */
-    public static String processParametersReplacement(String initialValue, final HashMap<String,ParameterValue> parameters, final File inputFile) {
+    public static HashMap<String,ParameterValue> addInputInParameters(final HashMap<String,ParameterValue> parameters, final File inputFile) {
         HashMap<String,ParameterValue> fileParams = new HashMap<>();
         String name = inputFile.getName();
         String basename = name.substring(0, name.lastIndexOf("."));
@@ -71,6 +70,6 @@ public class ParametersMerger {
         fileParams.put("input-basename", new ParameterValue("input-basename", basename));
         fileParams.put("input-name", new ParameterValue("input-name", name));
         fileParams.put("input-extension", new ParameterValue("input-extension", extension));
-        return processParametersReplacement(initialValue, merge(parameters, fileParams));
+        return merge(parameters, fileParams);
     }
 }

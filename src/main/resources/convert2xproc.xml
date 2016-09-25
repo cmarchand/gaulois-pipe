@@ -11,9 +11,8 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config ../../../src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
     <pipe nbThreads="1" mutiThreadMaxSourceSize="">
         <xslt href="cp:/fr/efl/chaine/xslt/gauloisPipe2xproc.xsl"/>
-        <output id="main">
-            <folder relative="." to="source-file"></folder>
-            <fileName name="$[input-basename]-xproc.$[input-extension]"/>
+        <output id="main" indent="yes">
+            <console/>
         </output>
     </pipe>
 </config>

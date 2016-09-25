@@ -99,12 +99,12 @@ public class GauloisPipeTest {
     @Test
     public void testNoSourceFile() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/no-source.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/empty-source.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.setLogFileSize(true);
         config.verify();
         piper.setConfig(config);
-        piper.setInstanceName("NO_SOURCE");
+        piper.setInstanceName("EMPTY_SOURCE");
         // on veut juste s'assurer qu'on a pas d'exception
         assertTrue(true);
         piper.launch();
@@ -232,6 +232,18 @@ public class GauloisPipeTest {
         piper.launch();
         // it's difficult to check that no file has been written anywhere...
     }
+    @Test
+    public void testConsoleOutput() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/console.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        assertTrue("Output is not a null output", config.getPipe().getOutput().isConsoleOutput());
+        piper.setConfig(config);
+        piper.setInstanceName("CONSOLE OUTPUT");
+        piper.launch();
+        // it's difficult to check that no file has been written anywhere...
+    }
     
     @Test(expected = InvalidSyntaxException.class)
     public void testIncompleteTrace() throws Exception {
@@ -283,6 +295,13 @@ public class GauloisPipeTest {
         expect = new File("target/generated-test-files/paye1-choose.xml");
         exists = expect.exists();
         assertTrue("The file target/generated-test-files/paye2-choose.xml does not exists", exists);
+    }
+    @Test(expected = InvalidSyntaxException.class)
+    public void testNoSource() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/no-source.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
     }
 
 }

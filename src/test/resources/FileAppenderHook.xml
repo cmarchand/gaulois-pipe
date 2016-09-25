@@ -18,7 +18,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
 		</java>
 		<output id="main">
 			<folder absolute="${user.dir}/$[destDir]"/>
-			<fileName name="${basename}-$[p-file]-result.xml"/>
+			<fileName name="$[input-basename]-$[p-file]-result.xml"/>
 		</output>
 	</pipe>
 	<params>

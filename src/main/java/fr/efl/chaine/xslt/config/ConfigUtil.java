@@ -9,6 +9,7 @@ package fr.efl.chaine.xslt.config;
 import java.io.File;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
+import fr.efl.chaine.xslt.utils.ParametersMerger;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -157,7 +158,10 @@ public class ConfigUtil {
                 // pipe
                 config.setPipe(buildPipe((XdmNode)(root.axisIterator(Axis.CHILD, Pipe.QNAME).next()),config.getParams()));
                 // sources
-                config.setSources(buildSources((XdmNode)(root.axisIterator(Axis.CHILD, Sources.QNAME).next()), config.getParams()));
+                XdmSequenceIterator sourceIterator = root.axisIterator(Axis.CHILD, Sources.QNAME);
+                if(sourceIterator.hasNext()) {
+                    config.setSources(buildSources((XdmNode)(sourceIterator.next()), config.getParams()));
+                }
                 // output
                 // pour compatibilité ascendante, si on a un output sous la config, on essaie de le mettre sur le pipe
                 // possible uniquement si le pipe est rectiligne
@@ -371,17 +375,9 @@ public class ConfigUtil {
     }
     String resolveEscapes(String input, HashMap<String,ParameterValue> params) {
         LOGGER.debug("resolveEscapes in "+input+" with "+params);
-//        if("$[xslDir]/identity.xsl".equals(input)) {
-//            new Exception().printStackTrace(System.out);
-//        }
         if(input==null) return input;
         String ret = input;
-        if(params!=null) {
-            for(ParameterValue pv: params.values()) {
-                ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
-            }
-        }
-        return ret;
+        return ParametersMerger.processParametersReplacement(ret, params);
     }
     private Collection<CfgFile> buildFolderContent(XdmNode node, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildFolderContent on "+node.getNodeName());
@@ -434,21 +430,29 @@ public class ConfigUtil {
         if(nullOutput) {
             ret.setNull(true);
         } else {
-            XdmNode folder = (XdmNode)node.axisIterator(Axis.CHILD, CfgFile.QN_FOLDER).next();
-            String relative = resolveEscapes(folder.getAttributeValue(new QName("relative")),parameters);
-            String temp = folder.getAttributeValue(new QName("to"));
-            String to = resolveEscapes(temp, parameters);
-            String absolute = resolveEscapes(folder.getAttributeValue(new QName("absolute")), parameters);
-            if(relative!=null) ret.setRelativePath(relative);
-            if(to!=null) ret.setRelativeTo(to);
-            if(absolute!=null) ret.setAbsolute(absolute);
-            XdmNode filename = (XdmNode)node.axisIterator(Axis.CHILD, new QName(Config.NS,"fileName")).next();
-            String prefix = resolveEscapes(filename.getAttributeValue(new QName("prefix")),parameters);
-            String name = resolveEscapes(filename.getAttributeValue(new QName("name")),parameters);
-            String suffix = resolveEscapes(filename.getAttributeValue(new QName("suffix")), parameters);
-            if(prefix!=null) ret.setPrefix(prefix);
-            if(name!=null) ret.setName(name);
-            if(suffix!=null) ret.setSuffix(suffix);
+            XdmSequenceIterator consoleIterator = node.axisIterator(Axis.CHILD, Output.QN_CONSOLE);
+            if(consoleIterator.hasNext()) {
+                XdmNode console = (XdmNode)consoleIterator.next();
+                String sConsole = console.getAttributeValue(Output.ATTR_CONSOLE_WHICH);
+                if(sConsole==null) sConsole = "out";
+                ret.setConsole(sConsole);
+            } else {
+                XdmNode folder = (XdmNode)node.axisIterator(Axis.CHILD, CfgFile.QN_FOLDER).next();
+                String relative = resolveEscapes(folder.getAttributeValue(new QName("relative")),parameters);
+                String temp = folder.getAttributeValue(new QName("to"));
+                String to = resolveEscapes(temp, parameters);
+                String absolute = resolveEscapes(folder.getAttributeValue(new QName("absolute")), parameters);
+                if(relative!=null) ret.setRelativePath(relative);
+                if(to!=null) ret.setRelativeTo(to);
+                if(absolute!=null) ret.setAbsolute(absolute);
+                XdmNode filename = (XdmNode)node.axisIterator(Axis.CHILD, new QName(Config.NS,"fileName")).next();
+                String prefix = resolveEscapes(filename.getAttributeValue(new QName("prefix")),parameters);
+                String name = resolveEscapes(filename.getAttributeValue(new QName("name")),parameters);
+                String suffix = resolveEscapes(filename.getAttributeValue(new QName("suffix")), parameters);
+                if(prefix!=null) ret.setPrefix(prefix);
+                if(name!=null) ret.setName(name);
+                if(suffix!=null) ret.setSuffix(suffix);
+            }
         }
         return ret;
     }

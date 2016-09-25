@@ -414,11 +414,12 @@ public class GauloisPipe {
                 }
             }
         }
+        HashMap<String,ParameterValue> parameters = ParametersMerger.addInputInParameters(ParametersMerger.merge(input.getParameters(), config.getParams()),input.getFile());
         XsltTransformer transformer = buildTransformer(
                 pipe, 
                 input.getFile(), 
                 input.getFile().toURI().toURL().toExternalForm(), 
-                ParametersMerger.merge(input.getParameters(), config.getParams()),
+                parameters,
                 listener, source);
         LOGGER.debug("["+instanceName+"] transformer build");
         transformer.setInitialContextNode(source);
@@ -454,14 +455,14 @@ public class GauloisPipe {
                 }
                 for(ParameterValue pv:xsl.getParams()) {
                     // on substitue les paramètres globaux dans ceux de la XSL
-                    String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile);
+                    String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters);
                     LOGGER.trace("Setting parameter ("+pv.getKey()+","+value+")");
                     currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(value));
                 }
                 for(ParameterValue pv:parameters.values()) {
                     // la substitution a été faite avant, dans le merge, but there is input-file relative parameters...
                     currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
-                            ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile)
+                            ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                     ));
                 }
                 if(xsl.isDebug()) {
@@ -511,13 +512,13 @@ public class GauloisPipe {
                     StepJava stepJava = javaStep.getStepClass().newInstance();
                     for(ParameterValue pv:javaStep.getParams()) {
                         stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
-                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile)
+                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                         ));
                     }
                     for(ParameterValue pv:parameters.values()) {
                         // la substitution a été faite avant, dans le merge
                         stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
-                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile)
+                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                         ));
                     }
                     if(previousTransformer!=null) {
@@ -646,6 +647,8 @@ public class GauloisPipe {
     private Destination buildSerializer(Output output, File inputFile, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
         if(output.isNullOutput()) {
             return processor.newSerializer(new NullOutputStream());
+        } else if(output.isConsoleOutput()) {
+            return processor.newSerializer("out".equals(output.getConsole())?System.out:System.err);
         }
         final File destinationFile = output.getDestinationFile(inputFile, parameters);
         final Serializer ret = processor.newSerializer(destinationFile);

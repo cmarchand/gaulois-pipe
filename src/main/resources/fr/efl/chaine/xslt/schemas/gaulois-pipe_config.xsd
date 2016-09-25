@@ -274,14 +274,32 @@
                     </xs:annotation>
                 </xs:element>
             </xs:sequence>
-            <xs:sequence>
-                <xs:element name="null" type="xs:string" fixed="">
-                    <xs:annotation>
-                        <xs:documentation xml:lang="fr">Pour définir une sortie qu'on ne veut pas</xs:documentation>
-                        <xs:documentation xml:lang="en">To define a null output</xs:documentation>
-                    </xs:annotation>
-                </xs:element>
-            </xs:sequence>
+            <xs:element name="null" type="xs:string" fixed="">
+                <xs:annotation>
+                    <xs:documentation xml:lang="fr">Pour définir une sortie qu'on ne veut pas</xs:documentation>
+                    <xs:documentation xml:lang="en">To define a null output</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="console">
+                <xs:complexType>
+                    <xs:attribute name="which" default="out">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:enumeration value="out">
+                                    <xs:annotation>
+                                        <xs:documentation>Standard output</xs:documentation>
+                                    </xs:annotation>
+                                </xs:enumeration>
+                                <xs:enumeration value="err">
+                                    <xs:annotation>
+                                        <xs:documentation>Error output</xs:documentation>
+                                    </xs:annotation>
+                                </xs:enumeration>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:attribute>
+                </xs:complexType>
+            </xs:element>
         </xs:choice>
         <xs:attribute name="id" type="xs:ID" use="required">
             <xs:annotation>

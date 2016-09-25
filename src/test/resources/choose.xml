@@ -24,7 +24,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
         </choose>
         <output id="main">
             <folder absolute="./target/generated-test-files"></folder>
-            <fileName name="${basename}-choose.xml"/>
+            <fileName name="$[input-basename]-choose.xml"/>
         </output>
     </pipe>
     <sources orderBy="size" sort="desc">
