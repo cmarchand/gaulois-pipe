@@ -43,7 +43,7 @@
       </xsl:text><xsl:comment>====================================</xsl:comment>
       <xsl:value-of select="'&#10;'"/>
       <xsl:apply-templates select="sources"/>
-      <xsl:comment>Parameters must be setted (even if empty) so they are binded to xslt parameters port</xsl:comment>
+      <xsl:comment>Parameters must be set (even if empty) so they are binded to xslt parameters port</xsl:comment>
       <p:input port="parameters" kind="parameter" primary="true">
         <!--<p:empty/>-->
       </p:input>
