@@ -233,5 +233,25 @@ public class GauloisPipeTest {
         piper.launch();
         // it's difficult to check that no file has been written anywhere...
     }
+    
+    @Test(expected = InvalidSyntaxException.class)
+    public void testIncompleteTrace() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/incompleteTrace.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+    }
+
+    @Test
+    public void testTrace() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/trace.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("TRACE");
+        piper.launch();
+        File expect = new File("./target/generated-test-files/trace.log");
+        assertTrue("The file target/generated-test-files/trace. does not exists", expect.exists());
+    }
 
 }

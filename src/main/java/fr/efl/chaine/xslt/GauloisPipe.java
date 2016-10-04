@@ -50,9 +50,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
+import javax.xml.transform.stream.StreamResult;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.lib.StandardLogger;
+import net.sf.saxon.trace.XSLTTraceListener;
 import net.sf.saxon.trans.XPathException;
 import org.apache.commons.io.output.NullOutputStream;
 import org.xmlresolver.Resolver;
@@ -82,6 +85,7 @@ public class GauloisPipe {
      */
     private Class<MessageListener> messageListenerclass;
     private MessageListener messageListener = null;
+    private XSLTTraceListener traceListener = null;
     private DocumentCache documentCache;
     private XsltCompiler xsltCompiler;
     private DocumentBuilder builder = null;
@@ -97,6 +101,7 @@ public class GauloisPipe {
      * This constructor is the main one, the other one is only for backward compatibility.
      * @param configurationFactory The configuration factory to use
      */
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     public GauloisPipe(final SaxonConfigurationFactory configurationFactory) {
         super();
         if(!protocolInstalled) {
@@ -147,10 +152,11 @@ public class GauloisPipe {
      * @throws net.sf.saxon.s9api.SaxonApiException If a SaxonApi problem occurs
      * @throws java.net.URISyntaxException Because MVN forces to have comments...
      */
+    @SuppressWarnings("ThrowFromFinallyBlock")
     public void launch() throws InvalidSyntaxException, FileNotFoundException, SaxonApiException, URISyntaxException, IOException {
         Runtime.getRuntime().addShutdownHook(new Thread(new ErrorCollector(errors)));
         long start = System.currentTimeMillis();
-        errors = Collections.synchronizedList(new  ArrayList<Exception>());
+        errors = Collections.synchronizedList(new ArrayList<Exception>());
         documentCache = new DocumentCache(config.getMaxDocumentCacheSize());
         if (this.messageListenerclass != null) {
             try {
@@ -173,6 +179,9 @@ public class GauloisPipe {
             List<CfgFile> sourceFiles = config.getSources().getFiles();
             LOGGER.info("[" + instanceName + "] works on {} files", sourceFiles.size());
             
+            if(config.getPipe().getTraceOutput()!=null) {
+                traceListener = buildTraceListener(config.getPipe().getTraceOutput());
+            }
 
             if (config.getPipe().getNbThreads() > 1) {
                 if (config.hasFilesOverMultiThreadLimit()) {
@@ -435,6 +444,9 @@ public class GauloisPipe {
             if(step instanceof Xslt) {
                 Xslt xsl = (Xslt)step;
                 XsltTransformer currentTransformer = getXsltTransformer(xsl.getHref(), parameters);
+                if(xsl.isTraceToAdd()) {
+                    currentTransformer.setTraceListener(traceListener);
+                }
                 if(listener!=null) {
                     LOGGER.trace(xsl.getHref()+" setting messageListener "+listener);
                     currentTransformer.setMessageListener(listener);
@@ -557,9 +569,6 @@ public class GauloisPipe {
                 throw ex;
             } catch(URISyntaxException|FileNotFoundException ex) {
                 LOGGER.error("while compiling "+__href);
-                throw ex;
-            } catch(Exception ex) {
-                LOGGER.error("while compiling "+__href,ex);
                 throw ex;
             }
         }
@@ -743,6 +752,7 @@ public class GauloisPipe {
         }
     }
     
+    @SuppressWarnings("LocalVariableHidesMemberVariable")
     public Config parseCommandLine(String[] args) throws InvalidSyntaxException {
         List<String> inputFiles = new ArrayList<>();
         List<String> inputParams = new ArrayList<>();
@@ -905,6 +915,7 @@ public class GauloisPipe {
             return ret;
         }
         
+        @SuppressWarnings("SleepWhileInLoop")
         public XdmNode waitForLoading(String key) {
             long endDate = System.currentTimeMillis() + 2000;
             while(isLoading(key)) {
@@ -928,7 +939,6 @@ public class GauloisPipe {
         public void run() {
             if(errorsContainer==null || errorsContainer.isEmpty()) {
                 GauloisPipe.LOGGER.info("Gaulois-Pipe is exiting without error");
-//                Runtime.getRuntime().halt(0);
             } else {
                 for(Exception ex:errorsContainer) {
                     GauloisPipe.LOGGER.error("",ex);
@@ -948,6 +958,43 @@ public class GauloisPipe {
 
     public String getInstanceName() {
         return instanceName;
+    }
+    
+    private XSLTTraceListener buildTraceListener(final String outputDest) {
+        if(outputDest==null) return null;
+        net.sf.saxon.lib.Logger logger;
+        switch (outputDest) {
+            case "#default":
+                logger = configurationFactory.getConfiguration().getLogger();
+                break;
+            case "#logger":
+                logger = new net.sf.saxon.lib.Logger() {
+                    @Override
+                    public void println(String string, int i) {
+                        switch(i) {
+                            case net.sf.saxon.lib.Logger.INFO: LOGGER.debug(string);
+                            case net.sf.saxon.lib.Logger.WARNING: LOGGER.info(string);
+                            case net.sf.saxon.lib.Logger.ERROR: LOGGER.warn(string);
+                            case net.sf.saxon.lib.Logger.DISASTER: LOGGER.error(string);
+                        }
+                    }
+                    @Override
+                    public StreamResult asStreamResult() {
+                        // TODO : make this cleaner !
+                        return new StreamResult(System.out);
+                    }
+                };  break;
+            default:
+                try {
+                    logger = new StandardLogger(new File(outputDest));
+                } catch(FileNotFoundException ex) {
+                    LOGGER.error("while creating traceListener output. Traces will be logged to standard output",ex);
+                    logger = configurationFactory.getConfiguration().getLogger();
+            }   break;
+        }
+        XSLTTraceListener tracer = new XSLTTraceListener();
+        tracer.setOutputDestination(logger);
+        return tracer;
     }
     
 }

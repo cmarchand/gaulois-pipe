@@ -2,7 +2,9 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
     xmlns:cfg="http://efl.fr/chaine/saxon-pipe/config"
-    targetNamespace="http://efl.fr/chaine/saxon-pipe/config" elementFormDefault="qualified"
+    targetNamespace="http://efl.fr/chaine/saxon-pipe/config" 
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
     vc:minVersion="1.1">
 
     <xs:annotation>
@@ -82,6 +84,19 @@
                     done to avoid the java.lang.OutOfMemoryError. </xs:documentation>
             </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="traceOutput" type="cfg:TraceOutput">
+            <xs:annotation>
+                <xs:documentation xml:lang="fr">Permet d'indiquer où faire sortir les traces. c.f. http://blog.xml.rocks/debugging-complex-xslt-modules/ pour des explications sur les traces.</xs:documentation>
+                <xs:documentation xml:lang="en">Where to write traces. c.f. http://blog.xml.rocks/debugging-complex-xslt-modules/ for traces explanations</xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:assert
+            xpathDefaultNamespace="http://efl.fr/chaine/saxon-pipe/config"
+            test="
+            if(not(@traceOutput)) then empty(descendant::cfg:xslt[@traceActive]) else true()" xmlns:cfg="http://efl.fr/chaine/saxon-pipe/config">
+            
+        </xs:assert>
+        
     </xs:complexType>
     <xs:complexType name="TRestrictedPipe">
         <xs:sequence>
@@ -450,7 +465,7 @@
             </xs:annotation>
             <xs:simpleType>
                 <xs:restriction base="xs:string">
-                    <xs:pattern value="(source-file|current-folder|\$.+)"/>
+                    <xs:pattern value="(source-file|current-folder|[$].+)"/>
                 </xs:restriction>
             </xs:simpleType>
         </xs:attribute>
@@ -546,9 +561,20 @@
             <xs:annotation>
                 <xs:documentation xml:lang="fr">La référence à la XSL qui doit être
                     utilisée</xs:documentation>
-                <xs:documentation xml:lang="en"> The xsl to use. $[parameter] will be substitute by
+                <xs:documentation xml:lang="en"> The xsl to use. $[parameter] will be substituted by
                     the global parameter value. </xs:documentation>
             </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="traceActive" use="optional">
+            <xs:annotation>
+                <xs:documentation xml:lang="en">If set to true, a traceListener will be added to transformer. Ancestor &lt;pipe&gt; MUST have the @traceOutput set.</xs:documentation>
+                <xs:documentation xml:lang="fr">Si positionné à true, un TraceListener sera ajouté. Il faut définir le @traceOutput sur le &lt;pipe&gt; ancètre.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+                <xs:restriction base="xs:boolean">
+                    <xs:pattern value="true"/>
+                </xs:restriction>
+            </xs:simpleType>
         </xs:attribute>
     </xs:complexType>
 
@@ -624,7 +650,7 @@
                         toujours non nulle. </xs:documentation>
                     <xs:documentation xml:lang="en"> Allows to start a task once all submitted files
                         are processed. This <tt>StepJava</tt> is run outside of any pipline, with no
-                        source document. Only the méthods <tt>Receiver.open()</tt> and
+                        source document. Only the methods <tt>Receiver.open()</tt> and
                             <tt>Receiver.close()</tt> will be called. The method
                             <tt>StepJava.setDestination(Destination)</tt> will never be call. The
                         implemented <tt>Receiver</tt> must not rely on having a non null
@@ -639,6 +665,27 @@
     <xs:simpleType name="positiveInt">
         <xs:restriction base="xs:string">
             <xs:pattern value="[0-9]+|$\[.*\]"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:simpleType name="TraceOutput">
+        <xs:union memberTypes="xs:anyURI cfg:TOutputs">
+        </xs:union>
+    </xs:simpleType>
+    <xs:simpleType name="TOutputs">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="#standard">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Use standard Logger, as defined by net.sf.saxon.Configuration#getLogger()</xs:documentation>
+                    <xs:documentation xml:lang="fr">Utilise le logger standard de Saxon, tel que définit dans net.sf.saxon.Configuration#getLogger()</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="#logger">
+                <xs:annotation>
+                    <xs:documentation xml:lang="en">Use GauloisPipe logger, and use log4j to configure it.</xs:documentation>
+                    <xs:documentation xml:lang="fr">Utilise le logger Log4J de GauloisPipe</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
 

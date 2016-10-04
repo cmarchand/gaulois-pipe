@@ -25,8 +25,10 @@ import net.sf.saxon.s9api.QName;
 public class Xslt implements ParametrableStep {
     static final QName QNAME = new QName(Config.NS, "xslt");
     static final QName ATTR_HREF = new QName("href");
+    static final QName ATTR_TRACE_ACTIVE = new QName("traceActive");
     private String href;
     private HashMap<String,ParameterValue> params;
+    private boolean traceToAdd = false;
     // pour usage interne
     private File file;
     
@@ -94,7 +96,7 @@ public class Xslt implements ParametrableStep {
                             throw new InvalidSyntaxException(tf.getAbsolutePath()+" is not readable");
                         }
                     } else {
-                        if(!getFile().exists() || !getFile().isFile()) {
+                        if(!xslFile.exists() || !xslFile.isFile()) {
                             throw new InvalidSyntaxException(getFile().getAbsolutePath()+" does not exists or is not a regular file");
                         }
                     }
@@ -110,6 +112,18 @@ public class Xslt implements ParametrableStep {
         } catch(URISyntaxException ex) {
             throw new InvalidSyntaxException(ex);
         }
+    }
+
+    /**
+     * Return true if a TraceListener should be added to this Xslt
+     * @return true if a TraceListener should be added to this Xslt
+     */
+    public boolean isTraceToAdd() {
+        return traceToAdd;
+    }
+
+    void setTraceToAdd(boolean traceToAdd) {
+        this.traceToAdd = traceToAdd;
     }
     
 }
