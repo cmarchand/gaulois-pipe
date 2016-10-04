@@ -26,11 +26,15 @@ public class Xslt implements ParametrableStep {
     static final QName QNAME = new QName(Config.NS, "xslt");
     static final QName ATTR_HREF = new QName("href");
     static final QName ATTR_TRACE_ACTIVE = new QName("traceActive");
+    static final QName ATTR_DEBUG= new QName("debug");
+    static final QName ATTR_ID = new QName("id");
     private String href;
     private HashMap<String,ParameterValue> params;
     private boolean traceToAdd = false;
     // pour usage interne
     private File file;
+    private boolean debug;
+    private String id;
     
     public Xslt() {
         super();
@@ -125,5 +129,38 @@ public class Xslt implements ParametrableStep {
     void setTraceToAdd(boolean traceToAdd) {
         this.traceToAdd = traceToAdd;
     }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public String toString(String prefix) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix).append("xslt href=").append(href);
+        if(id!=null) {
+            sb.append(" id=").append(id);
+        }
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        return toString("");
+    }
+    
     
 }

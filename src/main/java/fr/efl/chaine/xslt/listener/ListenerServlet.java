@@ -17,9 +17,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.concurrent.RejectedExecutionException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -65,7 +64,7 @@ public class ListenerServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Collection<ParameterValue> parameters = new ArrayList<>();
+        HashMap<String,ParameterValue> parameters = new HashMap<>();
         String sUrl=null;
         Enumeration<String> enumer = req.getParameterNames();
         while(enumer.hasMoreElements()) {
@@ -73,7 +72,7 @@ public class ListenerServlet extends HttpServlet {
             if("url".equals(paramName)) {
                 sUrl = req.getParameter(paramName);
             } else if(paramName!=null) {
-                parameters.add(new ParameterValue(paramName, req.getParameter(paramName)));
+                parameters.put(paramName,new ParameterValue(paramName, req.getParameter(paramName)));
             } else {
                 LOGGER.info("received null parameter with value="+req.getParameter(paramName));
             }
@@ -95,7 +94,7 @@ public class ListenerServlet extends HttpServlet {
                         // it is acceptable, will process it
                         final ExecutionContext iCtx = context;
                         final ParametrableFile fpf = new ParametrableFile(inputFile);
-                        fpf.getParameters().addAll(parameters);
+                        fpf.getParameters().putAll(parameters);
                         Runnable r = new Runnable() {
                             @Override
                             public void run() {

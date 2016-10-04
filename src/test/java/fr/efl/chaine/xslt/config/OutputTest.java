@@ -13,8 +13,7 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import net.sf.saxon.Configuration;
 import org.junit.After;
 import static org.junit.Assert.*;
@@ -28,12 +27,12 @@ import org.junit.Test;
  */
 public class OutputTest {
     private Output output;
-    private static Collection<ParameterValue> emptyInputParams;
+    private static HashMap<String,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
 
     @BeforeClass
     public static void initialize() {
-        emptyInputParams = new ArrayList<>();
+        emptyInputParams = new HashMap<>();
         configFactory = new SaxonConfigurationFactory() {
             Configuration config = Configuration.newConfiguration();
             @Override

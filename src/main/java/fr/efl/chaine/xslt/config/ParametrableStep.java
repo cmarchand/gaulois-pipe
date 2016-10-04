@@ -25,4 +25,11 @@ public interface ParametrableStep extends Verifiable {
      * @param param the parameter to add
      */
     void addParameter(ParameterValue param);
+    
+    /**
+     * A tostring() with a prefix on each line
+     * @param prefix
+     * @return 
+     */
+    public String toString(final String prefix);
 }

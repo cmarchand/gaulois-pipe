@@ -9,7 +9,6 @@ package fr.efl.chaine.xslt.config;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import net.sf.saxon.s9api.QName;
 
@@ -33,8 +32,8 @@ public class CfgFile implements Verifiable {
         params.put(param.getKey(), param);
     }
     public File getSource() { return source; }
-    public Collection<ParameterValue> getParams() {
-        return params.values();
+    public HashMap<String,ParameterValue> getParams() {
+        return params;
     }
 
     @Override

@@ -6,7 +6,7 @@
 
     <groupId>top.marchand.xml</groupId>
     <artifactId>gaulois-pipe</artifactId>
-    <version>1.00.02-SNAPSHOT</version>
+    <version>1.01.00-SNAPSHOT</version>
 
     <description>A XSLT pipelining solution</description>
     

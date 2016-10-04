@@ -10,6 +10,7 @@ import de.schlichtherle.truezip.file.TFile;
 import de.schlichtherle.truezip.file.TFileInputStream;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.config.CfgFile;
+import fr.efl.chaine.xslt.config.ChooseStep;
 import fr.efl.chaine.xslt.config.Config;
 import fr.efl.chaine.xslt.config.ConfigUtil;
 import fr.efl.chaine.xslt.config.JavaStep;
@@ -18,10 +19,12 @@ import fr.efl.chaine.xslt.config.Output;
 import fr.efl.chaine.xslt.config.ParametrableStep;
 import fr.efl.chaine.xslt.config.Pipe;
 import fr.efl.chaine.xslt.config.Tee;
+import fr.efl.chaine.xslt.config.WhenEntry;
 import fr.efl.chaine.xslt.config.Xslt;
 import fr.efl.chaine.xslt.listener.HttpListener;
 import fr.efl.chaine.xslt.utils.ParametersMerger;
 import fr.efl.chaine.xslt.utils.ParametrableFile;
+import fr.efl.chaine.xslt.utils.TeeDebugDestination;
 import net.sf.saxon.s9api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +45,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -94,6 +96,7 @@ public class GauloisPipe {
     private static transient boolean protocolInstalled = false;
     
     private List<Exception> errors;
+    private XPathCompiler xpathCompiler;
 
     
     /**
@@ -247,9 +250,7 @@ public class GauloisPipe {
     }
     private ParametrableFile resolveInputFile(CfgFile file) {
         ParametrableFile ret = new ParametrableFile(file.getSource());
-        for (ParameterValue p : file.getParams()) {
-            ret.getParameters().add(p);
-        }
+        ret.getParameters().putAll(file.getParams());
         return ret;
     }
 
@@ -284,7 +285,7 @@ public class GauloisPipe {
                     inputs.get(0).getFile(), 
                     inputs.get(0).getFile().toURI().toURL().toExternalForm(), 
                     ParametersMerger.merge(inputs.get(0).getParameters(), config.getParams()),
-                    messageListener);
+                    messageListener,null);
             } catch(MalformedURLException | InvalidSyntaxException | URISyntaxException | SaxonApiException | FileNotFoundException ex) {
                 String msg = "while pre-compiling for a multi-thread use...";
                 LOGGER.error(msg);
@@ -399,27 +400,27 @@ public class GauloisPipe {
                         source = builder.build(input.getFile());
                         if(!avoidCache && config.getSources().getFileUsage(input.getFile())>1) {
                             // on ne le met en cache que si il est utilisé plusieurs fois !
-                            LOGGER.debug("["+instanceName+"] mise en cache de "+key);
+                            LOGGER.debug("["+instanceName+"] caching "+key);
                             documentCache.put(key, source);
                         } else {
                             documentCache.ignoreLoading(key);
                             if(avoidCache){
-                                LOGGER.debug("["+instanceName+"] "+key+" est explicitement exclu du cache");
+                                LOGGER.trace("["+instanceName+"] "+key+" exclued from cache");
                             } else {
-                                LOGGER.debug("["+instanceName+"] "+key+" n'est utilisé qu'une fois : pas de mise en cache");
+                                LOGGER.trace("["+instanceName+"] "+key+" used only once, no cache");
                             }
                         }
                     }
                 }
             }
         }
-
+        HashMap<String,ParameterValue> parameters = ParametersMerger.addInputInParameters(ParametersMerger.merge(input.getParameters(), config.getParams()),input.getFile());
         XsltTransformer transformer = buildTransformer(
                 pipe, 
                 input.getFile(), 
                 input.getFile().toURI().toURL().toExternalForm(), 
-                ParametersMerger.merge(input.getParameters(), config.getParams()),
-                listener);
+                parameters,
+                listener, source);
         LOGGER.debug("["+instanceName+"] transformer build");
         transformer.setInitialContextNode(source);
         transformer.transform();
@@ -433,7 +434,7 @@ public class GauloisPipe {
         }
     }
     
-    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
         LOGGER.trace("in buildTransformer(Pipe,...)");
         XsltTransformer first = null;
         Iterator<ParametrableStep> it = pipe.getXslts();
@@ -444,6 +445,7 @@ public class GauloisPipe {
             if(step instanceof Xslt) {
                 Xslt xsl = (Xslt)step;
                 XsltTransformer currentTransformer = getXsltTransformer(xsl.getHref(), parameters);
+                Destination currentDestination = currentTransformer;
                 if(xsl.isTraceToAdd()) {
                     currentTransformer.setTraceListener(traceListener);
                 }
@@ -453,21 +455,56 @@ public class GauloisPipe {
                 }
                 for(ParameterValue pv:xsl.getParams()) {
                     // on substitue les paramètres globaux dans ceux de la XSL
-                    String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile);
+                    String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters);
                     LOGGER.trace("Setting parameter ("+pv.getKey()+","+value+")");
                     currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(value));
                 }
-                for(ParameterValue pv:parameters) {
+                for(ParameterValue pv:parameters.values()) {
                     // la substitution a été faite avant, dans le merge, but there is input-file relative parameters...
                     currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
-                            ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile)
+                            ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                     ));
+                }
+                if(xsl.isDebug()) {
+                    Serializer debug = processor.newSerializer(new File(xsl.getId()+"-"+inputFile.getName()));
+                    currentTransformer.setDestination(currentDestination=new TeeDebugDestination(debug));
                 }
                 if(first==null) {
                     first = currentTransformer;
                 }
                 if(previousTransformer!=null) {
-                    assignStepToDestination(previousTransformer, currentTransformer);
+                    assignStepToDestination(previousTransformer, currentDestination);
+                }
+                previousTransformer = currentDestination;
+                LOGGER.trace(xsl.getHref()+" constructed and added to pipe");
+            } else if(step instanceof ChooseStep) {
+                ChooseStep cStep = (ChooseStep)step;
+                XPathCompiler xpc = getXPathCompiler();
+                if(documentTree==null) {
+                    // here, we are in a pre-compile xsl step, ignore the choose...
+                } else {
+                    for(WhenEntry when:cStep.getConditions()) {
+                        XPathSelector select = xpc.compile(when.getTest()).load();
+                        select.setContextItem(documentTree);
+                        XdmValue result = select.evaluate();
+                        if(result.size()!=1) {
+                            throw new InvalidSyntaxException(when.getTest()+" does not produce a xs:boolean result");
+                        }
+                        if("true".equals(result.itemAt(0).getStringValue())) {
+                            // use this WHEN !
+                            // on ne peut pas faire ça, il n'y a pas de terminal step.
+                            Pipe fakePipe = new Pipe();
+                            for(ParametrableStep innerStep:when.getSteps()) {
+                                fakePipe.addXslt(innerStep);
+                            }
+                            Destination currentDestination = buildTransformer(fakePipe, inputFile, inputFileUri, parameters, listener, documentTree, true);
+                            if(previousTransformer!=null) {
+                                assignStepToDestination(previousTransformer, currentDestination);
+                            }
+                            previousTransformer = currentDestination;
+                            break;
+                        }
+                    }
                 }
                 previousTransformer = currentTransformer;
                 LOGGER.trace(xsl.getHref()+" constructed and added to pipe");
@@ -477,13 +514,13 @@ public class GauloisPipe {
                     StepJava stepJava = javaStep.getStepClass().newInstance();
                     for(ParameterValue pv:javaStep.getParams()) {
                         stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
-                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile)
+                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                         ));
                     }
-                    for(ParameterValue pv:parameters) {
+                    for(ParameterValue pv:parameters.values()) {
                         // la substitution a été faite avant, dans le merge
                         stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
-                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters, inputFile)
+                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                         ));
                     }
                     if(previousTransformer!=null) {
@@ -500,14 +537,14 @@ public class GauloisPipe {
         Destination nextStep = null;
         if(pipe.getTee()!=null) {
             LOGGER.trace("after having construct xslts, build tee");
-            nextStep = buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener);
+            nextStep = buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener, documentTree);
         } else if(pipe.getOutput()!=null) {
             LOGGER.trace("after having construct xslts, build output");
             nextStep = buildSerializer(pipe.getOutput(),inputFile,parameters);
         }
         if(nextStep!=null) {
             assignStepToDestination(previousTransformer, nextStep);
-        } else {
+        } else if(isFake.length==0 || !isFake[0]) {
             throw new InvalidSyntaxException("Pipe "+pipe.toString()+" has no terminal Step.");
         }
         return first;
@@ -520,12 +557,14 @@ public class GauloisPipe {
             ((XsltTransformer)assignee).setDestination(assigned);
         } else if(assignee instanceof StepJava) {
             ((StepJava)assignee).setDestination(assigned);
+        } else if(assignee instanceof TeeDebugDestination) {
+            ((TeeDebugDestination)assignee).setDestination(assigned);
         } else {
             throw new IllegalArgumentException("assignee must be either a XsltTransformer or a StepJava instance");
         }
     }
     
-    private XsltTransformer getXsltTransformer(String href, Collection<ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException {
+    private XsltTransformer getXsltTransformer(String href, HashMap<String,ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException {
         // TODO : rewrite this, as cp: and jar: protocols are availabe and one can use new URL(cp:/...).getInputStream()
         String __href = ParametersMerger.processParametersReplacement(href, parameters);
         LOGGER.debug("loading "+__href);
@@ -575,28 +614,43 @@ public class GauloisPipe {
         return xsl.load();
     }
     
-    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
         LOGGER.trace("in buildTransformer(Tee,...)");
-        Destination dest1 = buildShortPipeTransformer(tee.getPipe1(), inputFile, inputFileUri, parameters, listener);
-        Destination dest2 = buildShortPipeTransformer(tee.getPipe2(), inputFile, inputFileUri, parameters, listener);
-        TeeDestination teeDest = new TeeDestination(dest1, dest2);
-        return teeDest;
+        List<Destination> dests = new ArrayList<>();
+        if(tee==null) {
+            throw new InvalidSyntaxException("tee est null !");
+        }
+        if(tee.getPipes()==null) {
+            throw new InvalidSyntaxException("tee.getPipes() est null !");
+        }
+        for(Pipe pipe:tee.getPipes()) {
+            dests.add(buildShortPipeTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree));
+        }
+        while(dests.size()>1) {
+            Destination d1 = dests.remove(0);
+            Destination d2 = dests.remove(0);
+            if(d1==d2) throw new IllegalArgumentException("d1 et d2 sont le meme destination");
+            dests.add(new TeeDestination(d2, d1));
+        }
+        return dests.get(0);
     }
-    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, List<ParameterValue> parameters, MessageListener listener) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
         if(!pipe.getXslts().hasNext()) {
             if(pipe.getOutput()!=null) {
                 return buildSerializer(pipe.getOutput(),inputFile, parameters);
             } else {
-                return buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener);
+                return buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener, documentTree);
             }
         } else {
-            return buildTransformer(pipe, inputFile, inputFileUri, parameters, listener);
+            return buildTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree);
         }
     }
     
-    private Destination buildSerializer(Output output, File inputFile, List<ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
+    private Destination buildSerializer(Output output, File inputFile, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
         if(output.isNullOutput()) {
             return processor.newSerializer(new NullOutputStream());
+        } else if(output.isConsoleOutput()) {
+            return processor.newSerializer("out".equals(output.getConsole())?System.out:System.err);
         }
         final File destinationFile = output.getDestinationFile(inputFile, parameters);
         final Serializer ret = processor.newSerializer(destinationFile);
@@ -647,7 +701,7 @@ public class GauloisPipe {
                     for(ParameterValue pv:javaStep.getParams()) {
                         stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
                     }
-                    for(ParameterValue pv:config.getParams()) {
+                    for(ParameterValue pv:config.getParams().values()) {
                         // la substitution a été faite avant, dans le merge
                         stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
                     }
@@ -759,7 +813,7 @@ public class GauloisPipe {
         List<String> inputXsls = new ArrayList<>();
         String nbThreads = null;
         String inputOutput = null;
-        String _messageListener = null;
+//        String _messageListener = null;
         String configFileName = null;
         String __instanceName = INSTANCE_DEFAULT_NAME;
         boolean logFileSize = false;
@@ -812,25 +866,28 @@ public class GauloisPipe {
                     nbThreads = argument; break;
                 case INPUT_OUTPUT:
                     inputOutput = argument; break;
-                case MESSAGE_LISTENER:
-                    _messageListener = argument ; break;
+//                case MESSAGE_LISTENER:
+//                    _messageListener = argument ; break;
                 case INSTANCE_NAME:
                     __instanceName = argument; break;
                 case CONFIG: 
                     configFileName = argument; break;
             }
         }
-        Collection<ParameterValue> inputParameters = new ArrayList<>(inputParams.size());
+        HashMap<String,ParameterValue> inputParameters = new HashMap<>(inputParams.size());
         for(String paramPattern:inputParams) {
-            inputParameters.add(ConfigUtil.parseParameterPattern(paramPattern));
+            ParameterValue pv = ConfigUtil.parseParameterPattern(paramPattern);
+            inputParameters.put(pv.getKey(), pv);
         }
+        LOGGER.debug("parameters from command line are : "+inputParameters);
         Config config;
         if(configFileName!=null) {
             config=parseConfig(configFileName, inputParameters, configurationFactory.getConfiguration(), skipSchemaValidation);
+            LOGGER.debug("computed parameters in config are :"+config.getParams());
         } else {
             config = new Config();
         }
-        for(ParameterValue pv: inputParameters) config.addParameter(pv);
+//        for(ParameterValue pv: inputParameters) config.addParameter(pv);
         for(String inputFile: inputFiles) ConfigUtil.addInputFile(config, inputFile);
         for(String inputXsl: inputXsls) ConfigUtil.addTemplate(config, inputXsl);
         if(nbThreads!=null) ConfigUtil.setNbThreads(config, nbThreads);
@@ -838,11 +895,12 @@ public class GauloisPipe {
         config.setLogFileSize(logFileSize);
         config.skipSchemaValidation(skipSchemaValidation);
         config.verify();
+        LOGGER.debug("merged parameters into config are : "+config.getParams());
         config.__instanceName=__instanceName;
         return config;
     }
 
-    private Config parseConfig(String fileName, Collection<ParameterValue> inputParameters, Configuration saxonConfig, final boolean skipSchemaValidation) throws InvalidSyntaxException {
+    private Config parseConfig(String fileName, HashMap<String,ParameterValue> inputParameters, Configuration saxonConfig, final boolean skipSchemaValidation) throws InvalidSyntaxException {
         try {
             return new ConfigUtil(saxonConfig, getUriResolver(), fileName, skipSchemaValidation).buildConfig(inputParameters);
         } catch (SaxonApiException ex) {
@@ -996,5 +1054,13 @@ public class GauloisPipe {
         tracer.setOutputDestination(logger);
         return tracer;
     }
-    
+    private XPathCompiler getXPathCompiler() {
+        if(xpathCompiler==null) {
+            xpathCompiler = processor.newXPathCompiler();
+            for(String prefix:config.getNamespaces().getMappings().keySet()) {
+                xpathCompiler.declareNamespace(prefix, config.getNamespaces().getMappings().get(prefix));
+            }
+        }
+        return xpathCompiler;
+    }
 }

@@ -12,7 +12,6 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -29,11 +28,14 @@ import org.slf4j.LoggerFactory;
  */
 public class Output implements Verifiable {
     final static QName QNAME = new QName(Config.NS, "output");
+    static final QName QN_CONSOLE = new QName(Config.NS, "console");
+    static final QName ATTR_CONSOLE_WHICH = new QName("which");
     public static final HashMap<String,OutputPropertyEntry> VALID_OUTPUT_PROPERTIES = new HashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(Output.class);
     private String relativeTo, relativePath;
     private String absolute;
     private String prefix, suffix, name;
+    private String console = null;
     private final OutputProperties outputProperties;
     private boolean nullOutput = false;
     
@@ -170,8 +172,8 @@ public class Output implements Verifiable {
      * @throws InvalidSyntaxException If this output has no been correctly defined
      * @throws java.net.URISyntaxException If the constructed URI is no valid
      */
-    public File getDestinationFile(File sourceFile, Collection<ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
-        File ret = null;
+    public File getDestinationFile(File sourceFile, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
+        File ret;
         if(isAbsolute()) {
             String __abs = absolute;
             int pos = __abs.indexOf("${");
@@ -187,7 +189,8 @@ public class Output implements Verifiable {
                 }
                 pos = __abs.indexOf("${", pos+1);
             }
-            for(ParameterValue pv:parameters) {
+            for(ParameterValue pv:parameters.values()) {
+                LOGGER.debug("replacing $["+pv.getKey()+"]");
                 __abs = __abs.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
             }
             File directory = __abs.startsWith("file:") ? new File(new URI(__abs)) : new File(__abs);
@@ -205,14 +208,14 @@ public class Output implements Verifiable {
         }
         return ret;
     }
-    private String getFileName(File sourceFile, Collection<ParameterValue> parameters) {
+    private String getFileName(File sourceFile, HashMap<String,ParameterValue> parameters) {
         String filename = (prefix!=null?prefix:"") + name + (suffix!=null?suffix:"");
         String sourceName = sourceFile.getName();
         int ix = sourceName.lastIndexOf(".");
         String extension = sourceName.substring(ix);
         String basename = sourceName.substring(0, ix);
         String ret = filename.replaceAll("\\$\\{name\\}", sourceName).replaceAll("\\$\\{basename\\}", basename).replaceAll("\\$\\{extension\\}", extension);
-        for(ParameterValue pv:parameters) {
+        for(ParameterValue pv:parameters.values()) {
             ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
         }
         return ret;
@@ -221,6 +224,7 @@ public class Output implements Verifiable {
     @Override
     public void verify() throws InvalidSyntaxException {
         if(nullOutput) return;
+        if(isConsoleOutput()) return;
         if(!isAbsolute() && (relativePath==null || relativeTo==null)) throw new InvalidSyntaxException("output is neither absolute nor relative");
         if(name==null) throw new InvalidSyntaxException("no strategy to calculate output filename is defined");
     }
@@ -251,4 +255,30 @@ public class Output implements Verifiable {
     public abstract class OutputProperties extends Properties {
         public abstract Object defineProperty(String key, String value) throws InvalidSyntaxException;
     }
+    public String toString(final String prefix) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix).append(toString());
+        return sb.toString();
+    }
+
+    /**
+     * Returns the console to use.
+     * @return "out", "err" or null
+     */
+    public String getConsole() {
+        return console;
+    }
+
+    /**
+     * Defines which console to use.
+     * @param console Only "out", "err" and null are valid values
+     * @throws InvalidSyntaxException If console is not a valid value.
+     */
+    public void setConsole(String console) throws InvalidSyntaxException {
+        if(!"out".equals(console) && !"err".equals(console) && console!=null) {
+            throw new InvalidSyntaxException("Only out, err and null are valid values for console");
+        }
+        this.console = console;
+    }
+    public boolean isConsoleOutput() { return getConsole()!=null; }
 }

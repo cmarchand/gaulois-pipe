@@ -6,7 +6,7 @@ the MPL was not distributed with this file, You
 can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <config xmlns="http://efl.fr/chaine/saxon-pipe/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://efl.fr/chaine/saxon-pipe/config ../../../src/main/resources/fr/efl/chaine/xslt/schemas/saxon-pipe_config.xsd"
+	xsi:schemaLocation="http://efl.fr/chaine/saxon-pipe/config ../../../src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd"
 	documentCacheSize="2">
 	<pipe mutiThreadMaxSourceSize="24349456" nbThreads="4">
 		<xslt href="$[xslDir]/parallel.xsl">
@@ -14,7 +14,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
 		</xslt>
 		<output id="main">
 			<folder absolute="${user.dir}/$[destDir]"/>
-			<fileName name="${basename}-$[p-file]-result.xml"/>
+			<fileName name="$[input-basename]-$[p-file]-result.xml"/>
 		</output>
 	</pipe>
 	<params>

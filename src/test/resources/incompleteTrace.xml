@@ -8,7 +8,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
 <config
     xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
     xmlns='http://efl.fr/chaine/saxon-pipe/config'
-    xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config file:/home/cmarchand/devel/gaulois-pipe/src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
+    xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config ../../../src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
     <pipe nbThreads="1" mutiThreadMaxSourceSize="">
         <xslt href="cp:/uppercase.xsl" traceActive="true"/>
         <output id="pipe2">

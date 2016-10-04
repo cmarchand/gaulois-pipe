@@ -9,8 +9,7 @@ import fr.efl.chaine.xslt.GauloisPipe;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.SaxonConfigurationFactory;
 import fr.efl.chaine.xslt.utils.ParameterValue;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.SaxonApiException;
 import static org.junit.Assert.*;
@@ -23,11 +22,11 @@ import org.junit.Test;
  */
 public class ConfigUtilTest {
     private static SaxonConfigurationFactory configFactory;
-    private static Collection<ParameterValue> emptyInputParams;
+    private static HashMap<String,ParameterValue> emptyInputParams;
 
     @BeforeClass
     public static void initialize() {
-        emptyInputParams = new ArrayList<>();
+        emptyInputParams = new HashMap<>();
         configFactory = new SaxonConfigurationFactory() {
             Configuration config = Configuration.newConfiguration();
             @Override

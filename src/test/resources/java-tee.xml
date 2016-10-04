@@ -8,11 +8,11 @@ can obtain one at https://mozilla.org/MPL/2.0/.
 <config
     xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
     xmlns='http://efl.fr/chaine/saxon-pipe/config'
-    xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config file:/home/cmarchand/devel/gaulois-pipe/src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
+    xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config ../../main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
     <pipe nbThreads="1" mutiThreadMaxSourceSize="">
         <xslt href="src/test/resources/identity.xsl"/>
         <tee>
-            <pipe1>
+            <pipe>
                 <xslt href="src/test/resources/identity.xsl"/>
                 <java class="fr.efl.chaine.xslt.utils.FileAppenderStep">
                     <param name="filePath" value="./target/generated-test-files/tee-java.txt"/>
@@ -20,15 +20,15 @@ can obtain one at https://mozilla.org/MPL/2.0/.
                 </java>
                 <output id="pipe1" >
                     <folder absolute="./target/generated-test-files"/>
-                    <fileName name="${basename}-pipe1.xml"/>
+                    <fileName name="$[input-basename]-pipe1.xml"/>
                 </output>
-            </pipe1>
-            <pipe2>
+            </pipe>
+            <pipe>
                 <output id="pipe2">
                     <folder absolute="./target/generated-test-files"></folder>
-                    <fileName name="${basename}-pipe2.xml"/>
+                    <fileName name="$[input-basename]-pipe2.xml"/>
                 </output>
-            </pipe2>
+            </pipe>
         </tee>
     </pipe>
     <sources orderBy="size" sort="desc">

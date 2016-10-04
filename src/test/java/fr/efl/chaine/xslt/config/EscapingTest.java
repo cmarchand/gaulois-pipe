@@ -10,8 +10,7 @@ import fr.efl.chaine.xslt.GauloisPipe;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.SaxonConfigurationFactory;
 import fr.efl.chaine.xslt.utils.ParameterValue;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import net.sf.saxon.Configuration;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
@@ -39,12 +38,12 @@ public class EscapingTest {
     @Test
     public void escapeParameter() throws InvalidSyntaxException {
         ParameterValue pv = new ParameterValue("workDir", "file:/home/cmarchand/devel/data");
-        Collection<ParameterValue> coll = new ArrayList<>();
-        coll.add(pv);
+        HashMap<String,ParameterValue> params = new HashMap<>();
+        params.put(pv.getKey(), pv);
         // n'importe lequel, aucune importance
         GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/same-source-file.xml");
-        String result = cu.resolveEscapes("$[workDir]/collection.xml", coll);
+        String result = cu.resolveEscapes("$[workDir]/collection.xml", params);
         assertEquals("file:/home/cmarchand/devel/data/collection.xml", result);
     }
     

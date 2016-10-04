@@ -71,5 +71,18 @@ public class JavaStep implements ParametrableStep {
         }
         return hierarch!=null;
     }
+
+    @Override
+    public String toString(String prefix) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix).append("java class=").append(className).append("\n");
+        return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        return toString("");
+    }
+    
     
 }

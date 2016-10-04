@@ -13,8 +13,7 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -27,7 +26,7 @@ import org.junit.BeforeClass;
  * @author Christophe Marchand
  */
 public class GauloisPipeTest {
-    private static Collection<ParameterValue> emptyInputParams;
+    private static HashMap<String,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
     
     public GauloisPipeTest() {
@@ -35,7 +34,7 @@ public class GauloisPipeTest {
     
     @BeforeClass
     public static void initialize() {
-        emptyInputParams = new ArrayList<>();
+        emptyInputParams = new HashMap<>();
         configFactory = new SaxonConfigurationFactory() {
             Configuration config = Configuration.newConfiguration();
             @Override
@@ -100,12 +99,12 @@ public class GauloisPipeTest {
     @Test
     public void testNoSourceFile() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/no-source.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/empty-source.xml");
         Config config = cu.buildConfig(emptyInputParams);
         config.setLogFileSize(true);
         config.verify();
         piper.setConfig(config);
-        piper.setInstanceName("NO_SOURCE");
+        piper.setInstanceName("EMPTY_SOURCE");
         // on veut juste s'assurer qu'on a pas d'exception
         assertTrue(true);
         piper.launch();
@@ -233,6 +232,18 @@ public class GauloisPipeTest {
         piper.launch();
         // it's difficult to check that no file has been written anywhere...
     }
+    @Test
+    public void testConsoleOutput() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/console.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        assertTrue("Output is not a null output", config.getPipe().getOutput().isConsoleOutput());
+        piper.setConfig(config);
+        piper.setInstanceName("CONSOLE OUTPUT");
+        piper.launch();
+        // it's difficult to check that no file has been written anywhere...
+    }
     
     @Test(expected = InvalidSyntaxException.class)
     public void testIncompleteTrace() throws Exception {
@@ -252,6 +263,45 @@ public class GauloisPipeTest {
         piper.launch();
         File expect = new File("./target/generated-test-files/trace.log");
         assertTrue("The file target/generated-test-files/trace. does not exists", expect.exists());
+    }
+
+    @Test
+    public void testDebug() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/debug.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("DEBUG");
+        piper.launch();
+        File expect = new File("debug-source.xml");
+        boolean exists = expect.exists();
+        expect.deleteOnExit();
+        assertTrue("The file debug-source.xml. does not exists", exists);
+    }
+
+    @Test
+    public void testChoose() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/choose.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("CHOOSE");
+        piper.launch();
+        File expect = new File("target/generated-test-files/paye1-choose.xml");
+        boolean exists = expect.exists();
+        assertTrue("The file target/generated-test-files/paye1-choose.xml does not exists", exists);
+        expect = new File("target/generated-test-files/paye1-choose.xml");
+        exists = expect.exists();
+        assertTrue("The file target/generated-test-files/paye2-choose.xml does not exists", exists);
+    }
+    @Test(expected = InvalidSyntaxException.class)
+    public void testNoSource() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/no-source.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
     }
 
 }

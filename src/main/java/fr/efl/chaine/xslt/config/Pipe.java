@@ -134,5 +134,25 @@ public class Pipe implements Verifiable {
         this.traceOutput = traceOutput;
     }
     
+    @Override
+    public String toString() {
+        return toString("");
+    }
+    public String toString(final String prefix) {
+        String _p = prefix+"  ";
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix).append("pipe\n");
+        for(ParametrableStep ps:xslts) {
+            sb.append(ps.toString(_p));
+        }
+        if(output!=null) {
+            sb.append(output.toString(_p));
+        }
+        if(tee!=null) {
+            sb.append(tee.toString(_p));
+        }
+        return sb.toString();
+    }
+    
 
 }
