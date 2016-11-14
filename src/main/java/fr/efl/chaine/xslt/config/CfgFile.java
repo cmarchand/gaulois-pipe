@@ -29,6 +29,7 @@ public class CfgFile implements Verifiable {
         params = new HashMap<>();
     }
     public void addParameter(ParameterValue param) {
+        if(param==null) return;
         params.put(param.getKey(), param);
     }
     public File getSource() { return source; }

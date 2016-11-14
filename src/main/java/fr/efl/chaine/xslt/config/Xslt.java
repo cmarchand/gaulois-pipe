@@ -61,7 +61,9 @@ public class Xslt implements ParametrableStep {
     
     @Override
     public void addParameter(ParameterValue param) {
-        params.put(param.getKey(), param);
+        if(param!=null) {
+            params.put(param.getKey(), param);
+        }
     }
     
     // cette méthode ne peut être appelée, il faut passer par la substitution dans le href

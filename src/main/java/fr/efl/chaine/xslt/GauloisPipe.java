@@ -887,7 +887,6 @@ public class GauloisPipe {
         } else {
             config = new Config();
         }
-//        for(ParameterValue pv: inputParameters) config.addParameter(pv);
         for(String inputFile: inputFiles) ConfigUtil.addInputFile(config, inputFile);
         for(String inputXsl: inputXsls) ConfigUtil.addTemplate(config, inputXsl);
         if(nbThreads!=null) ConfigUtil.setNbThreads(config, nbThreads);

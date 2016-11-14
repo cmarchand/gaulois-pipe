@@ -22,7 +22,7 @@ public interface ParametrableStep extends Verifiable {
     
     /**
      * Adds a parameter
-     * @param param the parameter to add
+     * @param param the parameter to add. <tt>param</tt> may be null.
      */
     void addParameter(ParameterValue param);
     

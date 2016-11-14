@@ -39,7 +39,9 @@ public class JavaStep implements ParametrableStep {
 
     @Override
     public void addParameter(ParameterValue param) {
-        params.put(param.getKey(), param);
+        if(param!=null) {
+            params.put(param.getKey(), param);
+        }
     }
 
     @Override

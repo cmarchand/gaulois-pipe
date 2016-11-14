@@ -32,6 +32,7 @@ public class XsltExecutableCarrier {
         return parameters;
     }
     public void addParameter(ParameterValue p) {
+        if(p==null) return;
         parameters.add(p);
     }
     
