@@ -506,8 +506,8 @@ public class GauloisPipe {
                         }
                     }
                 }
-                previousTransformer = currentTransformer;
-                LOGGER.trace(xsl.getHref()+" constructed and added to pipe");
+//                previousTransformer = currentTransformer;
+//                LOGGER.trace(xsl.getHref()+" constructed and added to pipe");
             } else if(step instanceof JavaStep) {
                 JavaStep javaStep = (JavaStep)step;
                 try {
