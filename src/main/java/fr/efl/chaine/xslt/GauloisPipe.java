@@ -97,6 +97,12 @@ public class GauloisPipe {
     
     private List<Exception> errors;
     private XPathCompiler xpathCompiler;
+    private File debugDirectory;
+
+    /**
+     * The property name to specify the debug output directory
+     */
+    public static final transient String GAULOIS_DEBUG_DIR_PROPERTY = "gaulois.debug.dir";
 
     
     /**
@@ -157,6 +163,7 @@ public class GauloisPipe {
      */
     @SuppressWarnings("ThrowFromFinallyBlock")
     public void launch() throws InvalidSyntaxException, FileNotFoundException, SaxonApiException, URISyntaxException, IOException {
+        initDebugDirectory();
         Runtime.getRuntime().addShutdownHook(new Thread(new ErrorCollector(errors)));
         long start = System.currentTimeMillis();
         errors = Collections.synchronizedList(new ArrayList<Exception>());
@@ -466,7 +473,13 @@ public class GauloisPipe {
                     ));
                 }
                 if(xsl.isDebug()) {
-                    Serializer debug = processor.newSerializer(new File(xsl.getId()+"-"+inputFile.getName()));
+                    File debugFile;
+                    if(debugDirectory!=null) {
+                        debugFile = new File(debugDirectory, xsl.getId()+"-"+inputFile.getName());
+                    } else {
+                        debugFile = new File(xsl.getId()+"-"+inputFile.getName());
+                    }
+                    Serializer debug = processor.newSerializer(debugFile);
                     currentTransformer.setDestination(currentDestination=new TeeDebugDestination(debug));
                 }
                 if(first==null) {
@@ -1061,5 +1074,17 @@ public class GauloisPipe {
             }
         }
         return xpathCompiler;
+    }
+    private void initDebugDirectory() {
+        String property = System.getProperty(GAULOIS_DEBUG_DIR_PROPERTY);
+        if(property!=null) {
+            File directory = new File(property);
+            if(!directory.exists()) {
+                directory.mkdirs();
+            }
+            if(directory.exists() && directory.isDirectory()) {
+                debugDirectory = directory;
+            }
+        }
     }
 }

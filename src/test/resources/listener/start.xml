@@ -11,6 +11,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     documentCacheSize="2" >
     <pipe>
         <xslt href="src/test/resources/identity.xsl"/>
+        <xslt href="src/test/resources/removeAccents.xsl"/>
         <output id="main">
             <folder relative="./target/generated-test-files" to="${user.dir}"/>
             <fileName name="${basename}-listen1.xml"/>

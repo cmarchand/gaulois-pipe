@@ -63,6 +63,14 @@ public class GauloisListenerTest {
         System.out.println(response.getStatusLine().toString());
         assertEquals(200,response.getStatusLine().getStatusCode());
         put.releaseConnection();
+        // the same, with accents
+        source = new File(userDir,"src/test/resources/source_avec_accents.xml");
+        put = new HttpPut("http://localhost:8123/?url="+URLEncoder.encode(source.toURI().toURL().toExternalForm(), "UTF-8"));
+        response = httpClient.execute(put);
+        System.out.println(response.getStatusLine().toString());
+        assertEquals(200,response.getStatusLine().getStatusCode());
+        put.releaseConnection();
+
         // we must let GauloisPipe process submitted file, because JUnit closes since the tested method returns.
         Thread.sleep(1000);
         File outputDir = new File("target/generated-test-files");
