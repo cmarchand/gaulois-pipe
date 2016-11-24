@@ -16,7 +16,13 @@ import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Iterator;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XPathExecutable;
+import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XdmItem;
+import net.sf.saxon.s9api.XdmNode;
+import net.sf.saxon.s9api.XdmValue;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
@@ -303,5 +309,22 @@ public class GauloisPipeTest {
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
     }
-
+    @Test
+    public void testAddAttribute() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/AddAttributeJavaStep.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("ADD_ATTRIBUTE");
+        piper.launch();
+        Processor proc = new Processor(configFactory.getConfiguration());
+        File expect = new File("target/generated-test-files/source-identity-addAttribute.xml");
+        XdmNode document = proc.newDocumentBuilder().build(expect);
+        XPathExecutable exec = proc.newXPathCompiler().compile("//*[@test]");
+        XPathSelector selector = exec.load();
+        selector.setContextItem((XdmItem)document);
+        XdmValue result = selector.evaluate();
+        assertTrue(result.size()>0);
+    }
 }

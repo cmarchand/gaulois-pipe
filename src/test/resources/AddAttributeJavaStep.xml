@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This Source Code Form is subject to the terms of 
+the Mozilla Public License, v. 2.0. If a copy of 
+the MPL was not distributed with this file, You 
+can obtain one at https://mozilla.org/MPL/2.0/.
+-->
+<config xmlns="http://efl.fr/chaine/saxon-pipe/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://efl.fr/chaine/saxon-pipe/config ../../../src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd"
+	documentCacheSize="2">
+	<pipe mutiThreadMaxSourceSize="24349456" nbThreads="4">
+		<xslt href="$[xslDir]/identity.xsl">
+			<param name="p-xsl" value="xsl-value"/>
+		</xslt>
+		<java class="fr.efl.chaine.xslt.utils.AttributeAdder"/>
+		<output id="main">
+			<folder absolute="${user.dir}/$[destDir]"/>
+			<fileName name="$[input-basename]-$[p-file]-addAttribute.xml"/>
+		</output>
+	</pipe>
+	<params>
+		<param name="xslDir" value="./src/test/resources"/>
+		<param name="destDir" value="./target/generated-test-files"/>
+	</params>
+	<sources>
+		<file href="./src/test/resources/source.xml">
+			<param name="p-file" value="identity"/>
+		</file>
+	</sources>
+</config>
