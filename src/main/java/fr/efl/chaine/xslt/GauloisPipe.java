@@ -818,6 +818,18 @@ public class GauloisPipe {
             gauloisPipe.getErrors().add(ex);
         }
     }
+
+    /**
+     * Set the MessageListener class to use.
+     * The only way to set a message listener is to define its class. Gaulois-pipe
+     * wille create an instance of this class, calling the default constructor.
+     * This method must be called before the {@link #launch() } call.
+     * @param messageListenerclass 
+     */
+    public void setMessageListenerclass(Class<MessageListener> messageListenerclass) {
+        this.messageListenerclass = messageListenerclass;
+    }
+    
     
     @SuppressWarnings("LocalVariableHidesMemberVariable")
     public Config parseCommandLine(String[] args) throws InvalidSyntaxException {
@@ -826,7 +838,7 @@ public class GauloisPipe {
         List<String> inputXsls = new ArrayList<>();
         String nbThreads = null;
         String inputOutput = null;
-//        String _messageListener = null;
+        String _messageListener = null;
         String configFileName = null;
         String __instanceName = INSTANCE_DEFAULT_NAME;
         boolean logFileSize = false;
@@ -879,8 +891,8 @@ public class GauloisPipe {
                     nbThreads = argument; break;
                 case INPUT_OUTPUT:
                     inputOutput = argument; break;
-//                case MESSAGE_LISTENER:
-//                    _messageListener = argument ; break;
+                case MESSAGE_LISTENER:
+                    _messageListener = argument ; break;
                 case INSTANCE_NAME:
                     __instanceName = argument; break;
                 case CONFIG: 
@@ -909,6 +921,14 @@ public class GauloisPipe {
         config.verify();
         LOGGER.debug("merged parameters into config are : "+config.getParams());
         config.__instanceName=__instanceName;
+        if(_messageListener!=null) {
+            try {
+                Class clazz = Class.forName(_messageListener);
+                messageListenerclass = clazz.asSubclass(MessageListener.class);
+            } catch(ClassNotFoundException ex) {
+                LOGGER.warn(_messageListener+" is not a "+MessageListener.class.getName());
+            }
+        }
         return config;
     }
 

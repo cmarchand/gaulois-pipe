@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This Source Code Form is subject to the terms of 
+the Mozilla Public License, v. 2.0. If a copy of 
+the MPL was not distributed with this file, You 
+can obtain one at https://mozilla.org/MPL/2.0/.
+-->
+<config xmlns="http://efl.fr/chaine/saxon-pipe/config"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config ../../../src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
+    <pipe mutiThreadMaxSourceSize="24349456" nbThreads="4">
+        <xslt href="./src/test/resources/step1.xsl">
+            <param name="p-step1" value="step1"/>
+        </xslt>
+        <tee>
+            <pipe>
+                <xslt href="./src/test/resources/step2.xsl">
+                    <param name="p-step2" value="step2"/>
+                </xslt>
+                <output id="step1">
+                    <folder relative="./target/generated-test-files" to="${user.dir}"/>
+                    <fileName name="step1-output.xml"/>
+                </output>
+            </pipe>
+            <pipe>
+                <xslt href="./src/test/resources/step3.xsl">
+                    <param name="p-step3" value="step3"/>
+                </xslt>
+                <output id="step3">
+                    <folder relative="./target/generated-test-files" to="${user.dir}"/>
+                    <fileName name="step3-output.xml"/>
+                </output>
+            </pipe>
+            <pipe>
+                <output id="step2">
+                    <folder relative="./target/generated-test-files" to="${user.dir}"/>
+                    <fileName name="step2-output.xml"/>
+                </output>
+            </pipe>
+        </tee>
+    </pipe>
+    <params>
+        <param name="p-general" value="GENERAL"/>
+    </params>
+    <sources>
+	<!-- on veut inclure les fichiers qui finissent par .xml, mais exclure les fichiers qui finissent par .out.xml -->
+        <folder href="./src/test/resources" pattern="source.*xml"></folder>
+    </sources>
+</config>
