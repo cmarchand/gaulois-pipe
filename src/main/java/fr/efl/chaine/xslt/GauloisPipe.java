@@ -826,8 +826,10 @@ public class GauloisPipe {
      * This method must be called before the {@link #launch() } call.
      * @param messageListenerclass The class of the listener to use
      */
-    public void setMessageListenerclass(Class<MessageListener> messageListenerclass) {
-        this.messageListenerclass = messageListenerclass;
+    public void setMessageListenerclass(Class messageListenerclass) {
+        if(MessageListener.class.isAssignableFrom(messageListenerclass)) {
+            this.messageListenerclass = messageListenerclass;
+        }
     }
     
     
