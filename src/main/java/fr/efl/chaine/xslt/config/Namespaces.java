@@ -11,7 +11,7 @@ import java.util.HashMap;
 import net.sf.saxon.s9api.QName;
 
 /**
- *
+ * A class used to keep namespaces definitions.
  * @author cmarchand
  */
 public class Namespaces implements Verifiable {
@@ -31,7 +31,7 @@ public class Namespaces implements Verifiable {
     
     /**
      * Returns a HashMap where key is the prefix, and value the URI.
-     * @return 
+     * @return The mappings
      */
     public HashMap<String,String> getMappings() {
         return mapping;

@@ -824,7 +824,7 @@ public class GauloisPipe {
      * The only way to set a message listener is to define its class. Gaulois-pipe
      * wille create an instance of this class, calling the default constructor.
      * This method must be called before the {@link #launch() } call.
-     * @param messageListenerclass 
+     * @param messageListenerclass The class of the listener to use
      */
     public void setMessageListenerclass(Class<MessageListener> messageListenerclass) {
         this.messageListenerclass = messageListenerclass;

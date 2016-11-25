@@ -69,8 +69,8 @@ public abstract class StepJava implements Destination {
     /**
      * Propagates the close on the chain.
      * Transform are actually done one {@link #close() } call.
-     * See {@linkplain http://saxon.markmail.org/search/?q=#query:+page:1+mid:r4mkgcg7awklwqwq+state:results}
-     * @throws SaxonApiException 
+     * See <a href="http://saxon.markmail.org/search/?q=#query:+page:1+mid:r4mkgcg7awklwqwq+state:results">Saxon mailing list</a>
+     * @throws SaxonApiException In case of problem.
      */
     @Override
     public void close() throws SaxonApiException {

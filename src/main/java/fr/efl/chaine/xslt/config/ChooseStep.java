@@ -28,7 +28,7 @@ public class ChooseStep implements ParametrableStep {
 
     /**
      * Always return null, a step may not have parameters.
-     * @return 
+     * @return {@code null}
      */
     @Override
     public Collection<ParameterValue> getParams() {
@@ -43,8 +43,8 @@ public class ChooseStep implements ParametrableStep {
     }
 
     /**
-     * Ignored. A Choose may not have parameters.
-     * @param param 
+     * Does nothing, a ChooseStep may not have parameters
+     * @param param Ignored
      */
     @Override
     public void addParameter(ParameterValue param) { }

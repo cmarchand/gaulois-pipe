@@ -28,8 +28,8 @@ public interface ParametrableStep extends Verifiable {
     
     /**
      * A tostring() with a prefix on each line
-     * @param prefix
-     * @return 
+     * @param prefix The prefix to use on each line
+     * @return The formal description, with a prefix
      */
     public String toString(final String prefix);
 }
