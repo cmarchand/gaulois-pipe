@@ -13,9 +13,9 @@ can obtain one at https://mozilla.org/MPL/2.0/.
 			<param name="p-xsl" value="first-identity"/>
 		</xslt>
 		<java class="fr.efl.chaine.xslt.utils.AttributeAdder"/>
-                <xslt href="$[xslDir]/identity.xsl">
+                <!--xslt href="$[xslDir]/identity.xsl">
 			<param name="p-xsl" value="last-identity"/>
-		</xslt>
+		</xslt-->
 		<output id="main">
 			<folder absolute="${user.dir}/$[destDir]"/>
 			<fileName name="$[input-basename]-$[p-file]-addAttribute.xml"/>

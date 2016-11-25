@@ -27,7 +27,7 @@ public class AttributeAdder extends StepJava {
     private AttributeCollectionImpl attributes;
 
     private Receiver underlyingReceiver;
-
+    
     @Override
     public Receiver getReceiver(Configuration c) throws SaxonApiException {
         underlyingReceiver = new AttributeAdderReceiver(getNextReceiver(c));
@@ -47,8 +47,8 @@ public class AttributeAdder extends StepJava {
 
         @Override
         public void startElement(NodeName elemName, SchemaType typeCode, Location location, int properties) throws XPathException {
-            attributes = new AttributeCollectionImpl(getConfiguration());
             super.startElement(elemName, typeCode, location, properties);
+            attributes = new AttributeCollectionImpl(getConfiguration());
             attributes.addAttribute(
                     new FingerprintedQName("", "", "test"), 
                     AnySimpleType.getInstance(), 
@@ -56,7 +56,6 @@ public class AttributeAdder extends StepJava {
                     location, 
                     properties);
         }
-
 
         @Override
         public void startContent() throws XPathException {

@@ -642,7 +642,7 @@ public class GauloisPipe {
         while(dests.size()>1) {
             Destination d1 = dests.remove(0);
             Destination d2 = dests.remove(0);
-            if(d1==d2) throw new IllegalArgumentException("d1 et d2 sont le meme destination");
+            if(d1==d2) throw new IllegalArgumentException("d1 et d2 sont la meme destination");
             dests.add(new TeeDestination(d2, d1));
         }
         return dests.get(0);
