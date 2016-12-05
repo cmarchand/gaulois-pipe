@@ -58,9 +58,9 @@ public class ParametersMerger {
     /**
      * Replaces the parameters in string
      * @param parameters The parameters values
-     * @param inputFile The input file actually processed. input-basename, input-name and input-extension are added, so can be used.
+     * @param inputFile The input file actually processed. input-basename, input-name, input-absolute and input-extension are added, so can be used.
      * 
-     * @return The parameters whith inpu-name, input-basename and input-extension added
+     * @return The parameters whith input-name, input-basename, input-absolute and input-extension added
      */
     public static HashMap<String,ParameterValue> addInputInParameters(final HashMap<String,ParameterValue> parameters, final File inputFile) {
         HashMap<String,ParameterValue> fileParams = new HashMap<>();
@@ -70,6 +70,7 @@ public class ParametersMerger {
         fileParams.put("input-basename", new ParameterValue("input-basename", basename));
         fileParams.put("input-name", new ParameterValue("input-name", name));
         fileParams.put("input-extension", new ParameterValue("input-extension", extension));
+        fileParams.put("input-absolute", new ParameterValue("input-absolute", inputFile.getAbsolutePath()));
         return merge(parameters, fileParams);
     }
 }

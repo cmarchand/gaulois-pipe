@@ -12,9 +12,7 @@ import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.utils.ParametrableFile;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
@@ -100,7 +98,7 @@ public class ListenerServlet extends HttpServlet {
                             public void run() {
                                 try {
                                     iCtx.getGaulois().execute(iCtx.getPipe(), fpf, iCtx.getMsgListener());
-                                } catch(SaxonApiException | MalformedURLException | InvalidSyntaxException | URISyntaxException | FileNotFoundException ex) {
+                                } catch(SaxonApiException | IOException | InvalidSyntaxException | URISyntaxException ex) {
                                     String msg = "[" + iCtx.getGaulois().getInstanceName() + "] while processing "+fpf.getFile().getName();
                                     LOGGER.error(msg, ex);
                                     iCtx.getGaulois().getErrors().add(new GauloisRunException(msg, fpf.getFile()));

@@ -6,8 +6,6 @@
  */
 package fr.efl.chaine.xslt;
 
-import de.schlichtherle.truezip.file.TFile;
-import de.schlichtherle.truezip.file.TFileInputStream;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.config.CfgFile;
 import fr.efl.chaine.xslt.config.ChooseStep;
@@ -45,6 +43,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -293,7 +292,7 @@ public class GauloisPipe {
                     inputs.get(0).getFile().toURI().toURL().toExternalForm(), 
                     ParametersMerger.merge(inputs.get(0).getParameters(), config.getParams()),
                     messageListener,null);
-            } catch(MalformedURLException | InvalidSyntaxException | URISyntaxException | SaxonApiException | FileNotFoundException ex) {
+            } catch(IOException | InvalidSyntaxException | URISyntaxException | SaxonApiException ex) {
                 String msg = "while pre-compiling for a multi-thread use...";
                 LOGGER.error(msg);
                 errors.add(new GauloisRunException(msg, ex));
@@ -306,7 +305,7 @@ public class GauloisPipe {
                 public void run() {
                     try {
                         execute(pipe, fpf, messageListener);
-                    } catch(SaxonApiException | MalformedURLException | InvalidSyntaxException | URISyntaxException | FileNotFoundException ex) {
+                    } catch(SaxonApiException | IOException | InvalidSyntaxException | URISyntaxException ex) {
                         String msg = "[" + instanceName + "] while processing "+fpf.getFile().getName();
                         LOGGER.error(msg, ex);
                         errors.add(new GauloisRunException(msg, fpf.getFile()));
@@ -357,8 +356,9 @@ public class GauloisPipe {
         for (ParametrableFile inputFile : inputs) {
             try {
                 execute(pipe, inputFile, messageListener);
-            } catch(SaxonApiException | MalformedURLException | InvalidSyntaxException | URISyntaxException | FileNotFoundException ex) {
+            } catch(SaxonApiException | InvalidSyntaxException | URISyntaxException | IOException ex) {
                 LOGGER.error("[" + instanceName + "] while mono-thread processing of "+inputFile.getFile().getName(),ex);
+                errors.add(new GauloisRunException(ex.getMessage(), inputFile.getFile()));
                 ret = false;
             }
         }
@@ -385,7 +385,7 @@ public class GauloisPipe {
      * @throws java.io.FileNotFoundException And when the file can not be found !
      */
     public void execute(Pipe pipe, ParametrableFile input, MessageListener listener)
-            throws SaxonApiException, MalformedURLException, InvalidSyntaxException, URISyntaxException, FileNotFoundException {
+            throws SaxonApiException, MalformedURLException, InvalidSyntaxException, URISyntaxException, FileNotFoundException, IOException {
         boolean avoidCache = input.getAvoidCache();
         long start = System.currentTimeMillis();
         String key = input.getFile().getAbsolutePath().intern();
@@ -441,7 +441,7 @@ public class GauloisPipe {
         }
     }
     
-    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         LOGGER.trace("in buildTransformer(Pipe,...)");
         XsltTransformer first = null;
         Iterator<ParametrableStep> it = pipe.getXslts();
@@ -519,8 +519,6 @@ public class GauloisPipe {
                         }
                     }
                 }
-//                previousTransformer = currentTransformer;
-//                LOGGER.trace(xsl.getHref()+" constructed and added to pipe");
             } else if(step instanceof JavaStep) {
                 JavaStep javaStep = (JavaStep)step;
                 try {
@@ -577,7 +575,7 @@ public class GauloisPipe {
         }
     }
     
-    private XsltTransformer getXsltTransformer(String href, HashMap<String,ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException {
+    private XsltTransformer getXsltTransformer(String href, HashMap<String,ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException, IOException {
         // TODO : rewrite this, as cp: and jar: protocols are availabe and one can use new URL(cp:/...).getInputStream()
         String __href = ParametersMerger.processParametersReplacement(href, parameters);
         LOGGER.debug("loading "+__href);
@@ -590,16 +588,7 @@ public class GauloisPipe {
                     File f = new File(new URI(__href));
                     input = new FileInputStream(f);
                 } else if(__href.startsWith("jar:")) {
-                    String xslUri = href.substring(href.indexOf("!")+1);
-                    if(!xslUri.startsWith("/")) xslUri = "/"+xslUri;
-                    String jarUri = href.substring(4,href.length()-xslUri.length()-1);
-                    if(jarUri.startsWith("file://")) {
-                        jarUri = jarUri.substring(7);
-                    } else if(jarUri.startsWith("file:")) {
-                        jarUri = jarUri.substring(5);
-                    }
-                    TFile f = new TFile(jarUri+xslUri);
-                    input = new TFileInputStream(f);
+                    input = new URL(__href).openStream();
                 } else if(__href.startsWith("cp:")) {
                     input = GauloisPipe.class.getResourceAsStream(__href.substring(3));
                 } else {
@@ -627,7 +616,7 @@ public class GauloisPipe {
         return xsl.load();
     }
     
-    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         LOGGER.trace("in buildTransformer(Tee,...)");
         List<Destination> dests = new ArrayList<>();
         if(tee==null) {
@@ -647,7 +636,7 @@ public class GauloisPipe {
         }
         return dests.get(0);
     }
-    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException {
+    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         if(!pipe.getXslts().hasNext()) {
             if(pipe.getOutput()!=null) {
                 return buildSerializer(pipe.getOutput(),inputFile, parameters);
