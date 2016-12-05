@@ -124,7 +124,7 @@ public class Pipe implements Verifiable {
 
     /**
      * Retuns the trace output. Valid values are #default, #logger, or an URI
-     * @return 
+     * @return Where to output traces
      */
     public String getTraceOutput() {
         return traceOutput;

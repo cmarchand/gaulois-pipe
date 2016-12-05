@@ -6,7 +6,7 @@
 
     <groupId>top.marchand.xml</groupId>
     <artifactId>gaulois-pipe-parent</artifactId>
-    <version>1.01.02-SNAPSHOT</version>
+    <version>1.01.03-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -52,98 +52,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <!--dependencies>
-        <dependency>
-            <groupId>org.opengis.cite.xerces</groupId>
-            <artifactId>xercesImpl-xsd11</artifactId>
-            <version>2.12-beta-r1667115</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opengis.cite.eclipse.webtools.sse</groupId>
-            <artifactId>org.eclipse.wst.xml.xpath2.processor</artifactId>
-            <version>1.1.5-738bb7b85d</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.xerces</groupId>
-                    <artifactId>org.apache.xerces</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.3</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.saxon</groupId>
-            <artifactId>Saxon-HE</artifactId>
-            <version>9.7.0-4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.6.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.6.1</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>de.schlichtherle.truezip</groupId>
-            <artifactId>truezip-file</artifactId>
-            <version>7.7.9</version>
-        </dependency>
-        <dependency>
-            <groupId>de.schlichtherle.truezip</groupId>
-            <artifactId>truezip-driver-zip</artifactId>
-            <version>7.7.9</version>
-        </dependency>
-        <dependency>
-            <groupId>org.xmlresolver</groupId>
-            <artifactId>xmlresolver</artifactId>
-            <version>0.12.4</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-slf4j-impl</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>top.marchand.xml</groupId>
-            <artifactId>cp-protocol</artifactId>
-            <version>1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>9.2.17.v20160517</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>9.2.17.v20160517</version>
-        </dependency>
-    </dependencies-->
 
     <distributionManagement>
         <snapshotRepository>
@@ -191,71 +99,6 @@
             </plugins>
         </pluginManagement>
         <plugins>
-            <!--plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <configuration>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                </configuration>
-            </plugin-->
-            <!--plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.1</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>fr.efl.chaine.xslt.GauloisPipe</mainClass>
-                        </manifest>
-                        <manifestEntries>
-                            <Build-Tag>${build-tag}</Build-Tag>
-                            <Git-Commit>${build-commit}</Git-Commit>
-                            <Git-Commit-Abbrev>${build-commit-abbrev}</Git-Commit-Abbrev>
-                            <Build-Version>${build-version}</Build-Version>
-                            <Build-Timestamp>${build-tstamp}</Build-Timestamp>
-                            <Source-Repository>${project.scm.connection}</Source-Repository>
-                            <Description>${project.description}</Description>
-                            <Website>${project.url}</Website>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin-->
-            <!--plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2</version>
-                <configuration>
-                    <finalName>gaulois-pipe-${project.version}</finalName>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>fr.efl.chaine.xslt.GauloisPipe</mainClass>
-                        </manifest>
-                        <manifestEntries>
-                            <Build-Tag>${build-tag}</Build-Tag>
-                            <Git-Commit>${build-commit}</Git-Commit>
-                            <Git-Commit-Abbrev>${build-commit-abbrev}</Git-Commit-Abbrev>
-                            <Build-Version>${build-version}</Build-Version>
-                            <Build-Timestamp>${build-tstamp}</Build-Timestamp>
-                            <Source-Repository>${project.scm.connection}</Source-Repository>
-                            <Description>${project.description}</Description>
-                            <Website>${project.url}</Website>
-                        </manifestEntries>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-my-jar-with-dependencies</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>

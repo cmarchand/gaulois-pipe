@@ -47,7 +47,7 @@ public class WhenEntry implements ParametrableStep {
 
     /**
      * Always return null, a When can not have parameters.
-     * @return 
+     * @return {@code null}
      */
     @Override
     public Collection<ParameterValue> getParams() {
@@ -56,7 +56,7 @@ public class WhenEntry implements ParametrableStep {
 
     /**
      * Does nothing, a When  can not have parameters.
-     * @param param 
+     * @param param Ignored
      */
     @Override
     public void addParameter(ParameterValue param) { }

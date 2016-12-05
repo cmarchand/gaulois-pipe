@@ -29,7 +29,7 @@ public class SourcesTest {
                 new CfgFile(new File("./src/test/resources/sources-getfiles/titi.txt"))
         ));
         List<CfgFile> files = sources.getFiles();
-        List<String> filesInString = new ArrayList<String>(files.size());
+        List<String> filesInString = new ArrayList<>(files.size());
         for (CfgFile file : files) {
             filesInString.add(file.getSource().getAbsolutePath());
         }

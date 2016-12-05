@@ -97,6 +97,12 @@ public class GauloisPipe {
     
     private List<Exception> errors;
     private XPathCompiler xpathCompiler;
+    private File debugDirectory;
+
+    /**
+     * The property name to specify the debug output directory
+     */
+    public static final transient String GAULOIS_DEBUG_DIR_PROPERTY = "gaulois.debug.dir";
 
     
     /**
@@ -157,6 +163,7 @@ public class GauloisPipe {
      */
     @SuppressWarnings("ThrowFromFinallyBlock")
     public void launch() throws InvalidSyntaxException, FileNotFoundException, SaxonApiException, URISyntaxException, IOException {
+        initDebugDirectory();
         Runtime.getRuntime().addShutdownHook(new Thread(new ErrorCollector(errors)));
         long start = System.currentTimeMillis();
         errors = Collections.synchronizedList(new ArrayList<Exception>());
@@ -466,7 +473,13 @@ public class GauloisPipe {
                     ));
                 }
                 if(xsl.isDebug()) {
-                    Serializer debug = processor.newSerializer(new File(xsl.getId()+"-"+inputFile.getName()));
+                    File debugFile;
+                    if(debugDirectory!=null) {
+                        debugFile = new File(debugDirectory, xsl.getId()+"-"+inputFile.getName());
+                    } else {
+                        debugFile = new File(xsl.getId()+"-"+inputFile.getName());
+                    }
+                    Serializer debug = processor.newSerializer(debugFile);
                     currentTransformer.setDestination(currentDestination=new TeeDebugDestination(debug));
                 }
                 if(first==null) {
@@ -629,7 +642,7 @@ public class GauloisPipe {
         while(dests.size()>1) {
             Destination d1 = dests.remove(0);
             Destination d2 = dests.remove(0);
-            if(d1==d2) throw new IllegalArgumentException("d1 et d2 sont le meme destination");
+            if(d1==d2) throw new IllegalArgumentException("d1 et d2 sont la meme destination");
             dests.add(new TeeDestination(d2, d1));
         }
         return dests.get(0);
@@ -805,6 +818,20 @@ public class GauloisPipe {
             gauloisPipe.getErrors().add(ex);
         }
     }
+
+    /**
+     * Set the MessageListener class to use.
+     * The only way to set a message listener is to define its class. Gaulois-pipe
+     * wille create an instance of this class, calling the default constructor.
+     * This method must be called before the {@link #launch() } call.
+     * @param messageListenerclass The class of the listener to use
+     */
+    public void setMessageListenerclass(Class messageListenerclass) {
+        if(MessageListener.class.isAssignableFrom(messageListenerclass)) {
+            this.messageListenerclass = messageListenerclass;
+        }
+    }
+    
     
     @SuppressWarnings("LocalVariableHidesMemberVariable")
     public Config parseCommandLine(String[] args) throws InvalidSyntaxException {
@@ -813,7 +840,7 @@ public class GauloisPipe {
         List<String> inputXsls = new ArrayList<>();
         String nbThreads = null;
         String inputOutput = null;
-//        String _messageListener = null;
+        String _messageListener = null;
         String configFileName = null;
         String __instanceName = INSTANCE_DEFAULT_NAME;
         boolean logFileSize = false;
@@ -866,8 +893,8 @@ public class GauloisPipe {
                     nbThreads = argument; break;
                 case INPUT_OUTPUT:
                     inputOutput = argument; break;
-//                case MESSAGE_LISTENER:
-//                    _messageListener = argument ; break;
+                case MESSAGE_LISTENER:
+                    _messageListener = argument ; break;
                 case INSTANCE_NAME:
                     __instanceName = argument; break;
                 case CONFIG: 
@@ -896,6 +923,14 @@ public class GauloisPipe {
         config.verify();
         LOGGER.debug("merged parameters into config are : "+config.getParams());
         config.__instanceName=__instanceName;
+        if(_messageListener!=null) {
+            try {
+                Class clazz = Class.forName(_messageListener);
+                messageListenerclass = clazz.asSubclass(MessageListener.class);
+            } catch(ClassNotFoundException ex) {
+                LOGGER.warn(_messageListener+" is not a "+MessageListener.class.getName());
+            }
+        }
         return config;
     }
 
@@ -1061,5 +1096,17 @@ public class GauloisPipe {
             }
         }
         return xpathCompiler;
+    }
+    private void initDebugDirectory() {
+        String property = System.getProperty(GAULOIS_DEBUG_DIR_PROPERTY);
+        if(property!=null) {
+            File directory = new File(property);
+            if(!directory.exists()) {
+                directory.mkdirs();
+            }
+            if(directory.exists() && directory.isDirectory()) {
+                debugDirectory = directory;
+            }
+        }
     }
 }

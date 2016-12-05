@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * An output definition
  * @author ext-cmarchand
  */
 public class Output implements Verifiable {
@@ -143,7 +143,7 @@ public class Output implements Verifiable {
     }
     /**
      * Returns <tt>true</tt> if the output should not be written anywhere
-     * @return 
+     * @return {@code true} if this output should produce nothing
      */
     public boolean isNullOutput() {
         return nullOutput;

@@ -21,7 +21,7 @@ import net.sf.saxon.s9api.XdmValue;
  * @author cmarchand
  */
 public abstract class StepJava implements Destination {
-    private Destination nextStep;
+    protected Destination nextStep;
     private final HashMap<QName, XdmValue> parameters;
     
     public StepJava() {
@@ -65,4 +65,17 @@ public abstract class StepJava implements Destination {
     public XdmValue getParameter(QName name) {
         return parameters.get(name);
     }
+
+    /**
+     * Propagates the close on the chain.
+     * Transform are actually done one {@link #close() } call.
+     * See <a href="http://saxon.markmail.org/search/?q=#query:+page:1+mid:r4mkgcg7awklwqwq+state:results">Saxon mailing list</a>
+     * @throws SaxonApiException In case of problem.
+     */
+    @Override
+    public void close() throws SaxonApiException {
+        nextStep.close();
+    }
+    
+    
 }

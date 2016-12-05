@@ -84,7 +84,6 @@ public class FileAppenderStep extends StepJava {
             } catch(IOException ex) {
                 LOGGER.error("while writting to "+fileName,ex);
             }
-            
         }
         
     }
