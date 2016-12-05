@@ -11,8 +11,8 @@
 
     <modules>
         <module>gaulois-pipe</module>
-        <module>dist</module>
         <module>logs</module>
+        <module>dist</module>
     </modules>
 
     <name>gaulois-pipe-parent</name>
