@@ -5,17 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>top.marchand.xml</groupId>
-    <artifactId>gaulois-pipe-parent</artifactId>
+    <artifactId>gaulois-pipe</artifactId>
     <version>1.01.02-SNAPSHOT</version>
-    <packaging>pom</packaging>
 
-    <modules>
-        <module>gaulois-pipe</module>
-        <module>dist</module>
-        <module>logs</module>
-    </modules>
-
-    <name>gaulois-pipe-parent</name>
+    <name>gaulois-pipe</name>
 
     <url>https://github.com/cmarchand/gaulois-pipe</url>
 
@@ -53,7 +46,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <!--dependencies>
+    <dependencies>
         <dependency>
             <groupId>org.opengis.cite.xerces</groupId>
             <artifactId>xercesImpl-xsd11</artifactId>
@@ -109,6 +102,7 @@
             <artifactId>truezip-driver-zip</artifactId>
             <version>7.7.9</version>
         </dependency>
+        <!-- http://mvnrepository.com/artifact/org.xmlresolver/xmlresolver -->
         <dependency>
             <groupId>org.xmlresolver</groupId>
             <artifactId>xmlresolver</artifactId>
@@ -133,17 +127,19 @@
             <artifactId>cp-protocol</artifactId>
             <version>1.2</version>
         </dependency>
+        <!-- http://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>9.2.17.v20160517</version>
         </dependency>
+        <!-- http://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlet -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
             <version>9.2.17.v20160517</version>
         </dependency>
-    </dependencies-->
+    </dependencies>
 
     <distributionManagement>
         <snapshotRepository>
@@ -191,17 +187,16 @@
             </plugins>
         </pluginManagement>
         <plugins>
-            <!--plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
-            </plugin-->
-            <!--plugin>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.1</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -220,7 +215,7 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
-            </plugin-->
+            </plugin>
             <!--plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.2</version>
@@ -255,7 +250,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin-->
+            </plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
