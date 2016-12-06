@@ -521,6 +521,7 @@ public class GauloisPipe {
                 }
             } else if(step instanceof JavaStep) {
                 JavaStep javaStep = (JavaStep)step;
+                LOGGER.debug("creating "+javaStep.getStepClass().getName());
                 try {
                     LOGGER.debug("[JAVA-STEP] Creating "+javaStep.getStepClass().getName());
                     StepJava stepJava = javaStep.getStepClass().newInstance();
@@ -699,6 +700,7 @@ public class GauloisPipe {
             context.getService().awaitTermination(5, TimeUnit.HOURS);
             if(config.getSources().getListener().getJavastep()!=null) {
                 JavaStep javaStep = config.getSources().getListener().getJavastep();
+                LOGGER.debug("creating "+javaStep.getStepClass().getName());
                 try {
                     StepJava stepJava = javaStep.getStepClass().newInstance();
                     for(ParameterValue pv:javaStep.getParams()) {

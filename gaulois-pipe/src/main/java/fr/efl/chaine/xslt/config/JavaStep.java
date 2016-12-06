@@ -1,7 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * This Source Code Form is subject to the terms of 
+ * the Mozilla Public License, v. 2.0. If a copy of 
+ * the MPL was not distributed with this file, You 
+ * can obtain one at https://mozilla.org/MPL/2.0/.
  */
 package fr.efl.chaine.xslt.config;
 
@@ -13,7 +14,7 @@ import java.util.HashMap;
 import net.sf.saxon.s9api.QName;
 
 /**
- *
+ * A java step.
  * @author cmarchand
  */
 public class JavaStep implements ParametrableStep {
@@ -49,7 +50,7 @@ public class JavaStep implements ParametrableStep {
         try {
             clazz = Class.forName(className);
             if(!isDerivedFrom(clazz, StepJava.class)) {
-                throw new InvalidSyntaxException("La classe "+className+" n'implémente pas "+StepJava.class.getName());
+                throw new InvalidSyntaxException("Class "+className+" do not extends "+StepJava.class.getName());
             }
         } catch(ClassNotFoundException | InvalidSyntaxException ex) {
             throw new InvalidSyntaxException(ex);
