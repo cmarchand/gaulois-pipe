@@ -49,7 +49,12 @@ public class ParametersMerger {
         String ret = initialValue;
         if(ret.contains("$[")) {
             for(ParameterValue pv: parameters.values()) {
-                ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
+                try {
+                    ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
+                } catch(java.lang.IllegalArgumentException ex) {
+                    LOGGER.error("while replacing "+pv.getKey()+" -> "+pv.getValue(),ex);
+                    throw ex;
+                }
                 if(!ret.contains("$[")) break;
             }
         }

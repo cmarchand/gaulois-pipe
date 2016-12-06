@@ -467,7 +467,7 @@ public class GauloisPipe {
                     currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(value));
                 }
                 for(ParameterValue pv:parameters.values()) {
-                    // la substitution a été faite avant, dans le merge, but there is input-file relative parameters...
+                    // substitution has been before, in merge, but there is input-file relative parameters...
                     currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
                             ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                     ));
@@ -522,6 +522,7 @@ public class GauloisPipe {
             } else if(step instanceof JavaStep) {
                 JavaStep javaStep = (JavaStep)step;
                 try {
+                    LOGGER.debug("[JAVA-STEP] Creating "+javaStep.getStepClass().getName());
                     StepJava stepJava = javaStep.getStepClass().newInstance();
                     for(ParameterValue pv:javaStep.getParams()) {
                         stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
@@ -892,6 +893,7 @@ public class GauloisPipe {
         }
         HashMap<String,ParameterValue> inputParameters = new HashMap<>(inputParams.size());
         for(String paramPattern:inputParams) {
+            LOGGER.debug("parsing parameter "+paramPattern);
             ParameterValue pv = ConfigUtil.parseParameterPattern(paramPattern);
             inputParameters.put(pv.getKey(), pv);
         }

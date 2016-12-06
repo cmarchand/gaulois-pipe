@@ -146,15 +146,19 @@ public class ConfigUtil {
                 config.setNamespaces(namespaces);
                 it.close();
                 // params
-                config.getParams().putAll(inputParameters);
+//                config.getParams().putAll(inputParameters);
+                HashMap<String, ParameterValue> configParameters = new HashMap<>();
                 it = root.axisIterator(Axis.CHILD, Config.PARAMS_CHILD);
                 while(it.hasNext()) {
                     XdmNode params = (XdmNode)it.next();
                     XdmSequenceIterator itp = params.axisIterator(Axis.CHILD, new QName(Config.NS, "param"));
                     while(itp.hasNext()) {
-                        config.addParameter(buildParameter((XdmNode)itp.next(),inputParameters));
+                        //config.addParameter(buildParameter((XdmNode)itp.next(),inputParameters));
+                        ParameterValue pv = buildParameter((XdmNode)itp.next(),inputParameters);
+                        configParameters.put(pv.getKey(), pv);
                     }
                 }
+                config.getParams().putAll(ParametersMerger.merge(inputParameters, configParameters));
                 // pipe
                 config.setPipe(buildPipe((XdmNode)(root.axisIterator(Axis.CHILD, Pipe.QNAME).next()),config.getParams()));
                 // sources
@@ -473,7 +477,7 @@ public class ConfigUtil {
     }
     
     /**
-     * Cette méthode statique ne peut être utilisée que pour construire un pipe linéaire (sans <tt>&lt;tee&gt;</tt>)
+     * Adds a parameter to the specified config.
      * @param config The config to modify
      * @param parameterPattern The prameter definition
      * @throws InvalidSyntaxException If the parameter definition is incorrect
@@ -489,7 +493,7 @@ public class ConfigUtil {
         return new ParameterValue(dec[0], dec[1]);
     }
     /**
-     * Cette méthode statique ne peut être utilisée que pour construire un pipe linéaire (sans <tt>&lt;tee&gt;</tt>)
+     * Defines the thread number to use in this config
      * @param config The config to modify
      * @param argument The number of threads
      * @throws InvalidSyntaxException It should never throws anything... but if argument is not an integer...
@@ -506,7 +510,7 @@ public class ConfigUtil {
         }
     }
     /**
-     * Cette méthode statique ne peut être utilisée que pour construire un pipe linéaire (sans <tt>&lt;tee&gt;</tt>)
+     * Adds an input file to the config
      * @param config The config to modify
      * @param argument The file to add
      * @throws InvalidSyntaxException If input file definition is incorrect
@@ -520,7 +524,7 @@ public class ConfigUtil {
         sources.addFile(resolveInputFile(argument));
     }
     /**
-     * Cette méthode statique ne peut être utilisée que pour construire un pipe linéaire (sans <tt>&lt;tee&gt;</tt>)
+     * Adds a template (XSLT) to the specified config
      * @param config the config to modify
      * @param argument The Xsl to add
      * @throws fr.efl.chaine.xslt.InvalidSyntaxException If xsl definition is incorrect
@@ -534,7 +538,7 @@ public class ConfigUtil {
         pipe.addXslt(resolveTemplate(argument));
     }
     /**
-     * Cette méthode statique ne peut être utilisée que pour construire un pipe linéaire (sans <tt>&lt;tee&gt;</tt>)
+     * Defines the output of this config
      * @param config The config used
      * @param argument The absolute dir to put files in
      * @throws fr.efl.chaine.xslt.InvalidSyntaxException  If output definition is incorrect
