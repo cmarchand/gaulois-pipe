@@ -354,9 +354,9 @@ public class ConfigUtil {
     }
     private ParameterValue buildParameter(XdmNode param, HashMap<String,ParameterValue> parameters) {
         LOGGER.trace("buildParameter on "+param.getNodeName());
-        // attributes already presents will no be added, so return null
+        // attributes already presents will no be added, so return the existing parameter
         ParameterValue pv = new ParameterValue(resolveEscapes(param.getAttributeValue(PARAM_NAME),parameters), resolveEscapes(param.getAttributeValue(PARAM_VALUE),parameters));
-        if(parameters.containsKey(pv.getKey())) return null;
+        if(parameters.containsKey(pv.getKey())) return parameters.get(pv.getKey());
         else return pv;
     }
     private CfgFile buildFile(XdmNode node, HashMap<String,ParameterValue> parameters) throws URISyntaxException {

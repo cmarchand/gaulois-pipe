@@ -327,4 +327,16 @@ public class GauloisPipeTest {
         XdmValue result = selector.evaluate();
         assertTrue(result.size()>0);
     }
+    
+    @Test
+    public void testLoadingParams() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/param-override.xml");
+        ParameterValue pv = new ParameterValue("outputDirPath", "..");
+        HashMap<String,ParameterValue> params = new HashMap<>();
+        params.put(pv.getKey(), pv);
+        Config config = cu.buildConfig(params);
+        // checks that a parameter from commandLine is not overwritten by a param from config file
+        assertEquals(config.getParams().get("outputDirPath").getValue(), "..");
+    }
 }

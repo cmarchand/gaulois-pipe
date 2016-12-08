@@ -1,0 +1,19 @@
+<config xmlns="http://efl.fr/chaine/saxon-pipe/config"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" documentCacheSize="2">
+    <pipe mutiThreadMaxSourceSize="24349456" nbThreads="4">
+        <!-- Préparation -->
+        <xslt href="src/test/resources/identity.xsl">
+            <param name="input-file-name" value="$[input-basename].xml"/>
+        </xslt>
+        <output id="final">
+            <null/>
+        </output>        
+    </pipe>
+     <params>
+        <param name="outputDirPath" value="."/>
+    </params>
+    <sources orderBy="size" sort="desc">
+        <folder href="." pattern="null"/>
+    </sources>
+</config>
+
