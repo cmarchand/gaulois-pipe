@@ -8,9 +8,14 @@ package fr.efl.chaine.xslt.config;
 
 import net.sf.saxon.s9api.QName;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
-import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +82,7 @@ public class Sources implements Verifiable {
             return files;
         } else {
             LOGGER.trace("getFiles() sort {} files with orderBy={} and sort={}", new Object[]{files.size(), orderBy, sort});
-            List<CfgFile> ret = new ArrayList<CfgFile>(files);
+            List<CfgFile> ret = new ArrayList<>(files);
             Collections.sort(ret, getComparator(orderBy, sort));
             LOGGER.trace("getFiles() return {} files", ret.size());
             return ret;
@@ -126,31 +131,31 @@ public class Sources implements Verifiable {
     
     public List<CfgFile> getFilesOverLimit(long limit) {
         // on va quand même les renvoyer triès comme demandés
-        List<CfgFile> files = getFiles("size", "asc");
-        List<CfgFile> ret = new ArrayList<CfgFile>(files.size());
-        for(CfgFile file: files) {
+        List<CfgFile> _files = getFiles("size", "asc");
+        List<CfgFile> ret = new ArrayList<>(_files.size());
+        for(CfgFile file: _files) {
             if(file.getSource().length()>limit) {
                 ret.add(file);
             } else {
                 break;
             }
         }
-        Collections.sort(files, getComparator(orderBy, sort));
+        Collections.sort(_files, getComparator(orderBy, sort));
         LOGGER.debug("getFilesOverLimit() -> {}", ret.size());
         return ret;
     }
     public List<CfgFile> getFilesUnderLimit(long limit) {
         // on va quand même les renvoyer triès comme demandés
-        List<CfgFile> files = getFiles("size", "asc");
-        List<CfgFile> ret = new ArrayList<CfgFile>(files.size());
-        for(CfgFile file: files) {
+        List<CfgFile> _files = getFiles("size", "asc");
+        List<CfgFile> ret = new ArrayList<>(_files.size());
+        for(CfgFile file: _files) {
             if(file.getSource().length()<=limit) {
                 ret.add(file);
             } else {
                 break;
             }
         }
-        Collections.sort(files, getComparator(orderBy, sort));
+        Collections.sort(_files, getComparator(orderBy, sort));
         LOGGER.debug("getFilesUnderLimit() -> {}", ret.size());
         return ret;
     }
