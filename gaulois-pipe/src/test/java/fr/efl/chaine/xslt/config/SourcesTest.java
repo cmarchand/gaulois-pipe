@@ -6,19 +6,40 @@
  */
 package fr.efl.chaine.xslt.config;
 
+import fr.efl.chaine.xslt.GauloisPipe;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
+import fr.efl.chaine.xslt.SaxonConfigurationFactory;
+import fr.efl.chaine.xslt.utils.ParameterValue;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import net.sf.saxon.Configuration;
+import static org.junit.Assert.assertEquals;
+import org.junit.BeforeClass;
 
 /**
  * Created by hrolland on 24/10/2015.
  */
 public class SourcesTest {
+    private static HashMap<String,ParameterValue> emptyInputParams;
+    private static SaxonConfigurationFactory configFactory;
+
+    @BeforeClass
+    public static void initialize() {
+        emptyInputParams = new HashMap<>();
+        configFactory = new SaxonConfigurationFactory() {
+            Configuration config = Configuration.newConfiguration();
+            @Override
+            public Configuration getConfiguration() {
+                return config;
+            }
+        };
+    }
 
     @Test
     public void testGetFiles() throws InvalidSyntaxException {
@@ -42,6 +63,14 @@ public class SourcesTest {
                 ).toArray(),
                 filesInString.toArray()
         );
+    }
+    
+    @Test()
+    public void testFolderPattern() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/sources-folder.xml");
+        Config cfg = cu.buildConfig(emptyInputParams);
+        assertEquals(0, cfg.getSources().getFiles().size());
     }
 
 }

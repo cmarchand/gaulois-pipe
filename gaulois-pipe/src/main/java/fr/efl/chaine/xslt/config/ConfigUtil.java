@@ -400,7 +400,7 @@ public class ConfigUtil {
         filter = new FilenameFilter() {
             @Override
             public boolean accept(File dir, String filename) {
-                if(recurse) return true;
+//                if(recurse) return true;
                 boolean match = regex.matcher(filename).matches();
                 if(!match) {
                     LOGGER.trace(filename+" not matched");
