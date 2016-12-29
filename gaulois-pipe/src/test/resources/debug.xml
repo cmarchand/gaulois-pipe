@@ -12,7 +12,8 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     <pipe nbThreads="1" mutiThreadMaxSourceSize="">
         <xslt href="cp:/uppercase.xsl" id="debug" debug="true"/>
         <output id="pipe2">
-            <null/>
+            <folder relative="../../../target/generated-test-files" to="source-file"/>
+            <fileName name="$[input-basename]-debug-result.xml"/>
         </output>
     </pipe>
     <sources orderBy="size" sort="desc">

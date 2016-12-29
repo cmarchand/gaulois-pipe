@@ -282,8 +282,10 @@ public class GauloisPipeTest {
         piper.launch();
         File expect = new File("debug-source.xml");
         boolean exists = expect.exists();
-        expect.deleteOnExit();
+        if(exists) expect.deleteOnExit();
         assertTrue("The file debug-source.xml. does not exists", exists);
+        expect = new File("./target/generated-test-files/source-debug-result.xml");
+        assertTrue("The file target/generated-test-files/source-debug-result.xml", expect.exists());
     }
 
     @Test

@@ -480,6 +480,7 @@ public class GauloisPipe {
                         debugFile = new File(xsl.getId()+"-"+inputFile.getName());
                     }
                     Serializer debug = processor.newSerializer(debugFile);
+                    // here currentTransformer==currentDestination
                     currentTransformer.setDestination(currentDestination=new TeeDebugDestination(debug));
                 }
                 if(first==null) {

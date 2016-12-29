@@ -11,25 +11,31 @@ import net.sf.saxon.event.Receiver;
 import net.sf.saxon.s9api.Destination;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.TeeDestination;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A TeeDestination where main destination in unknown when building.
  * @author cmarchand
  */
 public class TeeDebugDestination implements Destination {
+//    private static final Logger LOGGER = LoggerFactory.getLogger(TeeDebugDestination.class);
     private TeeDestination tee;
     private final Destination debugDestination;
 
     public TeeDebugDestination(Destination debugDestination) {
+//        LOGGER.debug("<new>(debugDestination)");
         this.debugDestination = debugDestination;
     }
     
     public void setDestination(Destination mainDestination) {
+//        LOGGER.debug("setDestination(mainDestination)");
         tee = new TeeDestination(debugDestination, mainDestination);
     }
 
     @Override
     public Receiver getReceiver(Configuration c) throws SaxonApiException {
+//        LOGGER.debug("getReceiver(Configuration)");
         return tee.getReceiver(c);
     }
 
