@@ -11,6 +11,7 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config ../../../src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
     <pipe nbThreads="1" mutiThreadMaxSourceSize="">
         <xslt href="cp:/uppercase.xsl" id="debug" debug="true"/>
+        <xslt href="cp:/identity.xsl"/>
         <output id="pipe2">
             <folder relative="../../../target/generated-test-files" to="source-file"/>
             <fileName name="$[input-basename]-debug-result.xml"/>

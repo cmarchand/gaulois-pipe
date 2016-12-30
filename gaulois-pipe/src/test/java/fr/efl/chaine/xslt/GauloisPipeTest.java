@@ -273,6 +273,11 @@ public class GauloisPipeTest {
 
     @Test
     public void testDebug() throws Exception {
+        File expect = new File("debug-source.xml");
+        File expect2 = new File("./target/generated-test-files/source-debug-result.xml");
+        if(expect.exists()) expect.delete();
+        if(expect2.exists()) expect2.delete();
+        
         GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/debug.xml");
         Config config = cu.buildConfig(emptyInputParams);
@@ -280,12 +285,10 @@ public class GauloisPipeTest {
         piper.setConfig(config);
         piper.setInstanceName("DEBUG");
         piper.launch();
-        File expect = new File("debug-source.xml");
-        boolean exists = expect.exists();
-        if(exists) expect.deleteOnExit();
-        assertTrue("The file debug-source.xml. does not exists", exists);
-        expect = new File("./target/generated-test-files/source-debug-result.xml");
-        assertTrue("The file target/generated-test-files/source-debug-result.xml", expect.exists());
+        
+        assertTrue("The file debug-source.xml. does not exists", expect.exists());
+        assertTrue("The file target/generated-test-files/source-debug-result.xml", expect2.exists());
+        expect2.delete();
     }
 
     @Test
