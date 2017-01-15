@@ -60,6 +60,7 @@ import net.sf.saxon.trace.XSLTTraceListener;
 import net.sf.saxon.trans.XPathException;
 import org.apache.commons.io.output.NullOutputStream;
 import org.xmlresolver.Resolver;
+import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
 import top.marchand.xml.protocols.ProtocolInstaller;
 
 /**
@@ -788,13 +789,7 @@ public class GauloisPipe {
             protocolInstalled = true;
         }
         LOGGER.info("Additionals protocols installed");
-        GauloisPipe gauloisPipe = new GauloisPipe(new SaxonConfigurationFactory() {
-            Configuration configuration = Configuration.newConfiguration();
-            @Override
-            public Configuration getConfiguration() {
-                return configuration;
-            }
-        });
+        GauloisPipe gauloisPipe = new GauloisPipe(new DefaultSaxonConfigurationFactory());
         try {
             LOGGER.debug("gauloisPipe instanciated");
             Config config = gauloisPipe.parseCommandLine(args);

@@ -17,7 +17,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Processor;
+import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
 import net.sf.saxon.s9api.XdmItem;
@@ -26,6 +28,7 @@ import net.sf.saxon.s9api.XdmValue;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
+import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
 
 /**
  *
@@ -343,5 +346,17 @@ public class GauloisPipeTest {
         Config config = cu.buildConfig(params);
         // checks that a parameter from commandLine is not overwritten by a param from config file
         assertEquals(config.getParams().get("outputDirPath").getValue(), "..");
+    }
+    
+    @Test
+    public void testExtFunctions() throws Exception {
+        Configuration config = new DefaultSaxonConfigurationFactory().getConfiguration();
+        Processor proc = new Processor(config);
+        XPathCompiler xpc = proc.newXPathCompiler();
+        xpc.declareNamespace("ex", "top:marchand:xml:extfunctions");
+        QName var = new QName("connect");
+        xpc.declareVariable(var);
+        XPathExecutable xpe = xpc.compile("ex:basex-query('for $i in 1 to 10 return <test>{$i}</test>',$connect)");
+        assertNotNull("unable to compile extension function", xpe);
     }
 }
