@@ -65,6 +65,7 @@ public class ConfigUtil {
     private final URIResolver uriResolver;
     private final String configUri;
     private final boolean skipSchemaValidation;
+    private boolean __isConfigUriTrueURI = false;
     
     public ConfigUtil(Configuration saxonConfig, URIResolver uriResolver, String configUri) throws InvalidSyntaxException {
         this(saxonConfig, uriResolver, configUri, false);
@@ -82,6 +83,7 @@ public class ConfigUtil {
                 if(is==null) {
                     throw new InvalidSyntaxException(configUri+" not found or can not be open");
                 }
+                __isConfigUriTrueURI = true;
             } catch (IOException ex) {
                 throw new InvalidSyntaxException(configUri+" not found or can not be open");
             }
@@ -107,7 +109,7 @@ public class ConfigUtil {
                     Validator validator = schema.newValidator();
                     validator.setErrorHandler(errListener);
                     SAXSource saxSource = new SAXSource(
-                            configUri.contains(":") ? new InputSource(new URL(configUri).openStream()) :
+                            __isConfigUriTrueURI ? new InputSource(new URL(configUri).openStream()) :
                                     new InputSource(new FileInputStream(new File(configUri)))
                     );
                     validator.validate(saxSource);
@@ -123,7 +125,7 @@ public class ConfigUtil {
                 }
             }
             XdmNode configRoot = 
-                    configUri.contains(":") ? 
+                    __isConfigUriTrueURI ? 
                     processor.newDocumentBuilder().build(uriResolver.resolve(configUri,null)) :
                     processor.newDocumentBuilder().build(new File(configUri));
             XPathSelector xs = processor.newXPathCompiler().compile("/*").load();
