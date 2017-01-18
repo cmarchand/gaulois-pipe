@@ -74,7 +74,8 @@ public class ConfigUtil {
         this.saxonConfig = saxonConfig;
         this.uriResolver=uriResolver;
         this.skipSchemaValidation=skipSchemaValidation;
-        if(configUri.contains(":")) {
+        Pattern pattern = Pattern.compile("[a-z].+:.+");
+        if(pattern.matcher(configUri).matches()) {
             try {
                 URL url = new URL(configUri);
                 InputStream is = url.openStream();
