@@ -46,5 +46,20 @@ public class EscapingTest {
         String result = cu.resolveEscapes("$[workDir]/collection.xml", params);
         assertEquals("file:/home/cmarchand/devel/data/collection.xml", result);
     }
+    /**
+     * Issue #14
+     * @throws InvalidSyntaxException 
+     */
+    @Test
+    public void escapeBackSlash() throws InvalidSyntaxException {
+        ParameterValue pv = new ParameterValue("basedir", "c:\\dev\\sie-efl-inneo-src");
+        HashMap<String,ParameterValue> params = new HashMap<>();
+        params.put(pv.getKey(), pv);
+        // n'importe lequel, aucune importance
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/same-source-file.xml");
+        String result = cu.resolveEscapes("file:$[basedir]/src/main/CheckBc/xslt", params);
+        assertEquals("Received "+result, "file:c:\\dev\\sie-efl-inneo-src/src/main/CheckBc/xslt", result);
+    }
     
 }

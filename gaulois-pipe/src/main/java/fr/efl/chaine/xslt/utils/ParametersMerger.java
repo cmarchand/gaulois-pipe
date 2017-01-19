@@ -8,6 +8,7 @@ package fr.efl.chaine.xslt.utils;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.regex.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,8 @@ public class ParametersMerger {
         if(ret.contains("$[")) {
             for(ParameterValue pv: parameters.values()) {
                 try {
-                    ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
+                    // issue #14
+                    ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", Matcher.quoteReplacement(pv.getValue()));
                 } catch(java.lang.IllegalArgumentException ex) {
                     LOGGER.error("while replacing "+pv.getKey()+" -> "+pv.getValue(),ex);
                     throw ex;
