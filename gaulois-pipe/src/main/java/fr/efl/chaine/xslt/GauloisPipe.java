@@ -98,6 +98,8 @@ public class GauloisPipe {
     private List<Exception> errors;
     private XPathCompiler xpathCompiler;
     private File debugDirectory;
+    
+    private String currentDir = System.getProperty("user.dir");
 
     /**
      * The property name to specify the debug output directory
@@ -788,7 +790,7 @@ public class GauloisPipe {
             ProtocolInstaller.registerAdditionalProtocols();
             protocolInstalled = true;
         }
-        LOGGER.info("Additionals protocols installed");
+        LOGGER.debug("Additionals protocols installed");
         GauloisPipe gauloisPipe = new GauloisPipe(new DefaultSaxonConfigurationFactory());
         try {
             LOGGER.debug("gauloisPipe instanciated");
@@ -863,10 +865,15 @@ public class GauloisPipe {
                         continue;
                     case "--config":
                         inputMode = CONFIG;
+                        continue;
                     case "--logFileSize":
                         logFileSize=true;
                     case "--skipSchemaValidation":
                         skipSchemaValidation=true;
+                    case "--working-dir":
+                    case "-wd":
+                        inputMode = CURRENT_DIR;
+                        continue;
                 }
             }
                 
@@ -887,6 +894,8 @@ public class GauloisPipe {
                     __instanceName = argument; break;
                 case CONFIG: 
                     configFileName = argument; break;
+                case CURRENT_DIR:
+                    currentDir = argument; break;
             }
         }
         HashMap<String,ParameterValue> inputParameters = new HashMap<>(inputParams.size());
@@ -898,10 +907,11 @@ public class GauloisPipe {
         LOGGER.debug("parameters from command line are : "+inputParameters);
         Config config;
         if(configFileName!=null) {
+            LOGGER.debug("loading config file "+configFileName);
             config=parseConfig(configFileName, inputParameters, configurationFactory.getConfiguration(), skipSchemaValidation);
             LOGGER.debug("computed parameters in config are :"+config.getParams());
         } else {
-            config = new Config();
+            config = new Config(currentDir);
         }
         for(String inputFile: inputFiles) ConfigUtil.addInputFile(config, inputFile);
         for(String inputXsl: inputXsls) ConfigUtil.addTemplate(config, inputXsl);
@@ -925,7 +935,7 @@ public class GauloisPipe {
 
     private Config parseConfig(String fileName, HashMap<String,ParameterValue> inputParameters, Configuration saxonConfig, final boolean skipSchemaValidation) throws InvalidSyntaxException {
         try {
-            return new ConfigUtil(saxonConfig, getUriResolver(), fileName, skipSchemaValidation).buildConfig(inputParameters);
+            return new ConfigUtil(saxonConfig, getUriResolver(), fileName, skipSchemaValidation, currentDir).buildConfig(inputParameters);
         } catch (SaxonApiException ex) {
             throw new InvalidSyntaxException(ex);
         }
@@ -942,6 +952,7 @@ public class GauloisPipe {
             + "\t--config config.xml\tthe config file to use\n"
             + "\t--msg-listener package.of.MessageListener The class to use as MessageListener\n"
             + "\t{--instance-name | -iName} <name>\t\tthe instance name to use in logs\n"
+            + "\t{--working-dir | -wd} <cwd>\t\t\tThe director to use as current directory ; ${user.dir} if missing\n"
             + "\t{--output | -o} <outputfile>\t\t\toutput directory\n"
             + "\t{--nbthreads | -n} <n>\t\t\tnumber of threads to use\n"
             + "\t{--logFileSize}\t\t\tdisplays intput and output files size in logs as INFO\n"
@@ -962,6 +973,7 @@ public class GauloisPipe {
     private static final int MESSAGE_LISTENER = 0x0F;
     private static final int INSTANCE_NAME = 0x10;
     private static final int CONFIG = 0x20;
+    private static final int CURRENT_DIR = 0x40;
     
     private class DocumentCache extends LinkedHashMap<String, XdmNode> {
         private final int cacheSize;

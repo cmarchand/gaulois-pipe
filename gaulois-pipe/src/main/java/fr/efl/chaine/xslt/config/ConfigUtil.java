@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,6 +40,8 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ErrorHandler;
@@ -60,7 +63,7 @@ public class ConfigUtil {
     private static final QName QN_RECURSE = new QName("recurse");
     private static final QName QN_PARAM = new QName(Config.NS,"param");
     private static final QName QN_NULL = new QName(Config.NS, "null");
-//    private final File file;
+    private final File currentDir;
     private final Configuration saxonConfig;
     private final URIResolver uriResolver;
     private final String configUri;
@@ -68,9 +71,9 @@ public class ConfigUtil {
     private boolean __isConfigUriTrueURI = false;
     
     public ConfigUtil(Configuration saxonConfig, URIResolver uriResolver, String configUri) throws InvalidSyntaxException {
-        this(saxonConfig, uriResolver, configUri, false);
+        this(saxonConfig, uriResolver, configUri, false, System.getProperty("user.dir"));
     }
-    public ConfigUtil(Configuration saxonConfig, URIResolver uriResolver, String configUri, final boolean skipSchemaValidation) throws InvalidSyntaxException {
+    public ConfigUtil(Configuration saxonConfig, URIResolver uriResolver, String configUri, final boolean skipSchemaValidation, final String currentDir) throws InvalidSyntaxException {
         super();
         this.saxonConfig = saxonConfig;
         this.uriResolver=uriResolver;
@@ -94,6 +97,7 @@ public class ConfigUtil {
             }
         }
         this.configUri=configUri;
+        this.currentDir = new File(currentDir);
     }
     
     public Config buildConfig(HashMap<String,ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
@@ -371,6 +375,9 @@ public class ConfigUtil {
             f = new File(new URI(href));
         } else {
             f = new File(href);
+            if(!f.exists()) {
+                f = new File(currentDir, href);
+            }
         }
         LOGGER.trace("buildFile on {}", f.getName());
         CfgFile ret = new CfgFile(f);
@@ -411,7 +418,8 @@ public class ConfigUtil {
                 return match;
             }
         };
-        File dir = new File(resolveEscapes(node.getAttributeValue(CfgFile.ATTR_HREF),parameters));
+        String fileName = resolveEscapes(node.getAttributeValue(CfgFile.ATTR_HREF),parameters);
+        File dir = new File(currentDir, fileName);
         if(!dir.isDirectory()) {
             throw new InvalidSyntaxException(dir.getAbsolutePath()+" is not a valid directory");
         }
@@ -463,13 +471,20 @@ public class ConfigUtil {
         }
         return ret;
     }
-    private List<CfgFile> getFilesFromDirectory(File directory, FilenameFilter filter, boolean recurse) {
-        File [] files = directory.listFiles(filter);
+    /**
+     * Visibility package private only for unit-tests
+     * @param directory
+     * @param filter
+     * @param recurse
+     * @return Found files
+     */
+    List<CfgFile> getFilesFromDirectory(File directory, FilenameFilter filter, boolean recurse) {
+        File [] files = directory.listFiles();
         List<CfgFile> ret = new ArrayList<>();
         for(File f:files) {
             if(f.isDirectory() && recurse) {
-                ret.addAll(getFilesFromDirectory(f,filter, recurse));
-            } else {
+                ret.addAll(getFilesFromDirectory(f, filter, recurse));
+            } else if(filter.accept(f.getParentFile(), f.getName())) {
                 ret.add(new CfgFile(f));
             }
         }

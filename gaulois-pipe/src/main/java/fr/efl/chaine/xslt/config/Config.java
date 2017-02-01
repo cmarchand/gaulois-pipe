@@ -8,6 +8,7 @@ package fr.efl.chaine.xslt.config;
 
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
+import java.io.File;
 import java.util.HashMap;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
@@ -31,6 +32,7 @@ public class Config implements Verifiable {
     private boolean logFileSize;
     private boolean skipSchemaValidation;
     public Namespaces namespaces;
+    private File currentDir;
     /**
      * This has nothing to do in Configuration, but for implementation reason,
      * it's here...
@@ -56,6 +58,12 @@ public class Config implements Verifiable {
     public Config() {
         super();
         params = new HashMap<>();
+        currentDir = new File(System.getProperty("user.dir"));
+    }
+    public Config(String currentDir) {
+        super();
+        params = new HashMap<>();
+        this.currentDir = new File(currentDir);
     }
     public Pipe getPipe() {
         return pipe;
