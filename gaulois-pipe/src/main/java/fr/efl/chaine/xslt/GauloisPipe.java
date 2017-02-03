@@ -963,7 +963,7 @@ public class GauloisPipe {
             + "\t\txsl_file(param1=value1,param2=value2,...)\n"
             + "\tA source file may be specified as this, if it needs special parameters :\n"
             + "\t\tfile(param1=value1,param2=value2,...)\n\n"
-            + "\tIt is impossible to override via command-line option something defined in config file, but it is possible to add inputs or templates.\n"
+//            + "\tIt is impossible to override via command-line option something defined in config file, but it is possible to add inputs or templates.\n"
             + "\tIf a MessageListener is specified, the denoted class must implement net.sf.saxon.s9api.MessageListener";
     private static final int INPUT_XSL = 0x00;
     private static final int INPUT_PARAMS = 0x01;
