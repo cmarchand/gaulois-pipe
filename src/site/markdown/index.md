@@ -15,3 +15,11 @@ To keep XProc compatibility, gaulois-pipe provides a XSLT to translate a gaulois
 ## Issues
 
 In case of defect or question, please report issues to [github](https://github.com/cmarchand/gaulois-pipe/issues/).
+
+## Sub-Modules
+
+Followind sub-modules are available in gaulois-pipe :
+
+ - [gaulois-pipe](../../gaulois-pipe/${project.version}/gaulois-pipe/index.html)
+ - [logs](../../logs/${project.version}/logs/index.html)
+ - [dist](../../dist/$project.version}/dist/index.html)
