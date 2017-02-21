@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.QName;
 import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 
@@ -26,7 +27,7 @@ import org.junit.BeforeClass;
  * Created by hrolland on 24/10/2015.
  */
 public class SourcesTest {
-    private static HashMap<String,ParameterValue> emptyInputParams;
+    private static HashMap<QName,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
 
     @BeforeClass

@@ -7,6 +7,7 @@
 package fr.efl.chaine.xslt.utils;
 
 import java.util.HashMap;
+import net.sf.saxon.s9api.QName;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -19,8 +20,9 @@ public class ParametersMergerTest {
     @Test
     public void initialContainsBackslash() {
         String initial = "C:\\Users\\ext-cmarchand\\$[source]";
-        HashMap<String, ParameterValue> parameters = new HashMap<>();
-        parameters.put("source", new ParameterValue("source","src/main/xsl"));
+        HashMap<QName, ParameterValue> parameters = new HashMap<>();
+        QName qn = new QName("source");
+        parameters.put(qn, new ParameterValue(qn,"src/main/xsl"));
         String ret = ParametersMerger.processParametersReplacement(initial, parameters);
         assertEquals("C:\\Users\\ext-cmarchand\\src/main/xsl", ret);
     }

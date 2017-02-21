@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.HashMap;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.QName;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -27,7 +28,7 @@ import org.junit.Test;
  */
 public class OutputTest {
     private Output output;
-    private static HashMap<String,ParameterValue> emptyInputParams;
+    private static HashMap<QName,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
 
     @BeforeClass

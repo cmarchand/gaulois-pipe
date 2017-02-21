@@ -21,7 +21,7 @@ public class JavaStep implements ParametrableStep {
     static final QName QNAME = new QName(Config.NS, "java");
     static final QName ATTR_CLASS = new QName("class");
     private String className;
-    private HashMap<String,ParameterValue> params;
+    private HashMap<QName,ParameterValue> params;
     private Class clazz;
     
     public JavaStep() {

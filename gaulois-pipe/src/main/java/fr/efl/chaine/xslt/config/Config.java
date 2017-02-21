@@ -25,7 +25,7 @@ public class Config implements Verifiable {
     static final String NS = "http://efl.fr/chaine/saxon-pipe/config";
     static final QName PARAMS_CHILD = new QName(NS, "params");
     private Pipe pipe;
-    private final HashMap<String,ParameterValue> params;
+    private final HashMap<QName,ParameterValue> params;
     private Sources sources;
     private int maxDocumentCacheSize = MAX_DOCUMENT_CACHE_SIZE;
     private static final Logger LOGGER = LoggerFactory.getLogger(Config.class);
@@ -73,7 +73,7 @@ public class Config implements Verifiable {
         this.pipe = pipe;
     }
 
-    public HashMap<String,ParameterValue> getParams() {
+    public HashMap<QName,ParameterValue> getParams() {
         return params;
     }
 

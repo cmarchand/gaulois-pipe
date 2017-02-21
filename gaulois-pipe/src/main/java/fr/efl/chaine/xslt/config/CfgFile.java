@@ -21,7 +21,7 @@ public class CfgFile implements Verifiable {
     static final QName QN_FOLDER = new QName(Config.NS, "folder");
     static final QName ATTR_HREF = new QName("href");
     private final File source;
-    private final HashMap<String, ParameterValue> params;
+    private final HashMap<QName, ParameterValue> params;
     
     public CfgFile(File source) {
         super();
@@ -33,7 +33,7 @@ public class CfgFile implements Verifiable {
         params.put(param.getKey(), param);
     }
     public File getSource() { return source; }
-    public HashMap<String,ParameterValue> getParams() {
+    public HashMap<QName,ParameterValue> getParams() {
         return params;
     }
 

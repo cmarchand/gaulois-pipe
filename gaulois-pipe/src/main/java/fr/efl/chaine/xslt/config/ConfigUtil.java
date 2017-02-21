@@ -17,7 +17,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,8 +39,6 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ErrorHandler;
@@ -100,7 +97,7 @@ public class ConfigUtil {
         this.currentDir = new File(currentDir);
     }
     
-    public Config buildConfig(HashMap<String,ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
+    public Config buildConfig(HashMap<QName,ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
         try {
             Processor processor = new Processor(saxonConfig);
             if(!skipSchemaValidation) {
@@ -154,7 +151,7 @@ public class ConfigUtil {
                 it.close();
                 // params
 //                config.getParams().putAll(inputParameters);
-                HashMap<String, ParameterValue> configParameters = new HashMap<>();
+                HashMap<QName, ParameterValue> configParameters = new HashMap<>();
                 it = root.axisIterator(Axis.CHILD, Config.PARAMS_CHILD);
                 while(it.hasNext()) {
                     XdmNode params = (XdmNode)it.next();
@@ -194,10 +191,10 @@ public class ConfigUtil {
         }
     }
     
-    private Pipe buildPipe(XdmNode pipeNode, HashMap<String,ParameterValue> parameters) throws IllegalStateException, InvalidSyntaxException {
+    private Pipe buildPipe(XdmNode pipeNode, HashMap<QName,ParameterValue> parameters) throws IllegalStateException, InvalidSyntaxException {
         return buildPipe(pipeNode, parameters, null);
     }
-    private Pipe buildPipe(XdmNode pipeNode, HashMap<String,ParameterValue> parameters, Tee parentTee) throws IllegalStateException, InvalidSyntaxException {
+    private Pipe buildPipe(XdmNode pipeNode, HashMap<QName,ParameterValue> parameters, Tee parentTee) throws IllegalStateException, InvalidSyntaxException {
         LOGGER.trace("buildPipe on "+pipeNode.getNodeName());
         Pipe pipe = new Pipe(parentTee);
         try {
@@ -237,7 +234,7 @@ public class ConfigUtil {
         return pipe;
     }
     
-    private Tee buildTee(XdmNode teeNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
+    private Tee buildTee(XdmNode teeNode, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildTee on "+teeNode.getNodeName());
         Tee tee = new Tee();
         XdmSequenceIterator seq = teeNode.axisIterator(Axis.CHILD,Pipe.QNAME);
@@ -248,7 +245,7 @@ public class ConfigUtil {
         }
         return tee;
     }
-    private Sources buildSources(XdmNode sourcesNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
+    private Sources buildSources(XdmNode sourcesNode, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         String orderBy = sourcesNode.getAttributeValue(Sources.ATTR_ORDERBY);
         String sort = sourcesNode.getAttributeValue(Sources.ATTR_SORT);
         LOGGER.trace("buildSources from {} with orderBy={} and sort={}", new Object[]{sourcesNode.getNodeName(), orderBy, sort});
@@ -276,7 +273,7 @@ public class ConfigUtil {
         }
         return sources;
     }
-    private Listener buildListener(XdmNode listenerNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
+    private Listener buildListener(XdmNode listenerNode, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         String tmp = resolveEscapes(listenerNode.getAttributeValue(Listener.ATTR_PORT),parameters);
         int port = Listener.DEFAULT_PORT;
         try {
@@ -290,7 +287,7 @@ public class ConfigUtil {
         }
         return list;
     }
-    private Xslt buildXslt(XdmNode xsltNode, HashMap<String,ParameterValue> parameters) {
+    private Xslt buildXslt(XdmNode xsltNode, HashMap<QName,ParameterValue> parameters) {
         LOGGER.trace("buildXslt on {}", xsltNode.getNodeName());
         Xslt ret = new Xslt(resolveEscapes(xsltNode.getAttributeValue(Xslt.ATTR_HREF),parameters));
         if("true".equals(xsltNode.getAttributeValue(Xslt.ATTR_TRACE_ACTIVE))) {
@@ -306,7 +303,7 @@ public class ConfigUtil {
         }
         return ret;
     }
-    private JavaStep buildJavaStep(XdmNode javaNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
+    private JavaStep buildJavaStep(XdmNode javaNode, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildJavaStep on {}", javaNode.getNodeName());
         JavaStep ret = new JavaStep(resolveEscapes(javaNode.getAttributeValue(JavaStep.ATTR_CLASS), parameters));
         XdmSequenceIterator it = javaNode.axisIterator(Axis.CHILD, QN_PARAM);
@@ -315,7 +312,7 @@ public class ConfigUtil {
         }
         return ret;
     }
-    private ChooseStep buildChooseStep(XdmNode chooseNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
+    private ChooseStep buildChooseStep(XdmNode chooseNode, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildChooseStep on {}", chooseNode.getNodeName());
         ChooseStep chooseStep = new ChooseStep();
         XdmSequenceIterator it = chooseNode.axisIterator(Axis.CHILD, WhenEntry.QNAME);
@@ -330,7 +327,7 @@ public class ConfigUtil {
         }
         return chooseStep;
     }
-    private WhenEntry buildWhen(XdmNode whenNode, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
+    private WhenEntry buildWhen(XdmNode whenNode, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         String test = whenNode.getAttributeValue(WhenEntry.ATTR_TEST);
         // particular case of the otherwise, which is implemented as a when[@test='true()']
         if((test==null || test.length()==0) && WhenEntry.QN_OTHERWISE.equals(whenNode.getNodeName()) ) {
@@ -359,14 +356,22 @@ public class ConfigUtil {
         }
         return when;
     }
-    private ParameterValue buildParameter(XdmNode param, HashMap<String,ParameterValue> parameters) {
+    private ParameterValue buildParameter(XdmNode param, HashMap<QName,ParameterValue> parameters) {
         LOGGER.trace("buildParameter on "+param.getNodeName());
         // attributes already presents will no be added, so return the existing parameter
-        ParameterValue pv = new ParameterValue(resolveEscapes(param.getAttributeValue(PARAM_NAME),parameters), resolveEscapes(param.getAttributeValue(PARAM_VALUE),parameters));
+        // issue#15 : parameter names are not anymore resolved, only QNamed
+        ParameterValue pv = new ParameterValue(resolveQName(param.getAttributeValue(PARAM_NAME)), resolveEscapes(param.getAttributeValue(PARAM_VALUE),parameters));
         if(parameters.containsKey(pv.getKey())) return parameters.get(pv.getKey());
         else return pv;
     }
-    private CfgFile buildFile(XdmNode node, HashMap<String,ParameterValue> parameters) throws URISyntaxException {
+    public static QName resolveQName(String name) {
+        if(name==null) return null;
+        if(name.length()==0) return null;
+        else if(name.startsWith("Q{")) return QName.fromEQName(name);
+        else if(name.startsWith("{")) return QName.fromClarkName(name);
+        else return new QName(name);
+    }
+    private CfgFile buildFile(XdmNode node, HashMap<QName,ParameterValue> parameters) throws URISyntaxException {
         String href = node.getAttributeValue(CfgFile.ATTR_HREF);
         LOGGER.trace("buildFile from {} with href={}", node.getNodeName(), href);
         File f;
@@ -387,17 +392,17 @@ public class ConfigUtil {
         }
         return ret;
     }
-    String resolveEscapes(String input, HashMap<String,ParameterValue> params) {
+    String resolveEscapes(String input, HashMap<QName,ParameterValue> params) {
         LOGGER.debug("resolveEscapes in "+input+" with "+params);
         if(input==null) return input;
         String ret = input;
         return ParametersMerger.processParametersReplacement(ret, params);
     }
-    private Collection<CfgFile> buildFolderContent(XdmNode node, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
+    private Collection<CfgFile> buildFolderContent(XdmNode node, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildFolderContent on "+node.getNodeName());
         String pattern = resolveEscapes(node.getAttributeValue(QN_PATTERN), parameters);
         final boolean recurse = getBooleanValue(node.getAttributeValue(QN_RECURSE));
-        HashMap<String, ParameterValue> params = new HashMap<>();
+        HashMap<QName, ParameterValue> params = new HashMap<>();
         XdmSequenceIterator it = node.axisIterator(Axis.CHILD, QN_PARAM);
         while(it.hasNext()) {
             ParameterValue p = buildParameter((XdmNode)it.next(), parameters);
@@ -432,7 +437,7 @@ public class ConfigUtil {
         }
         return files;
     }
-    private Output buildOutput(XdmNode node, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException {
+    private Output buildOutput(XdmNode node, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildOutput from {}", node.getNodeName());
         Output ret = new Output();
         // searching for output parameters
@@ -508,7 +513,7 @@ public class ConfigUtil {
         if(dec.length!=2) {
             throw new InvalidSyntaxException(parameterPattern+" is not a valid parameter declaration");
         }
-        return new ParameterValue(dec[0], dec[1]);
+        return new ParameterValue(resolveQName(dec[0]), dec[1]);
     }
     /**
      * Defines the thread number to use in this config
@@ -596,7 +601,7 @@ public class ConfigUtil {
         for(String entry:entries) {
             String[] ps = entry.split("=");
             if(ps.length==2) {
-                ParameterValue p = new ParameterValue(ps[0], ps[1]);
+                ParameterValue p = new ParameterValue(resolveQName(ps[0]), ps[1]);
                 ret.add(p);
             }
         }

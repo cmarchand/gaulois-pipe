@@ -9,6 +9,7 @@ package fr.efl.chaine.xslt.listener;
 import fr.efl.chaine.xslt.ExecutionContext;
 import fr.efl.chaine.xslt.GauloisRunException;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
+import fr.efl.chaine.xslt.config.ConfigUtil;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.utils.ParametrableFile;
 import java.io.File;
@@ -22,6 +23,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +64,7 @@ public class ListenerServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        HashMap<String,ParameterValue> parameters = new HashMap<>();
+        HashMap<QName,ParameterValue> parameters = new HashMap<>();
         String sUrl=null;
         Enumeration<String> enumer = req.getParameterNames();
         while(enumer.hasMoreElements()) {
@@ -70,7 +72,8 @@ public class ListenerServlet extends HttpServlet {
             if("url".equals(paramName)) {
                 sUrl = req.getParameter(paramName);
             } else if(paramName!=null) {
-                parameters.put(paramName,new ParameterValue(paramName, req.getParameter(paramName)));
+                QName qn = ConfigUtil.resolveQName(paramName);
+                parameters.put(qn, new ParameterValue(qn, req.getParameter(paramName)));
             } else {
                 LOGGER.info("received null parameter with value="+req.getParameter(paramName));
             }

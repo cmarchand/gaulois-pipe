@@ -8,13 +8,14 @@ package fr.efl.chaine.xslt.utils;
 
 import java.io.File;
 import java.util.HashMap;
+import net.sf.saxon.s9api.QName;
 
 /**
  * Used to carry a file and the parameters to give to pipe when processing this file
  * @author ext-cmarchand
  */
 public class ParametrableFile {
-    private final HashMap<String,ParameterValue> parameters;
+    private final HashMap<QName,ParameterValue> parameters;
     private final File file;
     private boolean avoidCache;
     
@@ -24,7 +25,7 @@ public class ParametrableFile {
         parameters = new HashMap<>();
     }
 
-    public HashMap<String,ParameterValue> getParameters() {
+    public HashMap<QName,ParameterValue> getParameters() {
         return parameters;
     }
 

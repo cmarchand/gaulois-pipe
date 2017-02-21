@@ -172,7 +172,7 @@ public class Output implements Verifiable {
      * @throws InvalidSyntaxException If this output has no been correctly defined
      * @throws java.net.URISyntaxException If the constructed URI is no valid
      */
-    public File getDestinationFile(File sourceFile, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
+    public File getDestinationFile(File sourceFile, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
         File ret;
         if(isAbsolute()) {
             String __abs = absolute;
@@ -208,7 +208,7 @@ public class Output implements Verifiable {
         }
         return ret;
     }
-    private String getFileName(File sourceFile, HashMap<String,ParameterValue> parameters) {
+    private String getFileName(File sourceFile, HashMap<QName,ParameterValue> parameters) {
         String filename = (prefix!=null?prefix:"") + name + (suffix!=null?suffix:"");
         String sourceName = sourceFile.getName();
         int ix = sourceName.lastIndexOf(".");

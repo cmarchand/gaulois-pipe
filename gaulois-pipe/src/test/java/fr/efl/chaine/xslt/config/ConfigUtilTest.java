@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
@@ -26,7 +27,7 @@ import org.junit.Test;
  */
 public class ConfigUtilTest {
     private static SaxonConfigurationFactory configFactory;
-    private static HashMap<String,ParameterValue> emptyInputParams;
+    private static HashMap<QName,ParameterValue> emptyInputParams;
 
     @BeforeClass
     public static void initialize() {

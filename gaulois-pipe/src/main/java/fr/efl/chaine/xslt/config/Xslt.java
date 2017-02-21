@@ -29,7 +29,7 @@ public class Xslt implements ParametrableStep {
     static final QName ATTR_DEBUG= new QName("debug");
     static final QName ATTR_ID = new QName("id");
     private String href;
-    private HashMap<String,ParameterValue> params;
+    private HashMap<QName,ParameterValue> params;
     private boolean traceToAdd = false;
     // pour usage interne
     private File file;
