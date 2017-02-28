@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
@@ -424,7 +425,13 @@ public class ConfigUtil {
             }
         };
         String fileName = resolveEscapes(node.getAttributeValue(CfgFile.ATTR_HREF),parameters);
-        File dir = new File(currentDir, fileName);
+        File dir;
+        try {
+            dir = new File(new URI(fileName));
+        } catch (URISyntaxException | IllegalArgumentException ex) {
+            dir = new File(currentDir, fileName);
+        }
+        
         if(!dir.isDirectory()) {
             throw new InvalidSyntaxException(dir.getAbsolutePath()+" is not a valid directory");
         }
