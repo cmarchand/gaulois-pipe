@@ -35,7 +35,7 @@ import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
  * @author Christophe Marchand
  */
 public class GauloisPipeTest {
-    private static HashMap<String,ParameterValue> emptyInputParams;
+    private static HashMap<QName,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
     
     public GauloisPipeTest() {
@@ -340,12 +340,12 @@ public class GauloisPipeTest {
     public void testLoadingParams() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/param-override.xml");
-        ParameterValue pv = new ParameterValue("outputDirPath", "..");
-        HashMap<String,ParameterValue> params = new HashMap<>();
+        ParameterValue pv = new ParameterValue(new QName("outputDirPath"), "..");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
         params.put(pv.getKey(), pv);
         Config config = cu.buildConfig(params);
         // checks that a parameter from commandLine is not overwritten by a param from config file
-        assertEquals(config.getParams().get("outputDirPath").getValue(), "..");
+        assertEquals(config.getParams().get(new QName("outputDirPath")).getValue(), "..");
     }
     
     @Test

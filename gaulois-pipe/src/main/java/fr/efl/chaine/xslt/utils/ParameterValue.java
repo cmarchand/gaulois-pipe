@@ -6,6 +6,8 @@
  */
 package fr.efl.chaine.xslt.utils;
 
+import net.sf.saxon.s9api.QName;
+
 /**
  * A parameter value in saxon pipe.
  */
@@ -13,8 +15,9 @@ public class ParameterValue {
 
     /**
      * the parameter key.
+     * Since issue#15, it is a QName
      */
-    private final String key;
+    private final QName key;
     /**
      * the parameter value.
      */
@@ -26,7 +29,7 @@ public class ParameterValue {
      * @param key the parameter key
      * @param value the parameter value
      */
-    public ParameterValue(String key, String value) {
+    public ParameterValue(QName key, String value) {
         this.key = key;
         this.value = value;
     }
@@ -34,7 +37,7 @@ public class ParameterValue {
     /**
      * @return the parameter key
      */
-    public String getKey() {
+    public QName getKey() {
         return key;
     }
 

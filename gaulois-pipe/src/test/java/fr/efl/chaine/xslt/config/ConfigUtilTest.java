@@ -11,10 +11,12 @@ import fr.efl.chaine.xslt.SaxonConfigurationFactory;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
@@ -26,7 +28,7 @@ import org.junit.Test;
  */
 public class ConfigUtilTest {
     private static SaxonConfigurationFactory configFactory;
-    private static HashMap<String,ParameterValue> emptyInputParams;
+    private static HashMap<QName,ParameterValue> emptyInputParams;
 
     @BeforeClass
     public static void initialize() {
@@ -62,5 +64,32 @@ public class ConfigUtilTest {
         List<CfgFile> files = cu.getFilesFromDirectory(new File("src/test/resources/findDir-recurse"), filter, true);
         assertEquals("5 files are expected ", files.size(), 5);
     }
+    
+    @Test
+    public void testSourceFolderContent() throws InvalidSyntaxException, SaxonApiException, MalformedURLException {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "src/test/resources/folderContentRelative.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        assertTrue("relative path in source folder fails",config.getSources().getFiles().size()>=34);
+        
+        cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "cp:/folderContentAbsUri.xml");
+        HashMap<QName, ParameterValue> params = new HashMap<>();
+        File currentPath = new File(System.getProperty("user.dir"));
+        // check if we are in the right directory
+        File test = new File(currentPath, "src/test/resources/folderContentAbsUri.xml");
+        if(!test.exists()) {
+            // probably, we are in parent folder
+            currentPath = new File(currentPath, "gaulois-pipe");
+            test = new File(currentPath, "src/test/resources/folderContentAbsUri.xml");
+            if(!test.exists()) {
+                fail("Unable to locate gaulois-pipe folder. Try moving to gaulois-pipe module folder.");
+            }
+        }
+        QName sourceQn = new QName("source");
+        params.put(sourceQn, new ParameterValue(sourceQn, currentPath.toURI().toURL().toExternalForm()));
+        config = cu.buildConfig(params);
+        assertTrue("absolute URI in source folder fails", config.getSources().getFiles().size()>=34);
+    }
+    
     
 }

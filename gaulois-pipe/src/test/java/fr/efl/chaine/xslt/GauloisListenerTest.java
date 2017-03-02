@@ -15,6 +15,7 @@ import java.io.FileReader;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.QName;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPut;
@@ -28,7 +29,7 @@ import org.junit.Test;
  * @author cmarchand
  */
 public class GauloisListenerTest {
-    private static HashMap<String,ParameterValue> emptyInputParams;
+    private static HashMap<QName,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
 
     @BeforeClass

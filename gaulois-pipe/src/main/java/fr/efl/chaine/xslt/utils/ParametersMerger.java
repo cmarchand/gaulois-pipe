@@ -9,6 +9,7 @@ package fr.efl.chaine.xslt.utils;
 import java.io.File;
 import java.util.HashMap;
 import java.util.regex.Matcher;
+import net.sf.saxon.s9api.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,12 @@ import org.slf4j.LoggerFactory;
  */
 public class ParametersMerger {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParametersMerger.class);
+    
+    private static final QName INPUT_BASENAME = new QName("input-basename");
+    private static final QName INPUT_NAME = new QName("input-name");
+    private static final QName INPUT_EXTENSION = new QName("input-extension");
+    private static final QName INPUT_ABSOLUTE = new QName("input-absolute");
+
 
     /**
      * Merges the two lists into a new list, and let the two original lists unchanged.
@@ -25,9 +32,9 @@ public class ParametersMerger {
      * @param lowPriority Second list of parameters
      * @return A new list that contains all elements from <tt>l1</tt> and <tt>l2</tt>
      */
-    public static HashMap<String,ParameterValue> merge(final HashMap<String,ParameterValue> highPriority, final HashMap<String,ParameterValue> lowPriority) {
+    public static HashMap<QName,ParameterValue> merge(final HashMap<QName,ParameterValue> highPriority, final HashMap<QName,ParameterValue> lowPriority) {
 //        LOGGER.debug("merging : "+highPriority+" with "+lowPriority);
-        HashMap<String,ParameterValue> ret = new HashMap<>();
+        HashMap<QName,ParameterValue> ret = new HashMap<>();
         ret.putAll(highPriority);
         for(ParameterValue pv: lowPriority.values()) {
             if(!ret.containsKey(pv.getKey()))
@@ -46,7 +53,7 @@ public class ParametersMerger {
      * @param parameters The parameters values
      * @return The initialValue with all parameters replaced
      */
-    public static String processParametersReplacement(String initialValue, final HashMap<String,ParameterValue> parameters) {
+    public static String processParametersReplacement(String initialValue, final HashMap<QName,ParameterValue> parameters) {
         String ret = initialValue;
         if(ret.contains("$[")) {
             for(ParameterValue pv: parameters.values()) {
@@ -69,15 +76,15 @@ public class ParametersMerger {
      * 
      * @return The parameters whith input-name, input-basename, input-absolute and input-extension added
      */
-    public static HashMap<String,ParameterValue> addInputInParameters(final HashMap<String,ParameterValue> parameters, final File inputFile) {
-        HashMap<String,ParameterValue> fileParams = new HashMap<>();
+    public static HashMap<QName,ParameterValue> addInputInParameters(final HashMap<QName,ParameterValue> parameters, final File inputFile) {
+        HashMap<QName,ParameterValue> fileParams = new HashMap<>();
         String name = inputFile.getName();
         String basename = name.substring(0, name.lastIndexOf("."));
         String extension = name.substring(basename.length()+1);
-        fileParams.put("input-basename", new ParameterValue("input-basename", basename));
-        fileParams.put("input-name", new ParameterValue("input-name", name));
-        fileParams.put("input-extension", new ParameterValue("input-extension", extension));
-        fileParams.put("input-absolute", new ParameterValue("input-absolute", inputFile.getAbsolutePath()));
+        fileParams.put(INPUT_BASENAME, new ParameterValue(INPUT_BASENAME, basename));
+        fileParams.put(INPUT_NAME, new ParameterValue(INPUT_NAME, name));
+        fileParams.put(INPUT_EXTENSION, new ParameterValue(INPUT_EXTENSION, extension));
+        fileParams.put(INPUT_ABSOLUTE, new ParameterValue(INPUT_ABSOLUTE, inputFile.getAbsolutePath()));
         return merge(parameters, fileParams);
     }
 }

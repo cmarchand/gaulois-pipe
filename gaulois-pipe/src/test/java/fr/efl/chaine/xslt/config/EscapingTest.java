@@ -12,6 +12,7 @@ import fr.efl.chaine.xslt.SaxonConfigurationFactory;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.util.HashMap;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.QName;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -22,7 +23,7 @@ import org.junit.Test;
  */
 public class EscapingTest {
     private static SaxonConfigurationFactory configFactory;
-    @BeforeClass
+    @BeforeClass 
     public static void initialize() {
         configFactory = new SaxonConfigurationFactory() {
             Configuration config = Configuration.newConfiguration();
@@ -37,8 +38,8 @@ public class EscapingTest {
     
     @Test
     public void escapeParameter() throws InvalidSyntaxException {
-        ParameterValue pv = new ParameterValue("workDir", "file:/home/cmarchand/devel/data");
-        HashMap<String,ParameterValue> params = new HashMap<>();
+        ParameterValue pv = new ParameterValue(new QName("workDir"), "file:/home/cmarchand/devel/data");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
         params.put(pv.getKey(), pv);
         // n'importe lequel, aucune importance
         GauloisPipe piper = new GauloisPipe(configFactory);
@@ -52,8 +53,8 @@ public class EscapingTest {
      */
     @Test
     public void escapeBackSlash() throws InvalidSyntaxException {
-        ParameterValue pv = new ParameterValue("basedir", "c:\\dev\\sie-efl-inneo-src");
-        HashMap<String,ParameterValue> params = new HashMap<>();
+        ParameterValue pv = new ParameterValue(new QName("basedir"), "c:\\dev\\sie-efl-inneo-src");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
         params.put(pv.getKey(), pv);
         // n'importe lequel, aucune importance
         GauloisPipe piper = new GauloisPipe(configFactory);

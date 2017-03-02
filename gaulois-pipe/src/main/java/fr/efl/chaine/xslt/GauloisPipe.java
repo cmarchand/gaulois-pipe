@@ -424,7 +424,7 @@ public class GauloisPipe {
                 }
             }
         }
-        HashMap<String,ParameterValue> parameters = ParametersMerger.addInputInParameters(ParametersMerger.merge(input.getParameters(), config.getParams()),input.getFile());
+        HashMap<QName,ParameterValue> parameters = ParametersMerger.addInputInParameters(ParametersMerger.merge(input.getParameters(), config.getParams()),input.getFile());
         XsltTransformer transformer = buildTransformer(
                 pipe, 
                 input.getFile(), 
@@ -444,7 +444,7 @@ public class GauloisPipe {
         }
     }
     
-    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         LOGGER.trace("in buildTransformer(Pipe,...)");
         XsltTransformer first = null;
         Iterator<ParametrableStep> it = pipe.getXslts();
@@ -467,11 +467,11 @@ public class GauloisPipe {
                     // on substitue les paramètres globaux dans ceux de la XSL
                     String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters);
                     LOGGER.trace("Setting parameter ("+pv.getKey()+","+value+")");
-                    currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(value));
+                    currentTransformer.setParameter(pv.getKey(), new XdmAtomicValue(value));
                 }
                 for(ParameterValue pv:parameters.values()) {
                     // substitution has been before, in merge, but there is input-file relative parameters...
-                    currentTransformer.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
+                    currentTransformer.setParameter(pv.getKey(), new XdmAtomicValue(
                             ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                     ));
                 }
@@ -530,13 +530,13 @@ public class GauloisPipe {
                     LOGGER.debug("[JAVA-STEP] Creating "+javaStep.getStepClass().getName());
                     StepJava stepJava = javaStep.getStepClass().newInstance();
                     for(ParameterValue pv:javaStep.getParams()) {
-                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
+                        stepJava.setParameter(pv.getKey(), new XdmAtomicValue(
                                 ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                         ));
                     }
                     for(ParameterValue pv:parameters.values()) {
                         // la substitution a été faite avant, dans le merge
-                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(
+                        stepJava.setParameter(pv.getKey(), new XdmAtomicValue(
                                 ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                         ));
                     }
@@ -581,7 +581,7 @@ public class GauloisPipe {
         }
     }
     
-    private XsltTransformer getXsltTransformer(String href, HashMap<String,ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException, IOException {
+    private XsltTransformer getXsltTransformer(String href, HashMap<QName,ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException, IOException {
         // TODO : rewrite this, as cp: and jar: protocols are availabe and one can use new URL(cp:/...).getInputStream()
         String __href = ParametersMerger.processParametersReplacement(href, parameters);
         LOGGER.debug("loading "+__href);
@@ -622,7 +622,7 @@ public class GauloisPipe {
         return xsl.load();
     }
     
-    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         LOGGER.trace("in buildTransformer(Tee,...)");
         List<Destination> dests = new ArrayList<>();
         if(tee==null) {
@@ -642,7 +642,7 @@ public class GauloisPipe {
         }
         return dests.get(0);
     }
-    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<String,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         if(!pipe.getXslts().hasNext()) {
             if(pipe.getOutput()!=null) {
                 return buildSerializer(pipe.getOutput(),inputFile, parameters);
@@ -654,7 +654,7 @@ public class GauloisPipe {
         }
     }
     
-    private Destination buildSerializer(Output output, File inputFile, HashMap<String,ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
+    private Destination buildSerializer(Output output, File inputFile, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
         if(output.isNullOutput()) {
             return processor.newSerializer(new NullOutputStream());
         } else if(output.isConsoleOutput()) {
@@ -708,11 +708,11 @@ public class GauloisPipe {
                 try {
                     StepJava stepJava = javaStep.getStepClass().newInstance();
                     for(ParameterValue pv:javaStep.getParams()) {
-                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
+                        stepJava.setParameter(pv.getKey(), new XdmAtomicValue(pv.getValue()));
                     }
                     for(ParameterValue pv:config.getParams().values()) {
                         // la substitution a été faite avant, dans le merge
-                        stepJava.setParameter(new QName(pv.getKey()), new XdmAtomicValue(pv.getValue()));
+                        stepJava.setParameter(pv.getKey(), new XdmAtomicValue(pv.getValue()));
                     }
                     Receiver r = stepJava.getReceiver(configurationFactory.getConfiguration());
                     r.open();
@@ -898,7 +898,7 @@ public class GauloisPipe {
                     currentDir = argument; break;
             }
         }
-        HashMap<String,ParameterValue> inputParameters = new HashMap<>(inputParams.size());
+        HashMap<QName,ParameterValue> inputParameters = new HashMap<>(inputParams.size());
         for(String paramPattern:inputParams) {
             LOGGER.debug("parsing parameter "+paramPattern);
             ParameterValue pv = ConfigUtil.parseParameterPattern(paramPattern);
@@ -933,7 +933,7 @@ public class GauloisPipe {
         return config;
     }
 
-    private Config parseConfig(String fileName, HashMap<String,ParameterValue> inputParameters, Configuration saxonConfig, final boolean skipSchemaValidation) throws InvalidSyntaxException {
+    private Config parseConfig(String fileName, HashMap<QName,ParameterValue> inputParameters, Configuration saxonConfig, final boolean skipSchemaValidation) throws InvalidSyntaxException {
         try {
             return new ConfigUtil(saxonConfig, getUriResolver(), fileName, skipSchemaValidation, currentDir).buildConfig(inputParameters);
         } catch (SaxonApiException ex) {

@@ -12,6 +12,7 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.File;
 import java.util.HashMap;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.s9api.QName;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -21,7 +22,7 @@ import static org.junit.Assert.assertEquals;
  * @author cmarchand
  */
 public class ManualConstructedSourcesTest {
-    private static HashMap<String,ParameterValue> emptyInputParams;
+    private static HashMap<QName,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
     
     @BeforeClass
