@@ -58,6 +58,7 @@ public class DefaultSaxonConfigurationFactory extends SaxonConfigurationFactory 
     private void __initConfiguration() {
         // default construct
         configuration = Configuration.newConfiguration();
+        LOGGER.debug("configuration is a "+configuration.getClass().getName());
         ClassLoader cl = getClass().getClassLoader();
         if(cl instanceof URLClassLoader) {
             Processor proc = new Processor(configuration);
