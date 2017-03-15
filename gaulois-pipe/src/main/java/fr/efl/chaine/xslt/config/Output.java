@@ -191,7 +191,9 @@ public class Output implements Verifiable {
             }
             for(ParameterValue pv:parameters.values()) {
                 LOGGER.debug("replacing $["+pv.getKey()+"]");
-                __abs = __abs.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
+                if(pv.getValue() instanceof String) {
+                    __abs = __abs.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue().toString());
+                }
             }
             File directory = __abs.startsWith("file:") ? new File(new URI(__abs)) : new File(__abs);
             ret = new File(directory, getFileName(sourceFile, parameters));
@@ -216,7 +218,9 @@ public class Output implements Verifiable {
         String basename = sourceName.substring(0, ix);
         String ret = filename.replaceAll("\\$\\{name\\}", sourceName).replaceAll("\\$\\{basename\\}", basename).replaceAll("\\$\\{extension\\}", extension);
         for(ParameterValue pv:parameters.values()) {
-            ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
+            if(pv.getValue() instanceof String) {
+                ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue().toString());
+            }
         }
         return ret;
     }

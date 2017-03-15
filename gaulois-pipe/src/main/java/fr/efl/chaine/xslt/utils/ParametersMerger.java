@@ -53,16 +53,46 @@ public class ParametersMerger {
      * @param parameters The parameters values
      * @return The initialValue with all parameters replaced
      */
+    public static Object processParametersReplacement(Object initialValue, final HashMap<QName,ParameterValue> parameters) {
+        if(initialValue instanceof String) {
+            String ret = initialValue.toString();
+            if(ret.contains("$[")) {
+                for(ParameterValue pv: parameters.values()) {
+                    if(pv.getValue() instanceof String) {
+                        try {
+                            // issue #14
+                            ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", Matcher.quoteReplacement(pv.getValue().toString()));
+                        } catch(java.lang.IllegalArgumentException ex) {
+                            LOGGER.error("while replacing "+pv.getKey()+" -> "+pv.getValue(),ex);
+                            throw ex;
+                        }
+                    }
+                    if(!ret.contains("$[")) break;
+                }
+            }
+            return ret;
+        } else {
+            return initialValue;
+        }
+    }
+    /**
+     * Replaces the parameters in string
+     * @param initialValue The String to change parameters in
+     * @param parameters The parameters values
+     * @return The initialValue with all parameters replaced
+     */
     public static String processParametersReplacement(String initialValue, final HashMap<QName,ParameterValue> parameters) {
         String ret = initialValue;
         if(ret.contains("$[")) {
             for(ParameterValue pv: parameters.values()) {
-                try {
-                    // issue #14
-                    ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", Matcher.quoteReplacement(pv.getValue()));
-                } catch(java.lang.IllegalArgumentException ex) {
-                    LOGGER.error("while replacing "+pv.getKey()+" -> "+pv.getValue(),ex);
-                    throw ex;
+                if(pv.getValue() instanceof String) {
+                    try {
+                        // issue #14
+                        ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", Matcher.quoteReplacement(pv.getValue().toString()));
+                    } catch(java.lang.IllegalArgumentException ex) {
+                        LOGGER.error("while replacing "+pv.getKey()+" -> "+pv.getValue(),ex);
+                        throw ex;
+                    }
                 }
                 if(!ret.contains("$[")) break;
             }

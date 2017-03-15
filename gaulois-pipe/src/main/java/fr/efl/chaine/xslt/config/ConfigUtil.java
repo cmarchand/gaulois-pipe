@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
@@ -393,15 +392,25 @@ public class ConfigUtil {
         }
         return ret;
     }
+    Object resolveEscapes(Object input, HashMap<QName,ParameterValue> params) {
+        LOGGER.debug("resolveEscapes in "+input+" with "+params);
+        if(input==null) return input;
+        if(input instanceof String) {
+            String ret = input.toString();
+            return ParametersMerger.processParametersReplacement(ret, params);
+        } else {
+            return input;
+        }
+    }
     String resolveEscapes(String input, HashMap<QName,ParameterValue> params) {
         LOGGER.debug("resolveEscapes in "+input+" with "+params);
         if(input==null) return input;
         String ret = input;
-        return ParametersMerger.processParametersReplacement(ret, params);
+        return (String)ParametersMerger.processParametersReplacement(ret, params);
     }
     private Collection<CfgFile> buildFolderContent(XdmNode node, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildFolderContent on "+node.getNodeName());
-        String pattern = resolveEscapes(node.getAttributeValue(QN_PATTERN), parameters);
+        String pattern = (String)resolveEscapes(node.getAttributeValue(QN_PATTERN), parameters);
         final boolean recurse = getBooleanValue(node.getAttributeValue(QN_RECURSE));
         HashMap<QName, ParameterValue> params = new HashMap<>();
         XdmSequenceIterator it = node.axisIterator(Axis.CHILD, QN_PARAM);
@@ -424,7 +433,7 @@ public class ConfigUtil {
                 return match;
             }
         };
-        String fileName = resolveEscapes(node.getAttributeValue(CfgFile.ATTR_HREF),parameters);
+        String fileName = (String)resolveEscapes(node.getAttributeValue(CfgFile.ATTR_HREF),parameters);
         File dir;
         try {
             dir = new File(new URI(fileName));
@@ -451,7 +460,7 @@ public class ConfigUtil {
         XdmSequenceIterator attributes = node.axisIterator(Axis.ATTRIBUTE);
         while(attributes.hasNext()) {
             XdmNode attr = (XdmNode)attributes.next();
-            ret.setOutputProperty(attr.getNodeName().getLocalName(), resolveEscapes(attr.getStringValue(),parameters));
+            ret.setOutputProperty(attr.getNodeName().getLocalName(), (String)resolveEscapes(attr.getStringValue(),parameters));
         }
         boolean nullOutput = node.axisIterator(Axis.CHILD, QN_NULL).hasNext();
         if(nullOutput) {

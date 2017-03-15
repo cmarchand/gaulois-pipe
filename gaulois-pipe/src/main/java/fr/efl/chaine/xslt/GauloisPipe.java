@@ -465,15 +465,23 @@ public class GauloisPipe {
                 }
                 for(ParameterValue pv:xsl.getParams()) {
                     // on substitue les paramètres globaux dans ceux de la XSL
-                    String value = ParametersMerger.processParametersReplacement(pv.getValue(), parameters);
-                    LOGGER.trace("Setting parameter ("+pv.getKey()+","+value+")");
-                    currentTransformer.setParameter(pv.getKey(), new XdmAtomicValue(value));
+                    if(pv.getValue() instanceof String) {
+                        String value = (String)ParametersMerger.processParametersReplacement(pv.getValue(), parameters);
+                        LOGGER.trace("Setting parameter ("+pv.getKey()+","+value+")");
+                        currentTransformer.setParameter(pv.getKey(), new XdmAtomicValue(value));
+                    } else if(pv.getValue() instanceof XdmValue){
+                        currentTransformer.setParameter(pv.getKey(), (XdmValue)pv.getValue());
+                    }
                 }
                 for(ParameterValue pv:parameters.values()) {
                     // substitution has been before, in merge, but there is input-file relative parameters...
-                    currentTransformer.setParameter(pv.getKey(), new XdmAtomicValue(
-                            ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
-                    ));
+                    if(pv.getValue() instanceof String) {
+                        currentTransformer.setParameter(pv.getKey(), new XdmAtomicValue(
+                                (String)ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
+                        ));
+                    } else {
+                        currentTransformer.setParameter(pv.getKey(), (XdmValue)pv.getValue());
+                    }
                 }
                 if(xsl.isDebug()) {
                     File debugFile;
@@ -530,15 +538,23 @@ public class GauloisPipe {
                     LOGGER.debug("[JAVA-STEP] Creating "+javaStep.getStepClass().getName());
                     StepJava stepJava = javaStep.getStepClass().newInstance();
                     for(ParameterValue pv:javaStep.getParams()) {
-                        stepJava.setParameter(pv.getKey(), new XdmAtomicValue(
-                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
-                        ));
+                        if(pv.getValue() instanceof String) {
+                            stepJava.setParameter(pv.getKey(), new XdmAtomicValue(
+                                    (String)ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
+                            ));
+                        } else if(pv.getValue() instanceof XdmValue) {
+                            stepJava.setParameter(pv.getKey(), (XdmValue)pv.getValue());
+                        }
                     }
                     for(ParameterValue pv:parameters.values()) {
                         // la substitution a été faite avant, dans le merge
-                        stepJava.setParameter(pv.getKey(), new XdmAtomicValue(
-                                ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
-                        ));
+                        if(pv.getValue() instanceof String) {
+                            stepJava.setParameter(pv.getKey(), new XdmAtomicValue(
+                                    (String)ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
+                            ));
+                        } else {
+                            stepJava.setParameter(pv.getKey(), (XdmValue)pv.getValue());
+                        }
                     }
                     if(previousTransformer!=null) {
                         assignStepToDestination(previousTransformer, stepJava);
@@ -583,7 +599,7 @@ public class GauloisPipe {
     
     private XsltTransformer getXsltTransformer(String href, HashMap<QName,ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException, IOException {
         // TODO : rewrite this, as cp: and jar: protocols are availabe and one can use new URL(cp:/...).getInputStream()
-        String __href = ParametersMerger.processParametersReplacement(href, parameters);
+        String __href = (String)ParametersMerger.processParametersReplacement(href, parameters);
         LOGGER.debug("loading "+__href);
         XsltExecutable xsl = xslCache.get(__href);
         if(xsl==null) {
@@ -708,11 +724,19 @@ public class GauloisPipe {
                 try {
                     StepJava stepJava = javaStep.getStepClass().newInstance();
                     for(ParameterValue pv:javaStep.getParams()) {
-                        stepJava.setParameter(pv.getKey(), new XdmAtomicValue(pv.getValue()));
+                        if(pv.getValue() instanceof String) {
+                            stepJava.setParameter(pv.getKey(), new XdmAtomicValue(pv.getValue().toString()));
+                        } else if(pv.getValue() instanceof XdmValue) {
+                            stepJava.setParameter(pv.getKey(), (XdmValue)pv.getValue());
+                        }
                     }
                     for(ParameterValue pv:config.getParams().values()) {
                         // la substitution a été faite avant, dans le merge
-                        stepJava.setParameter(pv.getKey(), new XdmAtomicValue(pv.getValue()));
+                        if(pv.getValue() instanceof String) {
+                            stepJava.setParameter(pv.getKey(), new XdmAtomicValue(pv.getValue().toString()));
+                        } else {
+                            stepJava.setParameter(pv.getKey(), (XdmValue)pv.getValue());
+                        }
                     }
                     Receiver r = stepJava.getReceiver(configurationFactory.getConfiguration());
                     r.open();

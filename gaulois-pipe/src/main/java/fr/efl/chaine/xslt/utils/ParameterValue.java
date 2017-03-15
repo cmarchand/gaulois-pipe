@@ -7,6 +7,7 @@
 package fr.efl.chaine.xslt.utils;
 
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmValue;
 
 /**
  * A parameter value in saxon pipe.
@@ -21,7 +22,7 @@ public class ParameterValue {
     /**
      * the parameter value.
      */
-    private String value;
+    private Object value;
 
     /**
      * Default constructor.
@@ -29,7 +30,7 @@ public class ParameterValue {
      * @param key the parameter key
      * @param value the parameter value
      */
-    public ParameterValue(QName key, String value) {
+    public ParameterValue(QName key, Object value) {
         this.key = key;
         this.value = value;
     }
@@ -44,12 +45,18 @@ public class ParameterValue {
     /**
      * @return the parameter value
      */
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
     
-    public void setValue(String value) {
-        this.value=value;
+    public void setValue(Object value) {
+        if(value instanceof String) {
+            this.value=value;
+        } else if(value instanceof XdmValue) {
+            this.value=value;
+        } else {
+            throw new IllegalArgumentException("Only String or XdmValue are acceptable values for parameters");
+        }
     }
 
     @Override
