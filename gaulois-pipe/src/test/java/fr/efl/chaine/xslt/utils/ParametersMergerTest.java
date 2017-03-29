@@ -6,8 +6,11 @@
  */
 package fr.efl.chaine.xslt.utils;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmValue;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -25,5 +28,16 @@ public class ParametersMergerTest {
         parameters.put(qn, new ParameterValue(qn,"src/main/xsl"));
         String ret = ParametersMerger.processParametersReplacement(initial, parameters);
         assertEquals("C:\\Users\\ext-cmarchand\\src/main/xsl", ret);
+    }
+    
+    @Test
+    public void noReplacementForXdmValue() {
+        XdmValue initial = new XdmAtomicValue(BigDecimal.ZERO);
+        HashMap<QName, ParameterValue> parameters = new HashMap<>();
+        QName qn = new QName("source");
+        parameters.put(qn, new ParameterValue(qn,"src/main/xsl"));
+        Object ret = ParametersMerger.processParametersReplacement(initial, parameters);
+        assertTrue(ret instanceof XdmValue);
+        assertEquals(((XdmValue)ret).toString(), "0");
     }
 }

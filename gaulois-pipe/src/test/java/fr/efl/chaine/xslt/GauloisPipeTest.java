@@ -13,6 +13,8 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import net.sf.saxon.Configuration;
@@ -22,6 +24,7 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
@@ -358,5 +361,30 @@ public class GauloisPipeTest {
         xpc.declareVariable(var);
         XPathExecutable xpe = xpc.compile("ex:basex-query('for $i in 1 to 10 return <test>{$i}</test>',$connect)");
         assertNotNull("unable to compile extension function", xpe);
+    }
+    
+    @Test
+    public void testXdmValueToXsl() throws InvalidSyntaxException, SaxonApiException, URISyntaxException, IOException {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/paramDate.xml");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
+        QName qnDate = new QName("date");
+        // to get a date XdmValue from saxon, we must be brilliants !
+        Processor proc = new Processor(configFactory.getConfiguration());
+        XQueryEvaluator ev = proc.newXQueryCompiler().compile("current-dateTime()").load();
+        XdmItem item = ev.evaluateSingle();
+        params.put(qnDate, new ParameterValue(qnDate, item));
+        Config config = cu.buildConfig(params);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("ADD_ATTRIBUTE");
+        piper.launch();
+        File expect = new File("target/generated-test-files/date-output.xml");
+        XdmNode document = proc.newDocumentBuilder().build(expect);
+        XPathExecutable exec = proc.newXPathCompiler().compile("/date");
+        XPathSelector selector = exec.load();
+        selector.setContextItem((XdmItem)document);
+        XdmValue result = selector.evaluate();
+        assertTrue(result.size()>0);
     }
 }

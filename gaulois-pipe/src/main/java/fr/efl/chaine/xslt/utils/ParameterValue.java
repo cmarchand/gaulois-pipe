@@ -32,7 +32,7 @@ public class ParameterValue {
      */
     public ParameterValue(QName key, Object value) {
         this.key = key;
-        this.value = value;
+        setValue(value);
     }
 
     /**
