@@ -17,11 +17,11 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
@@ -391,6 +391,10 @@ public class ConfigUtil {
         while(it.hasNext()) {
             ret.addParameter(buildParameter((XdmNode)it.next(),parameters));
         }
+        ParameterValue relativeFile = new ParameterValue(ParametersMerger.INPUT_RELATIVE_FILE, f.toURI().toString());
+        ret.addParameter(relativeFile);
+        ParameterValue relativeDir = new ParameterValue(ParametersMerger.INPUT_RELATIVE_DIR, f.getParentFile().toURI().toString());
+        ret.addParameter(relativeDir);
         return ret;
     }
     String resolveEscapes(String input, HashMap<QName,ParameterValue> params) {
@@ -437,12 +441,21 @@ public class ConfigUtil {
         }
         LOGGER.trace("dir="+dir+", filter="+filter+", recurse="+recurse);
         List<CfgFile> files = getFilesFromDirectory(dir,filter,recurse);
+        Path dirPath= dir.toPath();
         for(CfgFile sourceFile:files) {
             for(ParameterValue p:params.values()) {
                 sourceFile.addParameter(p);
             }
+            ParameterValue relativeFile = new ParameterValue(ParametersMerger.INPUT_RELATIVE_FILE, makeAsUri(dirPath.relativize(sourceFile.getSource().toPath())));
+            sourceFile.addParameter(relativeFile);
+            ParameterValue relativeDir = new ParameterValue(ParametersMerger.INPUT_RELATIVE_DIR, makeAsUri(dirPath.relativize(sourceFile.getSource().getParentFile().toPath())));
+            sourceFile.addParameter(relativeDir);
+
         }
         return files;
+    }
+    private String makeAsUri(final Path p) {
+        return p.toString().replaceAll("\\\\", "/");
     }
     private Output buildOutput(XdmNode node, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildOutput from {}", node.getNodeName());
@@ -600,6 +613,10 @@ public class ConfigUtil {
         for(ParameterValue p:getParametersOfTemplate(sParams)) {
             ret.addParameter(p);
         }
+        ParameterValue relativeFile = new ParameterValue(ParametersMerger.INPUT_RELATIVE_FILE, ret.getSource().toURI().toString());
+        ret.addParameter(relativeFile);
+        ParameterValue relativeDir = new ParameterValue(ParametersMerger.INPUT_RELATIVE_DIR, ret.getSource().getParentFile().toURI().toString());
+        ret.addParameter(relativeDir);
         return ret;
     }
     private static List<ParameterValue> getParametersOfTemplate(final String s) {
