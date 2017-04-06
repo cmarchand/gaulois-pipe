@@ -8,6 +8,7 @@ package fr.efl.chaine.xslt.utils;
 
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmValue;
+import top.marchand.xml.gaulois.config.typing.Datatype;
 
 /**
  * A parameter value in saxon pipe.
@@ -23,16 +24,23 @@ public class ParameterValue {
      * the parameter value.
      */
     private Object value;
+    /**
+     * This parameter datatype. If not specified, it's xs:string
+     */
+    private Datatype datatype;
 
     /**
      * Default constructor.
      *
      * @param key the parameter key
      * @param value the parameter value
+     * @param datatype the parameter datatype
      */
-    public ParameterValue(QName key, Object value) {
+    @SuppressWarnings("OverridableMethodCallInConstructor")
+    public ParameterValue(QName key, Object value, Datatype datatype) {
         this.key = key;
         setValue(value);
+        setDatatype(datatype);
     }
 
     /**
@@ -54,6 +62,8 @@ public class ParameterValue {
             this.value=value;
         } else if(value instanceof XdmValue) {
             this.value=value;
+        } else if(value==null) {
+            this.value=value;
         } else {
             throw new IllegalArgumentException("Only String or XdmValue are acceptable values for parameters");
         }
@@ -62,6 +72,14 @@ public class ParameterValue {
     @Override
     public String toString() {
         return "[" + getKey() + "=" + getValue() + "]";
+    }
+
+    public Datatype getDatatype() {
+        return datatype;
+    }
+
+    public void setDatatype(Datatype datatype) {
+        this.datatype = datatype;
     }
 
 }

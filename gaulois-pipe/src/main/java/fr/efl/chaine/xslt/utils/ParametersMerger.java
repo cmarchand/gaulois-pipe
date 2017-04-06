@@ -10,8 +10,11 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 
 /**
  * Merges parameters
@@ -93,28 +96,33 @@ public class ParametersMerger {
                         LOGGER.error("while replacing "+pv.getKey()+" -> "+pv.getValue(),ex);
                         throw ex;
                     }
+                } else if(pv.getValue() instanceof XdmAtomicValue) {
+                    String replacer = Matcher.quoteReplacement(((XdmAtomicValue)pv.getValue()).toString());
+                    ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", replacer);
                 }
                 if(!ret.contains("$[")) break;
             }
         }
         return ret;
     }
+    
     /**
-     * Replaces the parameters in string
+     * Add input pseudo-variables to parameters
      * @param parameters The parameters values
      * @param inputFile The input file actually processed. input-basename, input-name, input-absolute and input-extension are added, so can be used.
+     * @param factory The DatatypeFactory to use
      * 
      * @return The parameters whith input-name, input-basename, input-absolute and input-extension added
      */
-    public static HashMap<QName,ParameterValue> addInputInParameters(final HashMap<QName,ParameterValue> parameters, final File inputFile) {
+    public static HashMap<QName,ParameterValue> addInputInParameters(final HashMap<QName,ParameterValue> parameters, final File inputFile, final DatatypeFactory factory) {
         HashMap<QName,ParameterValue> fileParams = new HashMap<>();
         String name = inputFile.getName();
         String basename = name.substring(0, name.lastIndexOf("."));
         String extension = name.substring(basename.length()+1);
-        fileParams.put(INPUT_BASENAME, new ParameterValue(INPUT_BASENAME, basename));
-        fileParams.put(INPUT_NAME, new ParameterValue(INPUT_NAME, name));
-        fileParams.put(INPUT_EXTENSION, new ParameterValue(INPUT_EXTENSION, extension));
-        fileParams.put(INPUT_ABSOLUTE, new ParameterValue(INPUT_ABSOLUTE, inputFile.getAbsolutePath()));
+        fileParams.put(INPUT_BASENAME, new ParameterValue(INPUT_BASENAME, basename, factory.XS_STRING));
+        fileParams.put(INPUT_NAME, new ParameterValue(INPUT_NAME, name, factory.XS_STRING));
+        fileParams.put(INPUT_EXTENSION, new ParameterValue(INPUT_EXTENSION, extension, factory.XS_STRING));
+        fileParams.put(INPUT_ABSOLUTE, new ParameterValue(INPUT_ABSOLUTE, inputFile.getAbsolutePath(), factory.XS_STRING));
         return merge(parameters, fileParams);
     }
 }

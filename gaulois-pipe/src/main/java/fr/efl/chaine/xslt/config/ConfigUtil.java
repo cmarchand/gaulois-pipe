@@ -30,6 +30,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import net.sf.saxon.Configuration;
+import net.sf.saxon.om.InscopeNamespaceResolver;
 import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -39,12 +40,15 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.type.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
+import top.marchand.xml.gaulois.config.typing.Datatype;
+import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 
 /**
  * A helper class to build the configuration.
@@ -56,16 +60,19 @@ public class ConfigUtil {
     private static final QName CONFIG_EL = new QName(Config.NS, "config");
     private static final QName PARAM_NAME = new QName("name");
     private static final QName PARAM_VALUE = new QName("value");
+    private static final QName PARAM_AS = new QName("as");
     private static final QName QN_PATTERN = new QName("pattern");
     private static final QName QN_RECURSE = new QName("recurse");
     private static final QName QN_PARAM = new QName(Config.NS,"param");
     private static final QName QN_NULL = new QName(Config.NS, "null");
+    private static final QName AS_NAME = new QName("as");
     private final File currentDir;
     private final Configuration saxonConfig;
     private final URIResolver uriResolver;
     private final String configUri;
     private final boolean skipSchemaValidation;
     private boolean __isConfigUriTrueURI = false;
+    private DatatypeFactory factory;
     
     public ConfigUtil(Configuration saxonConfig, URIResolver uriResolver, String configUri) throws InvalidSyntaxException {
         this(saxonConfig, uriResolver, configUri, false, System.getProperty("user.dir"));
@@ -95,6 +102,11 @@ public class ConfigUtil {
         }
         this.configUri=configUri;
         this.currentDir = new File(currentDir);
+        try {
+            factory = DatatypeFactory.getInstance(saxonConfig);
+        } catch(ValidationException ex) {
+            throw new InvalidSyntaxException(ex);
+        }
     }
     
     public Config buildConfig(HashMap<QName,ParameterValue> inputParameters) throws SaxonApiException, InvalidSyntaxException {
@@ -287,7 +299,7 @@ public class ConfigUtil {
         }
         return list;
     }
-    private Xslt buildXslt(XdmNode xsltNode, HashMap<QName,ParameterValue> parameters) {
+    private Xslt buildXslt(XdmNode xsltNode, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildXslt on {}", xsltNode.getNodeName());
         Xslt ret = new Xslt(resolveEscapes(xsltNode.getAttributeValue(Xslt.ATTR_HREF),parameters));
         if("true".equals(xsltNode.getAttributeValue(Xslt.ATTR_TRACE_ACTIVE))) {
@@ -356,13 +368,45 @@ public class ConfigUtil {
         }
         return when;
     }
-    private ParameterValue buildParameter(XdmNode param, HashMap<QName,ParameterValue> parameters) {
+    private ParameterValue buildParameter(XdmNode param, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildParameter on "+param.getNodeName());
         // attributes already presents will no be added, so return the existing parameter
         // issue#15 : parameter names are not anymore resolved, only QNamed
-        ParameterValue pv = new ParameterValue(resolveQName(param.getAttributeValue(PARAM_NAME)), resolveEscapes(param.getAttributeValue(PARAM_VALUE),parameters));
-        if(parameters.containsKey(pv.getKey())) return parameters.get(pv.getKey());
-        else return pv;
+        try {
+            String sDatatype = param.getAttributeValue(PARAM_AS);
+            Datatype dt ;
+            if(sDatatype!=null) {
+                QName datatypeName = null;
+                int doubleDotPosition = sDatatype.indexOf(":");
+                if(doubleDotPosition>0) {
+                    String prefix = sDatatype.substring(0, doubleDotPosition-1);
+//                    String uri = null;
+//                    NamespaceBinding[] nbs = param.getUnderlyingNode().getDeclaredNamespaces(null);
+//                    for(NamespaceBinding nb: nbs) {
+//                        if(nb.getPrefix().equals(prefix)) {
+//                            uri = nb.getURI();
+//                            break;
+//                        }
+//                    }
+                    String uri = new InscopeNamespaceResolver(param.getUnderlyingNode()).getURIForPrefix(prefix, true);
+                    if(uri==null) throw new InvalidSyntaxException("prefix "+prefix+" is not bound to any namespace URI ("+param.getLineNumber()+","+param.getColumnNumber()+")");
+                    datatypeName=new QName(prefix, uri, sDatatype.substring(doubleDotPosition+1));
+                } else {
+                    datatypeName = new QName(sDatatype);
+                }
+                dt = factory.getDatatype(datatypeName);
+            } else {
+                dt = factory.XS_STRING;
+            }
+            ParameterValue pv = new ParameterValue(
+                    resolveQName(param.getAttributeValue(PARAM_NAME)), 
+                    dt.convert(resolveEscapes(param.getAttributeValue(PARAM_VALUE),parameters),saxonConfig),
+                    dt);
+            if(parameters.containsKey(pv.getKey())) return parameters.get(pv.getKey());
+            else return pv;
+        } catch(ValidationException ex) {
+            throw new InvalidSyntaxException(ex);
+        }
     }
     public static QName resolveQName(String name) {
         if(name==null) return null;
@@ -371,7 +415,7 @@ public class ConfigUtil {
         else if(name.startsWith("{")) return QName.fromClarkName(name);
         else return new QName(name);
     }
-    private CfgFile buildFile(XdmNode node, HashMap<QName,ParameterValue> parameters) throws URISyntaxException {
+    private CfgFile buildFile(XdmNode node, HashMap<QName,ParameterValue> parameters) throws URISyntaxException, InvalidSyntaxException {
         String href = node.getAttributeValue(CfgFile.ATTR_HREF);
         LOGGER.trace("buildFile from {} with href={}", node.getNodeName(), href);
         File f;
@@ -406,6 +450,9 @@ public class ConfigUtil {
         LOGGER.debug("resolveEscapes in "+input+" with "+params);
         if(input==null) return input;
         String ret = input;
+        if(input.equals("$[destDir]/$[input-name]")) {
+            System.out.println("on y est !");
+        }
         return (String)ParametersMerger.processParametersReplacement(ret, params);
     }
     private Collection<CfgFile> buildFolderContent(XdmNode node, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
@@ -425,7 +472,6 @@ public class ConfigUtil {
         filter = new FilenameFilter() {
             @Override
             public boolean accept(File dir, String filename) {
-//                if(recurse) return true;
                 boolean match = regex.matcher(filename).matches();
                 if(!match) {
                     LOGGER.trace(filename+" not matched");
@@ -519,17 +565,18 @@ public class ConfigUtil {
      * Adds a parameter to the specified config.
      * @param config The config to modify
      * @param parameterPattern The prameter definition
+     * @param factory The datatype factory to use
      * @throws InvalidSyntaxException If the parameter definition is incorrect
      */
-    public static void addConfigParameter(Config config, String parameterPattern) throws InvalidSyntaxException {
-        config.addParameter(parseParameterPattern(parameterPattern));
+    public static void addConfigParameter(Config config, String parameterPattern, DatatypeFactory factory) throws InvalidSyntaxException {
+        config.addParameter(parseParameterPattern(parameterPattern, factory));
     }
-    public static ParameterValue parseParameterPattern(String parameterPattern) throws InvalidSyntaxException {
+    public static ParameterValue parseParameterPattern(String parameterPattern, DatatypeFactory factory) throws InvalidSyntaxException {
         String[] dec = parameterPattern.split("=");
         if(dec.length!=2) {
             throw new InvalidSyntaxException(parameterPattern+" is not a valid parameter declaration");
         }
-        return new ParameterValue(resolveQName(dec[0]), dec[1]);
+        return new ParameterValue(resolveQName(dec[0]), dec[1], factory.XS_STRING);
     }
     /**
      * Defines the thread number to use in this config
@@ -552,29 +599,31 @@ public class ConfigUtil {
      * Adds an input file to the config
      * @param config The config to modify
      * @param argument The file to add
+     * @param factory The datatypeFactory to use
      * @throws InvalidSyntaxException If input file definition is incorrect
      */
-    public static void addInputFile(Config config, String argument) throws InvalidSyntaxException {
+    public static void addInputFile(Config config, String argument, DatatypeFactory factory) throws InvalidSyntaxException {
         Sources sources = config.getSources();
         if(sources==null) {
             sources = new Sources();
             config.setSources(sources);
         }
-        sources.addFile(resolveInputFile(argument));
+        sources.addFile(resolveInputFile(argument, factory));
     }
     /**
      * Adds a template (XSLT) to the specified config
      * @param config the config to modify
      * @param argument The Xsl to add
+     * @param factory The datatype factory to use
      * @throws fr.efl.chaine.xslt.InvalidSyntaxException If xsl definition is incorrect
      */
-    public static void addTemplate(Config config, String argument) throws InvalidSyntaxException {
+    public static void addTemplate(Config config, String argument, DatatypeFactory factory) throws InvalidSyntaxException {
         Pipe pipe = config.getPipe();
         if(pipe==null) {
             pipe = new Pipe();
             config.setPipe(pipe);
         }
-        pipe.addXslt(resolveTemplate(argument));
+        pipe.addXslt(resolveTemplate(argument, factory));
     }
     /**
      * Defines the output of this config
@@ -591,33 +640,33 @@ public class ConfigUtil {
         }
     }
 
-    private static Xslt resolveTemplate(String path) {
+    private static Xslt resolveTemplate(String path, DatatypeFactory factory) {
         int index = path.indexOf("(");
         String filePath = index>0 ? path.substring(0, index) : path;
         String sParams = index>0 ? path.substring(index+1, path.length()-1).trim() : "";
         Xslt ret = new Xslt(filePath);
-        for(ParameterValue p:getParametersOfTemplate(sParams)) {
+        for(ParameterValue p:getParametersOfTemplate(sParams, factory)) {
             ret.addParameter(p);
         }
         return ret;
     }
-    private static CfgFile resolveInputFile(String path) {
+    private static CfgFile resolveInputFile(String path, DatatypeFactory factory) {
         int index = path.indexOf("(");
         String filePath = index>0 ? path.substring(0, index) : path;
         String sParams = index>0 ? path.substring(index+1, path.length()-1).trim() : "";
         CfgFile ret = new CfgFile(new File(filePath));
-        for(ParameterValue p:getParametersOfTemplate(sParams)) {
+        for(ParameterValue p:getParametersOfTemplate(sParams, factory)) {
             ret.addParameter(p);
         }
         return ret;
     }
-    private static List<ParameterValue> getParametersOfTemplate(final String s) {
+    private static List<ParameterValue> getParametersOfTemplate(final String s, DatatypeFactory factory) {
         ArrayList<ParameterValue> ret = new ArrayList<>();
         String[] entries = s.split(",");
         for(String entry:entries) {
             String[] ps = entry.split("=");
             if(ps.length==2) {
-                ParameterValue p = new ParameterValue(resolveQName(ps[0]), ps[1]);
+                ParameterValue p = new ParameterValue(resolveQName(ps[0]), ps[1], factory.XS_STRING);
                 ret.add(p);
             }
         }

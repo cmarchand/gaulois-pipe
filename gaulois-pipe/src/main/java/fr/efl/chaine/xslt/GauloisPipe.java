@@ -49,7 +49,9 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import javax.xml.datatype.DatatypeFactory;
+import java.util.logging.Level;
+import java.util.regex.Matcher;
+import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.Duration;
 import javax.xml.transform.stream.StreamResult;
 import net.sf.saxon.Configuration;
@@ -58,8 +60,10 @@ import net.sf.saxon.event.Receiver;
 import net.sf.saxon.lib.StandardLogger;
 import net.sf.saxon.trace.XSLTTraceListener;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.ValidationException;
 import org.apache.commons.io.output.NullOutputStream;
 import org.xmlresolver.Resolver;
+import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
 import top.marchand.xml.protocols.ProtocolInstaller;
 
@@ -100,20 +104,24 @@ public class GauloisPipe {
     private File debugDirectory;
     
     private String currentDir = System.getProperty("user.dir");
+    
+    private DatatypeFactory datatypeFactory;
 
     /**
      * The property name to specify the debug output directory
      */
     public static final transient String GAULOIS_DEBUG_DIR_PROPERTY = "gaulois.debug.dir";
+    private javax.xml.datatype.DatatypeFactory xmlDatatypeFactory;
 
     
     /**
      * Constructs a new GauloisPipe.
      * This constructor is the main one, the other one is only for backward compatibility.
      * @param configurationFactory The configuration factory to use
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public GauloisPipe(final SaxonConfigurationFactory configurationFactory) {
+    public GauloisPipe(final SaxonConfigurationFactory configurationFactory) throws InvalidSyntaxException {
         super();
         if(!protocolInstalled) {
             ProtocolInstaller.registerAdditionalProtocols();
@@ -123,6 +131,12 @@ public class GauloisPipe {
         Configuration saxonConfig=configurationFactory.getConfiguration();
         saxonConfig.setURIResolver(getUriResolver());
         xslCache = new HashMap<>();
+        try {
+            datatypeFactory = DatatypeFactory.getInstance(saxonConfig);
+            xmlDatatypeFactory = javax.xml.datatype.DatatypeFactory.newInstance();
+        } catch(ValidationException | DatatypeConfigurationException ex) {
+            throw new InvalidSyntaxException(ex);
+        }
     }
 
     /**
@@ -143,11 +157,11 @@ public class GauloisPipe {
         Config cfg = new Config();
 
         for (String input : inputs) {
-            ConfigUtil.addInputFile(cfg, input);
+            ConfigUtil.addInputFile(cfg, input, datatypeFactory);
         }
         ConfigUtil.setOutput(cfg, outputDirectory);
         for (String templatePath : templatePaths) {
-            ConfigUtil.addTemplate(cfg, templatePath);
+            ConfigUtil.addTemplate(cfg, templatePath, datatypeFactory);
         }
         ConfigUtil.setNbThreads(cfg, Integer.toString(nbThreads));
         cfg.verify();
@@ -235,7 +249,7 @@ public class GauloisPipe {
         try {
             if(config.getSources().getListener()==null) {
                 long duration = System.currentTimeMillis() - start;
-                Duration duree = DatatypeFactory.newInstance().newDuration(duration);
+                Duration duree = javax.xml.datatype.DatatypeFactory.newInstance().newDuration(duration);
                 LOGGER.info("[" + instanceName + "] Process terminated: "+duree.toString());
             }
         } catch(Exception ex) {
@@ -424,7 +438,7 @@ public class GauloisPipe {
                 }
             }
         }
-        HashMap<QName,ParameterValue> parameters = ParametersMerger.addInputInParameters(ParametersMerger.merge(input.getParameters(), config.getParams()),input.getFile());
+        HashMap<QName,ParameterValue> parameters = ParametersMerger.addInputInParameters(ParametersMerger.merge(input.getParameters(), config.getParams()),input.getFile(), datatypeFactory);
         XsltTransformer transformer = buildTransformer(
                 pipe, 
                 input.getFile(), 
@@ -437,7 +451,7 @@ public class GauloisPipe {
         long duration = System.currentTimeMillis() - start;
         String distinctName = input.toString();
         try {
-            Duration duree = DatatypeFactory.newInstance().newDuration(duration);
+            Duration duree = xmlDatatypeFactory.newDuration(duration);
             LOGGER.info("["+instanceName+"] - "+distinctName+" - transform terminated: "+duree.toString());
         } catch(Exception ex) {
             LOGGER.info("["+instanceName+"] - "+distinctName+" - transform terminated");
@@ -449,6 +463,8 @@ public class GauloisPipe {
         XsltTransformer first = null;
         Iterator<ParametrableStep> it = pipe.getXslts();
         Object previousTransformer = null;
+        Configuration _config = null;
+        _config = configurationFactory.getConfiguration();
         while(it.hasNext()) {
             LOGGER.trace("...in buildTransformer.tee.while");
             ParametrableStep step = it.next();
@@ -469,6 +485,16 @@ public class GauloisPipe {
                         String value = (String)ParametersMerger.processParametersReplacement(pv.getValue(), parameters);
                         LOGGER.trace("Setting parameter ("+pv.getKey()+","+value+")");
                         currentTransformer.setParameter(pv.getKey(), new XdmAtomicValue(value));
+                    } else if(pv.getValue() instanceof XdmAtomicValue) {
+                        String sValue = ((XdmAtomicValue)pv.getValue()).getStringValue();
+                        sValue = (String)ParametersMerger.processParametersReplacement(sValue, parameters);
+                        XdmValue newValue;
+                        try {
+                            newValue = pv.getDatatype().convert(sValue, _config);
+                            currentTransformer.setParameter(pv.getKey(), newValue);
+                        } catch (ValidationException ex) {
+                            throw new SaxonApiException(ex);
+                        }
                     } else if(pv.getValue() instanceof XdmValue){
                         currentTransformer.setParameter(pv.getKey(), (XdmValue)pv.getValue());
                     }
@@ -479,6 +505,16 @@ public class GauloisPipe {
                         currentTransformer.setParameter(pv.getKey(), new XdmAtomicValue(
                                 (String)ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                         ));
+                    } else if(pv.getValue() instanceof XdmAtomicValue) {
+                        String sValue = ((XdmAtomicValue)pv.getValue()).getStringValue();
+                        sValue = (String)ParametersMerger.processParametersReplacement(sValue, parameters);
+                        XdmValue newValue;
+                        try {
+                            newValue = pv.getDatatype().convert(sValue, _config);
+                            currentTransformer.setParameter(pv.getKey(), newValue);
+                        } catch (ValidationException ex) {
+                            throw new SaxonApiException(ex);
+                        }
                     } else {
                         currentTransformer.setParameter(pv.getKey(), (XdmValue)pv.getValue());
                     }
@@ -542,6 +578,17 @@ public class GauloisPipe {
                             stepJava.setParameter(pv.getKey(), new XdmAtomicValue(
                                     (String)ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                             ));
+                        } else if(pv.getValue() instanceof XdmAtomicValue) {
+                            // TODO : this code should be moved to ParametersMerger
+                            String sValue = ((XdmAtomicValue)pv.getValue()).getStringValue();
+                            sValue = (String)ParametersMerger.processParametersReplacement(sValue, parameters);
+                            XdmValue newValue;
+                            try {
+                                newValue = pv.getDatatype().convert(sValue, _config);
+                                stepJava.setParameter(pv.getKey(), newValue);
+                            } catch (ValidationException ex) {
+                                throw new SaxonApiException(ex);
+                            }
                         } else if(pv.getValue() instanceof XdmValue) {
                             stepJava.setParameter(pv.getKey(), (XdmValue)pv.getValue());
                         }
@@ -552,6 +599,17 @@ public class GauloisPipe {
                             stepJava.setParameter(pv.getKey(), new XdmAtomicValue(
                                     (String)ParametersMerger.processParametersReplacement(pv.getValue(), parameters)
                             ));
+                        } else if(pv.getValue() instanceof XdmAtomicValue) {
+                            // TODO : this code should be moved to ParametersMerger
+                            String sValue = ((XdmAtomicValue)pv.getValue()).getStringValue();
+                            sValue = (String)ParametersMerger.processParametersReplacement(sValue, parameters);
+                            XdmValue newValue;
+                            try {
+                                newValue = pv.getDatatype().convert(sValue, _config);
+                                stepJava.setParameter(pv.getKey(), newValue);
+                            } catch (ValidationException ex) {
+                                throw new SaxonApiException(ex);
+                            }
                         } else {
                             stepJava.setParameter(pv.getKey(), (XdmValue)pv.getValue());
                         }
@@ -815,8 +873,9 @@ public class GauloisPipe {
             protocolInstalled = true;
         }
         LOGGER.debug("Additionals protocols installed");
-        GauloisPipe gauloisPipe = new GauloisPipe(new DefaultSaxonConfigurationFactory());
+        GauloisPipe gauloisPipe=null;
         try {
+            gauloisPipe = new GauloisPipe(new DefaultSaxonConfigurationFactory());
             LOGGER.debug("gauloisPipe instanciated");
             Config config = gauloisPipe.parseCommandLine(args);
             gauloisPipe.setConfig(config);
@@ -925,7 +984,7 @@ public class GauloisPipe {
         HashMap<QName,ParameterValue> inputParameters = new HashMap<>(inputParams.size());
         for(String paramPattern:inputParams) {
             LOGGER.debug("parsing parameter "+paramPattern);
-            ParameterValue pv = ConfigUtil.parseParameterPattern(paramPattern);
+            ParameterValue pv = ConfigUtil.parseParameterPattern(paramPattern, datatypeFactory);
             inputParameters.put(pv.getKey(), pv);
         }
         LOGGER.debug("parameters from command line are : "+inputParameters);
@@ -937,8 +996,8 @@ public class GauloisPipe {
         } else {
             config = new Config(currentDir);
         }
-        for(String inputFile: inputFiles) ConfigUtil.addInputFile(config, inputFile);
-        for(String inputXsl: inputXsls) ConfigUtil.addTemplate(config, inputXsl);
+        for(String inputFile: inputFiles) ConfigUtil.addInputFile(config, inputFile, datatypeFactory);
+        for(String inputXsl: inputXsls) ConfigUtil.addTemplate(config, inputXsl, datatypeFactory);
         if(nbThreads!=null) ConfigUtil.setNbThreads(config, nbThreads);
         if(inputOutput!=null) ConfigUtil.setOutput(config, inputOutput);
         config.setLogFileSize(logFileSize);
@@ -1134,4 +1193,5 @@ public class GauloisPipe {
             }
         }
     }
+    public DatatypeFactory getDatatypeFactory() { return datatypeFactory; }
 }

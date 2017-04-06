@@ -9,6 +9,7 @@ package fr.efl.chaine.xslt.config;
 import java.io.File;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
+import fr.efl.chaine.xslt.utils.ParametersMerger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -18,7 +19,11 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.type.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,11 +219,12 @@ public class Output implements Verifiable {
         String filename = (prefix!=null?prefix:"") + name + (suffix!=null?suffix:"");
         String sourceName = sourceFile.getName();
         int ix = sourceName.lastIndexOf(".");
+        // FIXME: this shouldn't be supported, it has been replaced by input-* pseudo-variables
         String extension = sourceName.substring(ix);
         String basename = sourceName.substring(0, ix);
         String ret = filename.replaceAll("\\$\\{name\\}", sourceName).replaceAll("\\$\\{basename\\}", basename).replaceAll("\\$\\{extension\\}", extension);
         for(ParameterValue pv:parameters.values()) {
-            if(pv.getValue() instanceof String) {
+            if(pv.getValue() instanceof String || pv.getValue() instanceof XdmAtomicValue) {
                 ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue().toString());
             }
         }

@@ -1,7 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * This Source Code Form is subject to the terms of 
+ * the Mozilla Public License, v. 2.0. If a copy of 
+ * the MPL was not distributed with this file, You 
+ * can obtain one at https://mozilla.org/MPL/2.0/.
  */
 package fr.efl.chaine.xslt.config;
 
@@ -18,9 +19,11 @@ import java.util.regex.Pattern;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.type.ValidationException;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 
 /**
  *
@@ -29,9 +32,10 @@ import org.junit.Test;
 public class ConfigUtilTest {
     private static SaxonConfigurationFactory configFactory;
     private static HashMap<QName,ParameterValue> emptyInputParams;
+    private static DatatypeFactory datatypeFactory;
 
     @BeforeClass
-    public static void initialize() {
+    public static void initialize() throws ValidationException {
         emptyInputParams = new HashMap<>();
         configFactory = new SaxonConfigurationFactory() {
             Configuration config = Configuration.newConfiguration();
@@ -40,7 +44,9 @@ public class ConfigUtilTest {
                 return config;
             }
         };
+        datatypeFactory = DatatypeFactory.getInstance(configFactory.getConfiguration());
     }
+    
     
     @Test
     public void testCpConfigFile() throws InvalidSyntaxException, SaxonApiException {
@@ -86,7 +92,7 @@ public class ConfigUtilTest {
             }
         }
         QName sourceQn = new QName("source");
-        params.put(sourceQn, new ParameterValue(sourceQn, currentPath.toURI().toURL().toExternalForm()));
+        params.put(sourceQn, new ParameterValue(sourceQn, currentPath.toURI().toURL().toExternalForm(), datatypeFactory.XS_STRING));
         config = cu.buildConfig(params);
         assertTrue("absolute URI in source folder fails", config.getSources().getFiles().size()>=34);
     }

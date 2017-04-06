@@ -73,7 +73,7 @@ public class ListenerServlet extends HttpServlet {
                 sUrl = req.getParameter(paramName);
             } else if(paramName!=null) {
                 QName qn = ConfigUtil.resolveQName(paramName);
-                parameters.put(qn, new ParameterValue(qn, req.getParameter(paramName)));
+                parameters.put(qn, new ParameterValue(qn, req.getParameter(paramName), context.getDatatypeFactory().XS_STRING));
             } else {
                 LOGGER.info("received null parameter with value="+req.getParameter(paramName));
             }

@@ -10,6 +10,7 @@ import fr.efl.chaine.xslt.config.Pipe;
 import java.io.Serializable;
 import java.util.concurrent.ExecutorService;
 import net.sf.saxon.s9api.MessageListener;
+import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 
 /**
  * This represents a pipe execution context :
@@ -59,5 +60,6 @@ public class ExecutionContext implements Serializable {
         if(service.isTerminated()) return "context must not have a terminated service";
         return null;
     }
+    public DatatypeFactory getDatatypeFactory() { return gaulois.getDatatypeFactory(); }
     
 }

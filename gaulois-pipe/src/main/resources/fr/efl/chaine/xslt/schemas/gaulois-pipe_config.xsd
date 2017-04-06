@@ -591,8 +591,18 @@
     </xs:attribute>
     <xs:attribute name="as" type="xs:QName" use="optional">
       <xs:annotation>
-        <xs:documentation xml:lang="en">This allows to strongly type the parameter value, when push to XSL. Valid types are Sequence Type, as defined in https://www.w3.org/TR/xslt-30/#dt-sequence-type </xs:documentation>
-        <xs:documentation xml:lang="fr">Permet d'imposer un type pour le paramètre. Les types valides sont des Sequence Type, tels que définis dans https://www.w3.org/TR/xslt-30/#dt-sequence-type</xs:documentation>
+        <xs:documentation xml:lang="en">
+          This allows to strongly type the parameter value, when push to XSL. 
+          Valid types are Sequence Type, as defined in https://www.w3.org/TR/xslt-30/#dt-sequence-type.
+          Maps and Arrays are not supported.
+          Are also allowed special values document(), element(), element()*. See documentation on how these particular datatypes are managed.
+        </xs:documentation>
+        <xs:documentation xml:lang="fr">
+          Permet d'imposer un type pour le paramètre. 
+          Les types valides sont des Sequence Type, tels que définis dans https://www.w3.org/TR/xslt-30/#dt-sequence-type.
+          Les Maps et Arrays ne sont pas supportés.
+          Les valeurs spéciales suivantes sont aussi autorisées : document(), element(), element()*
+        </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="abstract" type="cfg:TTrue" use="optional">
@@ -601,13 +611,13 @@
         <xs:documentation xml:lang="en">Indicates this parameter is abstract. Its value MUST be provided outside of this configuration.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:assert test="(count(./@value)+count(./@abstract)) eq 1">
+    <xs:assert test="count(@value | @abstract) eq 1">
       <xs:annotation>
         <xs:documentation xml:lang="fr">Soit la valeur est définie, soit le paramètre est abstrait</xs:documentation>
         <xs:documentation xml:lang="en">Either value is provided, or param is abstract</xs:documentation>
       </xs:annotation>
     </xs:assert>
-    <xs:assert test="empty(@abstract)">
+    <xs:assert test="if(exists(@abstract)) then exists(@as) else true()">
       <xs:annotation>
         <xs:documentation xml:lang="fr">Si le paramètre est abstrait, son type est requis.</xs:documentation>
         <xs:documentation xml:lang="en">If the param is abstract, datatype is required.</xs:documentation>
