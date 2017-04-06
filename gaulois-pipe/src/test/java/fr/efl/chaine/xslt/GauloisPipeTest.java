@@ -12,9 +12,11 @@ import fr.efl.chaine.xslt.config.ParametrableStep;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Properties;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -60,9 +62,11 @@ public class GauloisPipeTest {
         piper.setConfig(cu.buildConfig(emptyInputParams));
         piper.setInstanceName("OLD_CONFIG");
         piper.launch();
-        assertEquals(true, new File("target/generated-test-files/result.xml").exists());
+        File expect = new File("target/generated-test-files/result.xml");
+        assertTrue(expect.exists());
         assertEquals(3, piper.getXsltCacheSize());
         assertEquals(0, piper.getDocumentCacheSize());
+        expect.delete();
     }
     @Test
     public void testNewConfig() throws Exception {
@@ -71,10 +75,16 @@ public class GauloisPipeTest {
         piper.setConfig(cu.buildConfig(emptyInputParams));
         piper.setInstanceName("NEW_CONFIG");
         piper.launch();
-        assertTrue(new File("target/generated-test-files/step1-output.xml").exists());
-        assertTrue(new File("target/generated-test-files/step2-output.xml").exists());
-        assertTrue(new File("target/generated-test-files/step3-output.xml").exists());
+        File f1 = new File("target/generated-test-files/step1-output.xml");
+        File f2 = new File("target/generated-test-files/step2-output.xml");
+        File f3 = new File("target/generated-test-files/step3-output.xml");
+        assertTrue(f1.exists());
+        assertTrue(f2.exists());
+        assertTrue(f3.exists());
         assertEquals(0, piper.getDocumentCacheSize());
+        f1.delete();
+        f2.delete();
+        f3.delete();
     }
     
     @Test
@@ -87,8 +97,12 @@ public class GauloisPipeTest {
         piper.setConfig(config);
         piper.setInstanceName("SAME_INPUT");
         piper.launch();
-        assertTrue(new File("target/generated-test-files/source-first-result.xml").exists());
-        assertTrue(new File("target/generated-test-files/source-second-result.xml").exists());
+        File expect = new File("target/generated-test-files/source-first-result.xml");
+        assertTrue(expect.exists());
+        expect.delete();
+        expect = new File("target/generated-test-files/source-second-result.xml");
+        assertTrue(expect.exists());
+        expect.delete();
         assertEquals(1, piper.getDocumentCacheSize());
     }
 
@@ -102,7 +116,9 @@ public class GauloisPipeTest {
         piper.setConfig(config);
         piper.setInstanceName("SUBSTITUTION");
         piper.launch();
-        assertTrue(new File("./target/generated-test-files/source-substitution-result.xml").exists());
+        File expect = new File("./target/generated-test-files/source-substitution-result.xml");
+        assertTrue(expect.exists());
+        expect.delete();
     }
 
     @Test
@@ -152,8 +168,10 @@ public class GauloisPipeTest {
         String content = reader.readLine();
         String expectedContent = "./target/generated-test-files/source.xml";
         assertEquals("Le fichier ./target/generated-test-files/appendee.txt ne contient pas ./target/generated-test-files/source.xml", expectedContent, content);
+        expect.delete();
         expect = new File("./target/generated-test-files/source-identity-result.xml");
         assertTrue("Le fichier ./target/generated-test-files/source-identity-result.xml n'existe pas", expect.exists());
+        expect.delete();
         
     }
     
@@ -176,6 +194,9 @@ public class GauloisPipeTest {
         assertTrue("The file ./target/generated-test-files/tee-java.txt does not exists", expect1.exists());
         assertTrue("The file ./target/generated-test-files/source-pipe1.xml does not exists", expect2.exists());
         assertTrue("The file ./target/generated-test-files/source-pipe2.xml does not exists", expect3.exists());
+        if(expect1.exists()) expect1.delete();
+        if(expect2.exists()) expect2.delete();
+        if(expect3.exists()) expect3.delete();
     }
     
     @Test(expected = InvalidSyntaxException.class)
@@ -213,6 +234,7 @@ public class GauloisPipeTest {
         piper.launch();
         File expect = new File("./target/generated-test-files/source-jar.xml");
         assertTrue("The file target/generated-test-files/source-jar.xml does not exists", expect.exists());
+        expect.delete();
     }
     
     @Test
@@ -227,6 +249,7 @@ public class GauloisPipeTest {
         piper.launch();
         File expect = new File("./target/generated-test-files/source-cp.xml");
         assertTrue("The file target/generated-test-files/source-cp.xml does not exists", expect.exists());
+        expect.delete();
     }
     
     @Test
@@ -272,6 +295,7 @@ public class GauloisPipeTest {
         piper.launch();
         File expect = new File("./target/generated-test-files/trace.log");
         assertTrue("The file target/generated-test-files/trace. does not exists", expect.exists());
+        expect.delete();
     }
 
     @Test
@@ -304,11 +328,11 @@ public class GauloisPipeTest {
         piper.setInstanceName("CHOOSE");
         piper.launch();
         File expect = new File("target/generated-test-files/paye1-choose.xml");
-        boolean exists = expect.exists();
-        assertTrue("The file target/generated-test-files/paye1-choose.xml does not exists", exists);
-        expect = new File("target/generated-test-files/paye1-choose.xml");
-        exists = expect.exists();
-        assertTrue("The file target/generated-test-files/paye2-choose.xml does not exists", exists);
+        assertTrue("The file target/generated-test-files/paye1-choose.xml does not exists", expect.exists());
+        expect.delete();
+        expect = new File("target/generated-test-files/paye2-choose.xml");
+        assertTrue("The file target/generated-test-files/paye2-choose.xml does not exists", expect.exists());
+        expect.delete();
     }
     @Test(expected = InvalidSyntaxException.class)
     public void testNoSource() throws Exception {
@@ -334,6 +358,7 @@ public class GauloisPipeTest {
         selector.setContextItem((XdmItem)document);
         XdmValue result = selector.evaluate();
         assertTrue(result.size()>0);
+        expect.delete();
     }
     
     @Test
@@ -358,5 +383,28 @@ public class GauloisPipeTest {
         xpc.declareVariable(var);
         XPathExecutable xpe = xpc.compile("ex:basex-query('for $i in 1 to 10 return <test>{$i}</test>',$connect)");
         assertNotNull("unable to compile extension function", xpe);
+    }
+    @Test
+    public void testInputParams() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/showParameters.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("SHOW_PARAMETERS");
+        piper.launch();
+        File expect = new File("target/generated-test-files/source.properties");
+        assertTrue("file source.properties does not exist",expect.exists());
+        Properties props = new Properties();
+        props.load(new FileInputStream(expect));
+        assertTrue("file:".concat(props.getProperty("input-absolute")).equals(props.getProperty("input-relative-file")));
+//        expect.delete();
+        expect = new File("target/generated-test-files/toto11.properties");
+        assertTrue("file toto11.properties does not exist",expect.exists());
+        props = new Properties();
+        props.load(new FileInputStream(expect));
+        assertTrue("findDir-recurse/dir1/dir11/toto11.xml".equals(props.getProperty("input-relative-file")));
+        assertTrue("findDir-recurse/dir1/dir11".equals(props.getProperty("input-relative-dir")));
+//        expect.delete();
     }
 }

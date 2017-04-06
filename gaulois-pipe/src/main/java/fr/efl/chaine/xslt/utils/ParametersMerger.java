@@ -20,10 +20,12 @@ import org.slf4j.LoggerFactory;
 public class ParametersMerger {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParametersMerger.class);
     
-    private static final QName INPUT_BASENAME = new QName("input-basename");
-    private static final QName INPUT_NAME = new QName("input-name");
-    private static final QName INPUT_EXTENSION = new QName("input-extension");
-    private static final QName INPUT_ABSOLUTE = new QName("input-absolute");
+    public static final QName INPUT_BASENAME = new QName("input-basename");
+    public static final QName INPUT_NAME = new QName("input-name");
+    public static final QName INPUT_EXTENSION = new QName("input-extension");
+    public static final QName INPUT_ABSOLUTE = new QName("input-absolute");
+    public static final QName INPUT_RELATIVE_FILE = new QName("input-relative-file");
+    public static final QName INPUT_RELATIVE_DIR = new QName("input-relative-dir");
 
 
     /**
