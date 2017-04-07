@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
@@ -105,6 +106,7 @@ public class GauloisPipe {
      * The property name to specify the debug output directory
      */
     public static final transient String GAULOIS_DEBUG_DIR_PROPERTY = "gaulois.debug.dir";
+    private ThreadFactory threadFactory;
 
     
     /**
@@ -281,9 +283,9 @@ public class GauloisPipe {
             int nbThreads,
             Listener listener) {
         ExecutorService service = (nbThreads==1) ? 
-                Executors.newSingleThreadExecutor() : 
-                Executors.newFixedThreadPool(nbThreads);
-        // a try to solve multi-thraed compiling problem...
+                Executors.newSingleThreadExecutor(getThreadFactory()): 
+                Executors.newFixedThreadPool(nbThreads, getThreadFactory());
+        // a try to solve multi-thread compiling problem...
         // that's a pretty dirty hack, but just a try, to test...
         if(xslCache.isEmpty() && !inputs.isEmpty()) {
             // in the opposite case, there is only a listener, and probably the first
@@ -1051,6 +1053,21 @@ public class GauloisPipe {
 
     public String getInstanceName() {
         return instanceName;
+    }
+    /**
+     * Sets the ThreadFactory to be used by executors. If not defined, {@link Executors#defaultThreadFactory() } is used.
+     * <b>Warning</b>: if you define your own ThreadFactory, be aware that log messages may change,
+     * as thread names are defined by the ThreadFactory, not by gaulois-pipe.
+     * @param threadFactory The threadFactory to use
+     */
+    public void setThreadFactory(ThreadFactory threadFactory) {
+        this.threadFactory=threadFactory;
+    }
+    protected ThreadFactory getThreadFactory() {
+        if(threadFactory==null) {
+            threadFactory = Executors.defaultThreadFactory();
+        }
+        return threadFactory;
     }
     
     private XSLTTraceListener buildTraceListener(final String outputDest) {
