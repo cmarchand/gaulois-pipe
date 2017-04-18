@@ -870,8 +870,10 @@ public class GauloisPipe {
                         continue;
                     case "--logFileSize":
                         logFileSize=true;
+                        continue;
                     case "--skipSchemaValidation":
                         skipSchemaValidation=true;
+                        continue;
                     case "--working-dir":
                     case "-wd":
                         inputMode = CURRENT_DIR;
