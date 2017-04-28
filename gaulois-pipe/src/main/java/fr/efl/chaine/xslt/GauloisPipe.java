@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -1125,7 +1126,17 @@ public class GauloisPipe {
     private void initDebugDirectory() {
         String property = System.getProperty(GAULOIS_DEBUG_DIR_PROPERTY);
         if(property!=null) {
-            File directory = new File(property);
+            File directory = null;
+            if(property.startsWith("file:/")) {
+                try {
+                    directory = new File(new URI(property));
+                } catch(URISyntaxException ex) {
+                    LOGGER.warn(property + " is not a vlid URI");
+                }
+            }
+            if(directory==null) {
+                directory = new File(property);
+            }
             if(!directory.exists()) {
                 directory.mkdirs();
             }
