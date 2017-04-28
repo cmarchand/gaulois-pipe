@@ -28,10 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.transform.URIResolver;
-import javax.xml.transform.stream.StreamSource;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URI;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
@@ -39,11 +37,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -52,6 +47,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
+import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
@@ -101,6 +98,7 @@ public class GauloisPipe {
     private File debugDirectory;
     
     private String currentDir = System.getProperty("user.dir");
+    private String currentDirUri;
 
     /**
      * The property name to specify the debug output directory
@@ -297,7 +295,7 @@ public class GauloisPipe {
                     inputs.get(0).getFile().toURI().toURL().toExternalForm(), 
                     ParametersMerger.merge(inputs.get(0).getParameters(), config.getParams()),
                     messageListener,null);
-            } catch(IOException | InvalidSyntaxException | URISyntaxException | SaxonApiException ex) {
+            } catch(IOException | InvalidSyntaxException | URISyntaxException | SaxonApiException | TransformerException ex) {
                 String msg = "while pre-compiling for a multi-thread use...";
                 LOGGER.error(msg);
                 errors.add(new GauloisRunException(msg, ex));
@@ -310,7 +308,7 @@ public class GauloisPipe {
                 public void run() {
                     try {
                         execute(pipe, fpf, messageListener);
-                    } catch(SaxonApiException | IOException | InvalidSyntaxException | URISyntaxException ex) {
+                    } catch(SaxonApiException | IOException | InvalidSyntaxException | URISyntaxException | TransformerException ex) {
                         String msg = "[" + instanceName + "] while processing "+fpf.getFile().getName();
                         LOGGER.error(msg, ex);
                         errors.add(new GauloisRunException(msg, fpf.getFile()));
@@ -361,7 +359,7 @@ public class GauloisPipe {
         for (ParametrableFile inputFile : inputs) {
             try {
                 execute(pipe, inputFile, messageListener);
-            } catch(SaxonApiException | InvalidSyntaxException | URISyntaxException | IOException ex) {
+            } catch(SaxonApiException | InvalidSyntaxException | URISyntaxException | IOException | TransformerException ex) {
                 LOGGER.error("[" + instanceName + "] while mono-thread processing of "+inputFile.getFile().getName(),ex);
                 errors.add(new GauloisRunException(ex.getMessage(), inputFile.getFile()));
                 ret = false;
@@ -388,9 +386,10 @@ public class GauloisPipe {
      * @throws fr.efl.chaine.xslt.InvalidSyntaxException When config file is invalid
      * @throws java.net.URISyntaxException When URI is invalid
      * @throws java.io.FileNotFoundException And when the file can not be found !
+     * @throws javax.xml.transform.TransformerException
      */
     public void execute(Pipe pipe, ParametrableFile input, MessageListener listener)
-            throws SaxonApiException, MalformedURLException, InvalidSyntaxException, URISyntaxException, FileNotFoundException, IOException {
+            throws SaxonApiException, MalformedURLException, InvalidSyntaxException, URISyntaxException, FileNotFoundException, IOException, TransformerException {
         boolean avoidCache = input.getAvoidCache();
         long start = System.currentTimeMillis();
         String key = input.getFile().getAbsolutePath().intern();
@@ -446,7 +445,7 @@ public class GauloisPipe {
         }
     }
     
-    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException, TransformerException {
         LOGGER.trace("in buildTransformer(Pipe,...)");
         XsltTransformer first = null;
         Iterator<ParametrableStep> it = pipe.getXslts();
@@ -583,31 +582,31 @@ public class GauloisPipe {
         }
     }
     
-    private XsltTransformer getXsltTransformer(String href, HashMap<QName,ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException, IOException {
-        // TODO : rewrite this, as cp: and jar: protocols are availabe and one can use new URL(cp:/...).getInputStream()
+    private XsltTransformer getXsltTransformer(String href, HashMap<QName,ParameterValue> parameters) throws MalformedURLException, SaxonApiException, URISyntaxException, FileNotFoundException, IOException, TransformerException {
         String __href = ParametersMerger.processParametersReplacement(href, parameters);
         LOGGER.debug("loading "+__href);
         XsltExecutable xsl = xslCache.get(__href);
         if(xsl==null) {
             LOGGER.trace(__href+" not in cache");
             try {
-                InputStream input ;
-                if(__href.startsWith("file:")) {
-                    File f = new File(new URI(__href));
-                    input = new FileInputStream(f);
-                } else if(__href.startsWith("jar:")) {
-                    input = new URL(__href).openStream();
-                } else if(__href.startsWith("cp:")) {
-                    input = GauloisPipe.class.getResourceAsStream(__href.substring(3));
-                } else {
-                    File f = new File(__href);
-                    input = new FileInputStream(f);
+                // FIXME: pourquoi est-ce qu'on n'utilise pas le URIResolver ????
+//                InputStream input ;
+//                if(__href.startsWith("file:")) {
+//                    File f = new File(new URI(__href));
+//                    input = new FileInputStream(f);
+//                } else if(__href.startsWith("jar:")) {
+//                    input = new URL(__href).openStream();
+//                } else if(__href.startsWith("cp:")) {
+//                    input = GauloisPipe.class.getResourceAsStream(__href.substring(3));
+//                } else {
+//                    File f = new File(__href);
+//                    input = new FileInputStream(f);
+//                }
+                Source xslSource = getUriResolver().resolve(href, getCurrentDirUri());
+                if(xslSource==null) {
+                    throw new FileNotFoundException("Unable to resolve "+href);
                 }
-                LOGGER.trace("input is "+input);
-                StreamSource source = new StreamSource(input);
-                source.setSystemId(__href);
-
-                xsl = xsltCompiler.compile(source);
+                xsl = xsltCompiler.compile(xslSource);
                 xslCache.put(__href, xsl);
             } catch(SaxonApiException ex) {
                 LOGGER.error("while compiling "+__href);
@@ -616,7 +615,7 @@ public class GauloisPipe {
                     LOGGER.error(ex.getCause().getMessage());
                 }
                 throw ex;
-            } catch(URISyntaxException|FileNotFoundException ex) {
+            } catch(FileNotFoundException|TransformerException ex) {
                 LOGGER.error("while compiling "+__href);
                 throw ex;
             }
@@ -624,7 +623,7 @@ public class GauloisPipe {
         return xsl.load();
     }
     
-    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException, TransformerException {
         LOGGER.trace("in buildTransformer(Tee,...)");
         List<Destination> dests = new ArrayList<>();
         if(tee==null) {
@@ -644,7 +643,7 @@ public class GauloisPipe {
         }
         return dests.get(0);
     }
-    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException, TransformerException {
         if(!pipe.getXslts().hasNext()) {
             if(pipe.getOutput()!=null) {
                 return buildSerializer(pipe.getOutput(),inputFile, parameters);
@@ -1105,6 +1104,12 @@ public class GauloisPipe {
         XSLTTraceListener tracer = new XSLTTraceListener();
         tracer.setOutputDestination(logger);
         return tracer;
+    }
+    protected String getCurrentDirUri() {
+        if (currentDirUri==null) {
+            currentDirUri = new File(currentDir).toURI().toString();
+        }
+        return currentDirUri;
     }
     private XPathCompiler getXPathCompiler() {
         if(xpathCompiler==null) {
