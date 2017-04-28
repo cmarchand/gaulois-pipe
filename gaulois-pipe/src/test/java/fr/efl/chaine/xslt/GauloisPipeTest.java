@@ -398,13 +398,31 @@ public class GauloisPipeTest {
         Properties props = new Properties();
         props.load(new FileInputStream(expect));
         assertTrue("file:".concat(props.getProperty("input-absolute")).equals(props.getProperty("input-relative-file")));
-//        expect.delete();
+        expect.delete();
         expect = new File("target/generated-test-files/toto11.properties");
         assertTrue("file toto11.properties does not exist",expect.exists());
         props = new Properties();
         props.load(new FileInputStream(expect));
         assertTrue("findDir-recurse/dir1/dir11/toto11.xml".equals(props.getProperty("input-relative-file")));
         assertTrue("findDir-recurse/dir1/dir11".equals(props.getProperty("input-relative-dir")));
-//        expect.delete();
+        expect.delete();
     }
+
+    @Test()
+    public void testIssue21() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/issue21.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("ISSUE_21");
+        piper.launch();
+        File expect = new File("target/generated-test-files/log4j-issue21.xml");
+        assertTrue("file log4j-issue21.xml does not exist",expect.exists());
+        expect.delete();
+        expect = new File("target/generated-test-files/paye2-issue21.xml");
+        assertTrue("file paye2-issue21.xml does not exist",expect.exists());
+        expect.delete();
+    }
+    
 }

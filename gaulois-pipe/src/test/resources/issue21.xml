@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This Source Code Form is subject to the terms of 
+the Mozilla Public License, v. 2.0. If a copy of 
+the MPL was not distributed with this file, You 
+can obtain one at https://mozilla.org/MPL/2.0/.
+-->
+<config
+    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+    xmlns='http://efl.fr/chaine/saxon-pipe/config'
+    xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config ../../../src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
+    <pipe nbThreads="2" mutiThreadMaxSourceSize="4048">
+        <xslt href="cp:/identity.xsl"/>
+        <output id="main">
+            <folder relative="target/generated-test-files" to="${user.dir}"></folder>
+            <fileName name="$[input-basename]-issue21.$[input-extension]"/>
+        </output>
+    </pipe>
+    <sources>
+        <file href="src/test/resources/log4j.xml"/> <!-- size is about 1000 bytes -->
+        <file href="src/test/resources/paye2.xml"/> <!-- size is 11125 bytes -->
+    </sources>
+</config>
