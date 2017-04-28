@@ -6,7 +6,7 @@
 
     <groupId>top.marchand.xml</groupId>
     <artifactId>gaulois-pipe-parent</artifactId>
-    <version>1.01.10-RC3-SNAPSHOT</version>
+    <version>1.01.11</version>
     <packaging>pom</packaging>
 
     <modules>
