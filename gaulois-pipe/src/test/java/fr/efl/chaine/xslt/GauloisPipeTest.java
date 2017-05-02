@@ -377,11 +377,11 @@ public class GauloisPipeTest {
         Processor proc = new Processor(configFactory.getConfiguration());
         XQueryEvaluator ev = proc.newXQueryCompiler().compile("current-dateTime()").load();
         XdmItem item = ev.evaluateSingle();
-        params.put(qnDate, new ParameterValue(qnDate, item, factory.XS_STRING));
+        params.put(qnDate, new ParameterValue(qnDate, item, factory.getDatatype(new QName("xs","http://www.w3.org/2001/XMLSchema","dateTime"))));
         Config config = cu.buildConfig(params);
         config.verify();
         piper.setConfig(config);
-        piper.setInstanceName("ADD_ATTRIBUTE");
+        piper.setInstanceName("XDM_VALUE_TO_XSL");
         piper.launch();
         File expect = new File("target/generated-test-files/date-output.xml");
         XdmNode document = proc.newDocumentBuilder().build(expect);
