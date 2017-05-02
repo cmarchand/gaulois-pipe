@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://efl.fr/chaine/saxon-pipe/config"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config ../../../../src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
+    <pipe>
+        <xslt href="./src/test/resources/identity.xsl">
+            <param name="p1" value="$[int]"/>
+        </xslt>
+        <output id="step1">
+            <null/>
+        </output>
+    </pipe>
+    <params>
+        <!-- this must throw an error, if a value is not given from command line -->
+        <param name="int" as="xs:integer" abstract="true"/>
+    </params>
+    <sources>
+        <folder href="./src/test/resources" pattern="trace.xml"></folder>
+    </sources>
+</config>
+
+

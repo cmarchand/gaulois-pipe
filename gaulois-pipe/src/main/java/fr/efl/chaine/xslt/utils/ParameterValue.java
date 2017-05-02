@@ -28,6 +28,7 @@ public class ParameterValue {
      * This parameter datatype. If not specified, it's xs:string
      */
     private Datatype datatype;
+    private boolean abstractParam;
 
     /**
      * Default constructor.
@@ -41,6 +42,18 @@ public class ParameterValue {
         this.key = key;
         setValue(value);
         setDatatype(datatype);
+    }
+
+    /**
+     * Constructs an abstract Parameter
+     * @param key
+     * @param datatype 
+     */
+    @SuppressWarnings("OverridableMethodCallInConstructor")
+    public ParameterValue(QName key, Datatype datatype) {
+        this.key = key;
+        setDatatype(datatype);
+        abstractParam = true;
     }
 
     /**
@@ -60,10 +73,13 @@ public class ParameterValue {
     public void setValue(Object value) {
         if(value instanceof String) {
             this.value=value;
+            abstractParam = false;
         } else if(value instanceof XdmValue) {
             this.value=value;
+            abstractParam = false;
         } else if(value==null) {
             this.value=value;
+            abstractParam = false;
         } else {
             throw new IllegalArgumentException("Only String or XdmValue are acceptable values for parameters");
         }
@@ -71,7 +87,7 @@ public class ParameterValue {
 
     @Override
     public String toString() {
-        return "[" + getKey() + "=" + getValue() + "]";
+        return "[" + getKey() + "=" + (abstractParam ? "<abstract>" : getValue()) + "]";
     }
 
     public Datatype getDatatype() {
@@ -80,6 +96,10 @@ public class ParameterValue {
 
     public void setDatatype(Datatype datatype) {
         this.datatype = datatype;
+    }
+    
+    public boolean isAbstract() {
+        return abstractParam;
     }
 
 }

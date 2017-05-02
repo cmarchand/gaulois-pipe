@@ -45,7 +45,9 @@ public class ParametersMerger {
         }
         // on fait les éventuelles substitutions, pour ne les faire qu'une fois.
         for(ParameterValue pv:ret.values()) {
-            pv.setValue(processParametersReplacement(pv.getValue(), ret));
+            if(!pv.isAbstract()) {
+                pv.setValue(processParametersReplacement(pv.getValue(), ret));
+            }
         }
         return ret;
     }

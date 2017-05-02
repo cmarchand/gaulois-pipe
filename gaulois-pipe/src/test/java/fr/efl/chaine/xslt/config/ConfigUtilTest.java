@@ -97,5 +97,34 @@ public class ConfigUtilTest {
         assertTrue("absolute URI in source folder fails", config.getSources().getFiles().size()>=34);
     }
     
+    @Test(expected = InvalidSyntaxException.class)
+    public void testUnboundedPrefix() throws Exception {
+        String configFilename = "src/test/resources/config/unmatchedPrefixDatatype.xml";
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), configFilename);
+        cu.buildConfig(emptyInputParams);
+        fail("This config file must throw an Exception and it doesn't : "+configFilename);
+    }
     
+    @Test(expected = InvalidSyntaxException.class)
+    public void testUnboundedAbstractParam() throws Exception {
+        String configFilename = "src/test/resources/config/abstractParam.xml";
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), configFilename);
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+//        fail("This config file declares an abstract param that is not valued : int");
+    }
+
+    @Test()
+    public void testBoundedAbstractParam() throws Exception {
+        String configFilename = "src/test/resources/config/abstractParam.xml";
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), configFilename);
+        HashMap<QName,ParameterValue> cliParameters = new HashMap<>();
+        ParameterValue pv = new ParameterValue(new QName("int"), "8", datatypeFactory.XS_STRING);
+        cliParameters.put(pv.getKey(), pv);
+        Config config = cu.buildConfig(cliParameters);
+        config.verify();
+    }
 }

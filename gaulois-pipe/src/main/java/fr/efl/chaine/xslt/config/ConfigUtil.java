@@ -40,6 +40,7 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmNodeKind;
 import net.sf.saxon.s9api.XdmSequenceIterator;
+import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.type.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,7 @@ public class ConfigUtil {
     private static final QName CONFIG_EL = new QName(Config.NS, "config");
     private static final QName PARAM_NAME = new QName("name");
     private static final QName PARAM_VALUE = new QName("value");
+    private static final QName PARAM_ABSTRACT = new QName("abstract");
     private static final QName PARAM_AS = new QName("as");
     private static final QName QN_PATTERN = new QName("pattern");
     private static final QName QN_RECURSE = new QName("recurse");
@@ -379,15 +381,7 @@ public class ConfigUtil {
                 QName datatypeName = null;
                 int doubleDotPosition = sDatatype.indexOf(":");
                 if(doubleDotPosition>0) {
-                    String prefix = sDatatype.substring(0, doubleDotPosition-1);
-//                    String uri = null;
-//                    NamespaceBinding[] nbs = param.getUnderlyingNode().getDeclaredNamespaces(null);
-//                    for(NamespaceBinding nb: nbs) {
-//                        if(nb.getPrefix().equals(prefix)) {
-//                            uri = nb.getURI();
-//                            break;
-//                        }
-//                    }
+                    String prefix = sDatatype.substring(0, doubleDotPosition);
                     String uri = new InscopeNamespaceResolver(param.getUnderlyingNode()).getURIForPrefix(prefix, true);
                     if(uri==null) throw new InvalidSyntaxException("prefix "+prefix+" is not bound to any namespace URI ("+param.getLineNumber()+","+param.getColumnNumber()+")");
                     datatypeName=new QName(prefix, uri, sDatatype.substring(doubleDotPosition+1));
@@ -398,12 +392,25 @@ public class ConfigUtil {
             } else {
                 dt = factory.XS_STRING;
             }
-            ParameterValue pv = new ParameterValue(
-                    resolveQName(param.getAttributeValue(PARAM_NAME)), 
-                    dt.convert(resolveEscapes(param.getAttributeValue(PARAM_VALUE),parameters),saxonConfig),
-                    dt);
-            if(parameters.containsKey(pv.getKey())) return parameters.get(pv.getKey());
-            else return pv;
+            ParameterValue pv;
+            if("true".equals(param.getAttributeValue(PARAM_ABSTRACT))) {
+                pv = new ParameterValue(resolveQName(param.getAttributeValue(PARAM_NAME)), dt);
+                ParameterValue fcli = parameters.get(pv.getKey());
+                if(fcli!=null) {
+                    XdmValue value = pv.getDatatype().convert(
+                            resolveEscapes(fcli.getValue().toString(),parameters), 
+                            saxonConfig);
+                    pv.setValue(value);
+                }
+                return pv;
+            } else {
+                pv = new ParameterValue(
+                        resolveQName(param.getAttributeValue(PARAM_NAME)), 
+                        dt.convert(resolveEscapes(param.getAttributeValue(PARAM_VALUE),parameters),saxonConfig),
+                        dt);
+                if(parameters.containsKey(pv.getKey())) return parameters.get(pv.getKey());
+                else return pv;
+            }
         } catch(ValidationException ex) {
             throw new InvalidSyntaxException(ex);
         }
