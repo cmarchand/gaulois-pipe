@@ -49,6 +49,13 @@ public class DefaultSaxonConfigurationFactory extends SaxonConfigurationFactory 
         super();
         __initConfiguration();
     }
+    
+    /**
+     * To be overriden, if required
+     */
+    protected void createConfigurationObject() {
+        configuration = Configuration.newConfiguration();
+    }
 
     @Override
     public Configuration getConfiguration() {
@@ -57,7 +64,7 @@ public class DefaultSaxonConfigurationFactory extends SaxonConfigurationFactory 
     
     private void __initConfiguration() {
         // default construct
-        configuration = Configuration.newConfiguration();
+        createConfigurationObject();
         LOGGER.debug("configuration is a "+configuration.getClass().getName());
         ClassLoader cl = getClass().getClassLoader();
         if(cl instanceof URLClassLoader) {
