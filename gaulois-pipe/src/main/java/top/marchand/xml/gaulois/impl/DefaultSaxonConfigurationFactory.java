@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultSaxonConfigurationFactory extends SaxonConfigurationFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultSaxonConfigurationFactory.class);
-    private Configuration configuration;
+    protected Configuration configuration;
     
     public DefaultSaxonConfigurationFactory() {
         super();
