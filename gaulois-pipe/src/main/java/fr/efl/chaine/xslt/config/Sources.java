@@ -130,14 +130,12 @@ public class Sources implements Verifiable {
     }
     
     public List<CfgFile> getFilesOverLimit(long limit) {
-        // on va quand même les renvoyer triès comme demandés
+        // on va quand même les renvoyer triés comme demandés
         List<CfgFile> _files = getFiles("size", "asc");
         List<CfgFile> ret = new ArrayList<>(_files.size());
         for(CfgFile file: _files) {
             if(file.getSource().length()>limit) {
                 ret.add(file);
-            } else {
-                break;
             }
         }
         Collections.sort(_files, getComparator(orderBy, sort));
@@ -145,14 +143,12 @@ public class Sources implements Verifiable {
         return ret;
     }
     public List<CfgFile> getFilesUnderLimit(long limit) {
-        // on va quand même les renvoyer triès comme demandés
+        // on va quand même les renvoyer triés comme demandés
         List<CfgFile> _files = getFiles("size", "asc");
         List<CfgFile> ret = new ArrayList<>(_files.size());
         for(CfgFile file: _files) {
             if(file.getSource().length()<=limit) {
                 ret.add(file);
-            } else {
-                break;
             }
         }
         Collections.sort(_files, getComparator(orderBy, sort));

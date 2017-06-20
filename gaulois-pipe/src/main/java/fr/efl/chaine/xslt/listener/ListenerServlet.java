@@ -23,6 +23,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.transform.TransformerException;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import org.slf4j.Logger;
@@ -101,7 +102,7 @@ public class ListenerServlet extends HttpServlet {
                             public void run() {
                                 try {
                                     iCtx.getGaulois().execute(iCtx.getPipe(), fpf, iCtx.getMsgListener());
-                                } catch(SaxonApiException | IOException | InvalidSyntaxException | URISyntaxException ex) {
+                                } catch(SaxonApiException | IOException | InvalidSyntaxException | URISyntaxException | TransformerException ex) {
                                     String msg = "[" + iCtx.getGaulois().getInstanceName() + "] while processing "+fpf.getFile().getName();
                                     LOGGER.error(msg, ex);
                                     iCtx.getGaulois().getErrors().add(new GauloisRunException(msg, fpf.getFile()));
