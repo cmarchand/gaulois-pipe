@@ -43,6 +43,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Properties;
@@ -387,20 +388,31 @@ public class GauloisPipe {
     /**
      * Execute the pipe for the specified input stream to the specified
      * serializer.<br>
-     * <b>Warning</b>: this method is public for implementation reasons,
-     * and <b>must not</b> be called outside of GauloisPipe
+     * <b>Warning</b>: this method is public, but should not be called outside of
+     * gaulois-pipe, as it doesn't use thread pool. Really be carfull if you need
+     * to use it.
+     * 
+     * If <tt>outputs</tt> is provided, it must be a single Map, that contains
+     * OutputStream where to redirect output to. The map's key entries are the
+     * <tt>//output/@id</tt> defined in config file. Only <tt>output</tt> that have
+     * an <tt>@id</tt> may be redirected to an existing OutputStream.
+     * 
      *
      * @param pipe the pipe to run
      * @param input the specified input stream
      * @param listener the message listener to use
+     * @param outputs An optional map that contains OutputStream to bind to cfg:output elements.
      * @throws SaxonApiException when a problem occurs
      * @throws java.net.MalformedURLException When an URL is not correctly formed
      * @throws fr.efl.chaine.xslt.InvalidSyntaxException When config file is invalid
      * @throws java.net.URISyntaxException When URI is invalid
      * @throws java.io.FileNotFoundException And when the file can not be found !
      */
-    public void execute(Pipe pipe, ParametrableFile input, MessageListener listener)
+    public void execute(Pipe pipe, ParametrableFile input, MessageListener listener, Map<String,OutputStream> ... outputs)
             throws SaxonApiException, MalformedURLException, InvalidSyntaxException, URISyntaxException, FileNotFoundException, IOException {
+        if(outputs.length>1) {
+            throw new InvalidSyntaxException("Only one outputs map is allowed.");
+        }
         boolean avoidCache = input.getAvoidCache();
         long start = System.currentTimeMillis();
         String key = input.getFile().getAbsolutePath().intern();
@@ -442,7 +454,7 @@ public class GauloisPipe {
                 input.getFile(), 
                 input.getFile().toURI().toURL().toExternalForm(), 
                 parameters,
-                listener, source);
+                listener, source, false, outputs.length>0 ? outputs[0] : null);
         LOGGER.debug("["+instanceName+"] transformer build");
         transformer.setInitialContextNode(source);
         transformer.transform();
@@ -456,7 +468,26 @@ public class GauloisPipe {
         }
     }
     
+    /**
+     * Execute the pipe for the specified input stream to the specified
+     * serializer.<br>
+     * <b>Warning</b>: this method is public for implementation reasons,
+     * and <b>must not</b> be called outside of GauloisPipe
+     *
+     * @param pipe the pipe to run
+     * @param input the specified input stream
+     * @param listener the message listener to use
+     * @param isFake An optional parameter to indicate that we build a pipe not to run it, only to pre-compile XSLs
+     * @throws SaxonApiException when a problem occurs
+     * @throws java.net.MalformedURLException When an URL is not correctly formed
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException When config file is invalid
+     * @throws java.net.URISyntaxException When URI is invalid
+     * @throws java.io.FileNotFoundException And when the file can not be found !
+     */
     private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+        return buildTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree, false, new HashMap<String,OutputStream>());
+    }
+    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean isFake, Map<String, OutputStream> ... outputs) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         LOGGER.trace("in buildTransformer(Pipe,...)");
         XsltTransformer first = null;
         Iterator<ParametrableStep> it = pipe.getXslts();
@@ -556,7 +587,7 @@ public class GauloisPipe {
                             for(ParametrableStep innerStep:when.getSteps()) {
                                 fakePipe.addXslt(innerStep);
                             }
-                            Destination currentDestination = buildTransformer(fakePipe, inputFile, inputFileUri, parameters, listener, documentTree, true);
+                            Destination currentDestination = buildTransformer(fakePipe, inputFile, inputFileUri, parameters, listener, documentTree, true, new HashMap<String,OutputStream>());
                             if(previousTransformer!=null) {
                                 assignStepToDestination(previousTransformer, currentDestination);
                             }
@@ -626,14 +657,14 @@ public class GauloisPipe {
         Destination nextStep = null;
         if(pipe.getTee()!=null) {
             LOGGER.trace("after having construct xslts, build tee");
-            nextStep = buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener, documentTree);
+            nextStep = buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener, documentTree, outputs[0]);
         } else if(pipe.getOutput()!=null) {
             LOGGER.trace("after having construct xslts, build output");
-            nextStep = buildSerializer(pipe.getOutput(),inputFile,parameters);
+            nextStep = buildSerializer(pipe.getOutput(),inputFile,parameters, outputs[0]);
         }
         if(nextStep!=null) {
             assignStepToDestination(previousTransformer, nextStep);
-        } else if(isFake.length==0 || !isFake[0]) {
+        } else if(!isFake) {
             throw new InvalidSyntaxException("Pipe "+pipe.toString()+" has no terminal Step.");
         }
         return first;
@@ -694,7 +725,7 @@ public class GauloisPipe {
         return xsl.load();
     }
     
-    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, Map<String, OutputStream> outputs) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         LOGGER.trace("in buildTransformer(Tee,...)");
         List<Destination> dests = new ArrayList<>();
         if(tee==null) {
@@ -704,7 +735,7 @@ public class GauloisPipe {
             throw new InvalidSyntaxException("tee.getPipes() est null !");
         }
         for(Pipe pipe:tee.getPipes()) {
-            dests.add(buildShortPipeTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree));
+            dests.add(buildShortPipeTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree, outputs));
         }
         while(dests.size()>1) {
             Destination d1 = dests.remove(0);
@@ -714,26 +745,31 @@ public class GauloisPipe {
         }
         return dests.get(0);
     }
-    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, Map<String, OutputStream> outputs) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         if(!pipe.getXslts().hasNext()) {
             if(pipe.getOutput()!=null) {
-                return buildSerializer(pipe.getOutput(),inputFile, parameters);
+                return buildSerializer(pipe.getOutput(),inputFile, parameters, outputs);
             } else {
-                return buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener, documentTree);
+                return buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener, documentTree, outputs);
             }
         } else {
             return buildTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree);
         }
     }
     
-    private Destination buildSerializer(Output output, File inputFile, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException, URISyntaxException {
+    private Destination buildSerializer(Output output, File inputFile, HashMap<QName,ParameterValue> parameters, Map<String,OutputStream> outputs) throws InvalidSyntaxException, URISyntaxException {
         if(output.isNullOutput()) {
             return processor.newSerializer(new NullOutputStream());
         } else if(output.isConsoleOutput()) {
             return processor.newSerializer("out".equals(output.getConsole())?System.out:System.err);
         }
         final File destinationFile = output.getDestinationFile(inputFile, parameters);
-        final Serializer ret = processor.newSerializer(destinationFile);
+        final Serializer ret;
+        if(output.getId()!=null && outputs!=null && outputs.get(output.getId())!=null) {
+            ret = processor.newSerializer(outputs.get(output.getId()));
+        } else {
+            ret = processor.newSerializer(destinationFile);
+        }
         Properties outputProps = output.getOutputProperties();
         for(Object key: outputProps.keySet()) {
             ret.setOutputProperty(Output.VALID_OUTPUT_PROPERTIES.get(key.toString()).getSaxonProperty(), outputProps.getProperty(key.toString()));

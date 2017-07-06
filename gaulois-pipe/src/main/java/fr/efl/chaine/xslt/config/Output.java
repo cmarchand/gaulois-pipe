@@ -9,7 +9,6 @@ package fr.efl.chaine.xslt.config;
 import java.io.File;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
-import fr.efl.chaine.xslt.utils.ParametersMerger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -19,11 +18,8 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 
 import net.sf.saxon.s9api.QName;
-import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.Serializer;
 import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmValue;
-import net.sf.saxon.type.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +37,7 @@ public class Output implements Verifiable {
     private String absolute;
     private String prefix, suffix, name;
     private String console = null;
+    private String id;
     private final OutputProperties outputProperties;
     private boolean nullOutput = false;
     
@@ -78,7 +75,10 @@ public class Output implements Verifiable {
             @Override
             public Object defineProperty(String key, String value) throws InvalidSyntaxException {
                 // ignore @id attribute
-                if("id".equals(key)) return value;
+                if("id".equals(key)) {
+                    setId(value);
+                    return value;
+                }
                 OutputPropertyEntry ope = VALID_OUTPUT_PROPERTIES.get(key);
                 if(ope!=null) {
                     if(ope.isValueValid(value)) {
@@ -291,4 +291,13 @@ public class Output implements Verifiable {
         this.console = console;
     }
     public boolean isConsoleOutput() { return getConsole()!=null; }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+    
 }
