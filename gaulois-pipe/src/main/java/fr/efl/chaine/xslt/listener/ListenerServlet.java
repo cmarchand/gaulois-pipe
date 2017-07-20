@@ -105,7 +105,7 @@ public class ListenerServlet extends HttpServlet {
                                 } catch(SaxonApiException | IOException | InvalidSyntaxException | URISyntaxException | TransformerException ex) {
                                     String msg = "[" + iCtx.getGaulois().getInstanceName() + "] while processing "+fpf.getFile().getName();
                                     LOGGER.error(msg, ex);
-                                    iCtx.getGaulois().getErrors().add(new GauloisRunException(msg, fpf.getFile()));
+                                    iCtx.getGaulois().collectError(new GauloisRunException(msg, fpf.getFile()));
                                 }
                             }
                         };
