@@ -14,15 +14,15 @@ import java.io.File;
 import java.util.HashMap;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.QName;
+import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 /**
  *
  * @author cmarchand
  */
-public class ManualConstructedSourcesTest {
+public class ErrorManagementTest {
     private static HashMap<QName,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
     
@@ -37,18 +37,28 @@ public class ManualConstructedSourcesTest {
             }
         };
     }
-
-    @Test()
-    public void testAddSources() throws Exception {
+    
+    @Test
+    public void testNoError() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
-        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/rename.xml");
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/errorManagement.xml");
         Config config = cu.buildConfig(emptyInputParams);
-        assertEquals("There should be 0 file in config file pattern match", config.getSources().getFiles().size(), 0);
-        config.getSources().addFile(new CfgFile(new File("./src/test/resources/source.xml")));
-        assertEquals("There should be 1 file in sources", config.getSources().getFiles().size(), 1);
+        config.getSources().addFile(new CfgFile(new File("./src/test/resources/xsl/typedFunctionWithValue.xml")));
         piper.setConfig(config);
-        piper.setInstanceName("ADDED_SOURCES");
+        piper.setInstanceName("ERROR_MGMT-NO_ERROR");
         piper.launch();
-        assertEquals(true, new File("target/generated-test-files/source-renamed.xml").exists());
+        assertEquals(0, piper.terminateErrorCollector());
+    }
+    
+    @Test
+    public void testError() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/errorManagement.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.getSources().addFile(new CfgFile(new File("./src/test/resources/xsl/typedFunctionWithoutValue.xml")));
+        piper.setConfig(config);
+        piper.setInstanceName("ERROR_MGMT-ERROR");
+        piper.launch();
+        assertNotEquals(0, piper.terminateErrorCollector());
     }
 }

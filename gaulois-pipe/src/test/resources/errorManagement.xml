@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This Source Code Form is subject to the terms of 
+the Mozilla Public License, v. 2.0. If a copy of 
+the MPL was not distributed with this file, You 
+can obtain one at https://mozilla.org/MPL/2.0/.
+-->
+<config
+    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+    xmlns='http://efl.fr/chaine/saxon-pipe/config'
+    xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config ../../../src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
+    <namespaces>
+        <mapping prefix="n" uri="http://www.minefi.gouv.fr/cp/helios/pes_v2/paye_1_1"/>
+    </namespaces>
+    <pipe nbThreads="1" mutiThreadMaxSourceSize="">
+        <xslt href="cp:/xsl/typedFunction.xsl"/>
+        <output id="main">
+            <folder absolute="./target/generated-test-files"></folder>
+            <fileName name="errorMgmt-$[input-basename].xml"/>
+        </output>
+    </pipe>
+    <sources orderBy="size" sort="desc">
+      <folder href="src/test/resources" pattern="null"/>
+    </sources>
+</config>

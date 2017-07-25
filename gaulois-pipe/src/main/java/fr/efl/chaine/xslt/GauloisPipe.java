@@ -42,43 +42,25 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
-import java.nio.file.Files;
-import java.util.Hashtable;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Queue;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
+import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.lib.StandardErrorListener;
 import net.sf.saxon.lib.StandardLogger;
 import net.sf.saxon.trace.XSLTTraceListener;
 import net.sf.saxon.trans.XPathException;
-import net.timewalker.ffmq4.FFMQConstants;
-import net.timewalker.ffmq4.FFMQCoreSettings;
-import net.timewalker.ffmq4.local.FFMQEngine;
-import net.timewalker.ffmq4.management.destination.definition.QueueDefinition;
-import net.timewalker.ffmq4.utils.Settings;
 import org.apache.commons.io.output.NullOutputStream;
 import org.xmlresolver.Resolver;
 import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
@@ -116,16 +98,16 @@ public class GauloisPipe {
     private URIResolver uriResolver;
     private static transient boolean protocolInstalled = false;
     
-    private List<Exception> _errors;
     private XPathCompiler xpathCompiler;
     private File debugDirectory;
     
     private String currentDir = System.getProperty("user.dir");
     private String currentDirUri;
+    private GPErrorListener errorListener;
     
     // The JMS server
-    private FFMQEngine jmsEngine;
-    private String jmsUUID;
+//    private FFMQEngine jmsEngine;
+//    private String jmsUUID;
 
     /**
      * The property name to specify the debug output directory
@@ -134,9 +116,9 @@ public class GauloisPipe {
     private ThreadFactory threadFactory;
     
     // JMS stuff
-    private MessageProducer jmsProducer;
-    private MessageConsumer jmsQueueConsumer;
-    private Session jmsSession;
+//    private MessageProducer jmsProducer;
+//    private MessageConsumer jmsQueueConsumer;
+//    private Session jmsSession;
     private List<String> errors;
     public static final String JMS_QUEUE_NAME = "error";
 
@@ -200,8 +182,9 @@ public class GauloisPipe {
     @SuppressWarnings("ThrowFromFinallyBlock")
     public void launch() throws InvalidSyntaxException, FileNotFoundException, SaxonApiException, URISyntaxException, IOException {
         initDebugDirectory();
-        startErrorCollector();
-//        errors = Collections.synchronizedList(new ArrayList<Exception>());
+//        startErrorCollector();
+        errors = Collections.synchronizedList(new ArrayList<String>());
+        errorListener = new GPErrorListener(errors);
 //        Runtime.getRuntime().addShutdownHook(new Thread(new ErrorCollector(errors)));
         long start = System.currentTimeMillis();
         documentCache = new DocumentCache(config.getMaxDocumentCacheSize());
@@ -347,7 +330,7 @@ public class GauloisPipe {
                         execute(pipe, fpf, messageListener);
                     } catch(SaxonApiException | IOException | InvalidSyntaxException | URISyntaxException | TransformerException ex) {
                         String msg = "[" + instanceName + "] while processing "+fpf.getFile().getName();
-                        LOGGER.error(msg, ex);
+//                        LOGGER.error(msg, ex);
                         collectError(new GauloisRunException(msg, ex, fpf.getFile()));
                     }
                 }
@@ -626,19 +609,6 @@ public class GauloisPipe {
         if(xsl==null) {
             LOGGER.trace(__href+" not in cache");
             try {
-                // FIXME: pourquoi est-ce qu'on n'utilise pas le URIResolver ????
-//                InputStream input ;
-//                if(__href.startsWith("file:")) {
-//                    File f = new File(new URI(__href));
-//                    input = new FileInputStream(f);
-//                } else if(__href.startsWith("jar:")) {
-//                    input = new URL(__href).openStream();
-//                } else if(__href.startsWith("cp:")) {
-//                    input = GauloisPipe.class.getResourceAsStream(__href.substring(3));
-//                } else {
-//                    File f = new File(__href);
-//                    input = new FileInputStream(f);
-//                }
                 Source xslSource = getUriResolver().resolve(href, getCurrentDirUri());
                 if(xslSource==null) {
                     throw new FileNotFoundException("Unable to resolve "+href);
@@ -657,7 +627,10 @@ public class GauloisPipe {
                 throw ex;
             }
         }
-        return xsl.load();
+        XsltTransformer ret = xsl.load();
+//        LOGGER.error("errorListener is a "+ret.getErrorListener().getClass().getName());
+        ret.setErrorListener(errorListener);
+        return ret;
     }
     
     private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException, TransformerException {
@@ -798,7 +771,7 @@ public class GauloisPipe {
      * <p>
      * Command samples :</p>
      * <ul>
-     * <li><tt>SaxonPipe -o path/to/out -n 4 PARAMS p1=xxx p2=yyy XSL
+     * <li><tt>GauloisPipe -o path/to/out -n 4 PARAMS p1=xxx p2=yyy XSL
      * path/to/xslt1 ... path/to/xsltN FILES path/to/input1 ...
      * path/to/inputN</tt>
      * <ul><li>Executes with 4 threads the pipe <tt>xslt1 to xsltN</tt> on
@@ -831,11 +804,13 @@ public class GauloisPipe {
         }
         LOGGER.debug("Additionals protocols installed");
         GauloisPipe gauloisPipe = new GauloisPipe(new DefaultSaxonConfigurationFactory());
+        boolean hasListener = false;
         try {
             LOGGER.debug("gauloisPipe instanciated");
             Config config = gauloisPipe.parseCommandLine(args);
             gauloisPipe.setConfig(config);
             gauloisPipe.setInstanceName(config.__instanceName);
+            hasListener = config.getSources().getListener()!=null;
         } catch (InvalidSyntaxException ex) {
             LOGGER.error(ex.getMessage(), ex);
             System.exit(1);
@@ -845,7 +820,10 @@ public class GauloisPipe {
         } catch (InvalidSyntaxException | SaxonApiException | URISyntaxException | IOException ex) {
             LOGGER.error(ex.getMessage(), ex);
             gauloisPipe.collectError(ex);
-            System.exit(gauloisPipe.terminateErrorCollector());
+        } finally {
+            if(!hasListener) {
+                System.exit(gauloisPipe.terminateErrorCollector());
+            }
         }
     }
 
@@ -1017,6 +995,32 @@ public class GauloisPipe {
     private static final int CONFIG = 0x20;
     private static final int CURRENT_DIR = 0x40;
     
+    private class GPErrorListener implements ErrorListener {
+        private List<String> errors;
+        public final StandardErrorListener sel;
+        protected GPErrorListener(List<String> errors) {
+            super();
+            this.errors=errors;
+            sel = new StandardErrorListener();
+        }
+        @Override
+        public void warning(TransformerException exception) throws TransformerException {
+            LOGGER.warn(exception.getMessage());
+        }
+        @Override
+        public void error(TransformerException exception) throws TransformerException {
+            // TODO : check if errors throw exceptions. Assume it does, so do not report anything here
+            //collectError(exception);
+            //collectError(exception, "ERROR", sel.getExpandedMessage(exception), sel.getLocationMessage(exception));
+            //errors.add("ERROR\n"+ sel.getExpandedMessage(exception)+"\n"+sel.getLocationMessage(exception));
+        }
+        @Override
+        public void fatalError(TransformerException exception) throws TransformerException {
+            // fatal errors throw exception, so it is not reported here
+            //errors.add("FATAL ERROR\n"+ sel.getExpandedMessage(exception)+"\n"+sel.getLocationMessage(exception));
+        }
+    }
+    
     private class DocumentCache extends LinkedHashMap<String, XdmNode> {
         private final int cacheSize;
         private List<String> loading;
@@ -1065,8 +1069,8 @@ public class GauloisPipe {
     }
     
 //    private class ErrorCollector implements Runnable {
-//        private final List<Exception> errorsContainer;
-//        public ErrorCollector(List<Exception> errorsContainer) {
+//        private final List<String> errorsContainer;
+//        public ErrorCollector(List<String> errorsContainer) {
 //            super();
 //            this.errorsContainer=errorsContainer;
 //        }
@@ -1075,14 +1079,15 @@ public class GauloisPipe {
 //            if(errorsContainer==null || errorsContainer.isEmpty()) {
 //                GauloisPipe.LOGGER.info("Gaulois-Pipe is exiting without error");
 //            } else {
-//                for(Exception ex:errorsContainer) {
-//                    GauloisPipe.LOGGER.error("",ex);
+//                for(String error: errorsContainer) {
+//                    GauloisPipe.LOGGER.error(error);
 //                }
 //                GauloisPipe.LOGGER.info("Gaulois-Pipe is exiting with error");
 //                Runtime.getRuntime().halt(errorsContainer.size());
 //            }
 //        }
 //    }
+
     public void setInstanceName(String instanceName) {
         this.instanceName = instanceName;
     }
@@ -1123,80 +1128,109 @@ public class GauloisPipe {
         }
         ex.printStackTrace(pw);
         pw.flush();
-        try {
-            Message msg = jmsSession.createTextMessage(sw.getBuffer().toString());
-            jmsProducer.send(msg);
-        } catch(JMSException jmsEx) {
-            LOGGER.error(jmsEx.getMessage()+" while sending error via JMS");
-            LOGGER.error("Error was ",ex);
+        sendError(sw.getBuffer().toString());
+    }
+    public void collectError(GauloisRunException ex, String... message) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+//        pw.println("while processing "+ex.getSource());
+        pw.println(ex.getMessage());
+        for(String m:message) {
+            pw.println(m);
         }
+        Throwable innerEx = ex;
+        while(innerEx.getCause()!=null) {
+            innerEx = innerEx.getCause();
+            if(innerEx instanceof TransformerException) break;
+        }
+        if(innerEx instanceof TransformerException) {
+            TransformerException tEx = (TransformerException)innerEx;
+            pw.println(errorListener.sel.getExpandedMessage(tEx));
+            pw.println(errorListener.sel.getLocationMessage(tEx));
+        } else {
+            innerEx.printStackTrace(pw);
+        }
+        pw.flush();
+        sendError(sw.getBuffer().toString());
+    }
+    protected void sendError(String error) {
+//        try {
+//            Message msg = jmsSession.createTextMessage(error);
+//            jmsProducer.send(msg);
+//        } catch(JMSException jmsEx) {
+//            LOGGER.error(jmsEx.getMessage()+" while sending error via JMS");
+//            LOGGER.error("Error was "+error);
+//        }
+        errors.add(error);
     }
     
     protected void startErrorCollector() {
-        try {
-            LOGGER.debug("Creating JMS engine");
-            jmsEngine = new FFMQEngine(jmsUUID = UUID.randomUUID().toString(), createJmsEngineSettings());
-            QueueDefinition queueDef = new QueueDefinition();
-            queueDef.setName(JMS_QUEUE_NAME);
-            queueDef.setUseJournal(false);
-            queueDef.setMaxNonPersistentMessages(1000);
-            queueDef.check();
-            jmsEngine.deploy();
-            LOGGER.debug("JMS engine deployed");
-            jmsEngine.createQueue(queueDef);
-            LOGGER.debug("JMS queue "+JMS_QUEUE_NAME+" created");
-            
-            Hashtable<String,String> jndiEnv = new Hashtable();
-            jndiEnv.put(Context.INITIAL_CONTEXT_FACTORY, FFMQConstants.JNDI_CONTEXT_FACTORY);
-            jndiEnv.put(Context.PROVIDER_URL, "vm://"+jmsUUID);
-            Context context = new InitialContext(jndiEnv);
-            // Lookup a connection factory in the context
-            ConnectionFactory connFactory = (ConnectionFactory)context.lookup(FFMQConstants.JNDI_CONNECTION_FACTORY_NAME);
-            // Obtain a JMS connection from the factory
-            Connection conn = connFactory.createConnection();
-            conn.start();
-            jmsSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            Queue jmsQueue = jmsSession.createQueue(JMS_QUEUE_NAME);
-            jmsProducer = jmsSession.createProducer(jmsQueue);
-            jmsQueueConsumer = jmsSession.createConsumer(jmsQueue);
-        } catch(IOException | JMSException | NamingException ex) {
-            throw new RuntimeException("Unable to start gaulois-pipe error collector", ex);
-        }
+//        try {
+//            LOGGER.debug("Creating JMS engine");
+//            jmsEngine = new FFMQEngine(jmsUUID = UUID.randomUUID().toString(), createJmsEngineSettings());
+//            QueueDefinition queueDef = new QueueDefinition();
+//            queueDef.setName(JMS_QUEUE_NAME);
+//            queueDef.setUseJournal(false);
+//            queueDef.setMaxNonPersistentMessages(1000);
+//            queueDef.check();
+//            jmsEngine.deploy();
+//            LOGGER.debug("JMS engine deployed");
+//            jmsEngine.createQueue(queueDef);
+//            LOGGER.debug("JMS queue "+JMS_QUEUE_NAME+" created");
+//            
+//            Hashtable<String,String> jndiEnv = new Hashtable();
+//            jndiEnv.put(Context.INITIAL_CONTEXT_FACTORY, FFMQConstants.JNDI_CONTEXT_FACTORY);
+//            jndiEnv.put(Context.PROVIDER_URL, "vm://"+jmsUUID);
+//            Context context = new InitialContext(jndiEnv);
+//            // Lookup a connection factory in the context
+//            ConnectionFactory connFactory = (ConnectionFactory)context.lookup(FFMQConstants.JNDI_CONNECTION_FACTORY_NAME);
+//            // Obtain a JMS connection from the factory
+//            Connection conn = connFactory.createConnection();
+//            conn.start();
+//            jmsSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//            Queue jmsQueue = jmsSession.createQueue(JMS_QUEUE_NAME);
+//            jmsProducer = jmsSession.createProducer(jmsQueue);
+//            jmsQueueConsumer = jmsSession.createConsumer(jmsQueue);
+//        } catch(IOException | JMSException | NamingException ex) {
+//            throw new RuntimeException("Unable to start gaulois-pipe error collector", ex);
+//        }
     }
     protected int terminateErrorCollector() {
-        errors = new LinkedList<>();
-        TextMessage msg;
-        do {
-            try {
-                msg = (TextMessage)jmsQueueConsumer.receiveNoWait();
-                if(msg!=null) {
-                    errors.add(msg.getText());
-                    LOGGER.error(msg.getText());
-                }
-            } catch(JMSException ex) {
-                msg = null;
-                LOGGER.error(ex.getMessage()+" while getting messages from errors queue");
-            }
-        } while(msg!=null);
-        try {
-            jmsSession.close();
-        } catch (JMSException ex) {
-            // ignore
+//        TextMessage msg;
+//        do {
+//            try {
+//                msg = (TextMessage)jmsQueueConsumer.receiveNoWait();
+//                if(msg!=null) {
+//                    errors.add(msg.getText());
+//                    LOGGER.error(msg.getText());
+//                }
+//            } catch(JMSException ex) {
+//                msg = null;
+//                LOGGER.error(ex.getMessage()+" while getting messages from errors queue");
+//            }
+//        } while(msg!=null);
+//        try {
+//            jmsSession.close();
+//        } catch (JMSException ex) {
+//            // ignore
+//        }
+//        jmsEngine.undeploy();
+        for(String error: errors) {
+            LOGGER.error(error);
         }
-        jmsEngine.undeploy();
         return errors.size();
     }
-    protected Settings createJmsEngineSettings() throws IOException {
-        Settings settings = new Settings();
-        File defaultTmpDir = new File(System.getProperty("java.io.tmpdir"));
-        File jmsDir = Files.createTempDirectory(defaultTmpDir.toPath(),jmsUUID).toFile();
-        String jmsDirName = jmsDir.getAbsolutePath();
-        settings.setStringProperty(FFMQCoreSettings.DESTINATION_DEFINITIONS_DIR, jmsDirName);
-        settings.setStringProperty(FFMQCoreSettings.BRIDGE_DEFINITIONS_DIR, jmsDirName);
-        settings.setStringProperty(FFMQCoreSettings.TEMPLATES_DIR, jmsDirName);
-        settings.setStringProperty(FFMQCoreSettings.DEFAULT_DATA_DIR, jmsDirName);
-        return settings;
-    }
+//    protected Settings createJmsEngineSettings() throws IOException {
+//        Settings settings = new Settings();
+//        File defaultTmpDir = new File(System.getProperty("java.io.tmpdir"));
+//        File jmsDir = Files.createTempDirectory(defaultTmpDir.toPath(),jmsUUID).toFile();
+//        String jmsDirName = jmsDir.getAbsolutePath();
+//        settings.setStringProperty(FFMQCoreSettings.DESTINATION_DEFINITIONS_DIR, jmsDirName);
+//        settings.setStringProperty(FFMQCoreSettings.BRIDGE_DEFINITIONS_DIR, jmsDirName);
+//        settings.setStringProperty(FFMQCoreSettings.TEMPLATES_DIR, jmsDirName);
+//        settings.setStringProperty(FFMQCoreSettings.DEFAULT_DATA_DIR, jmsDirName);
+//        return settings;
+//    }
     
     private XSLTTraceListener buildTraceListener(final String outputDest) {
         if(outputDest==null) return null;
