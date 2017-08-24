@@ -74,7 +74,7 @@ public class ListenerServlet extends HttpServlet {
                 sUrl = req.getParameter(paramName);
             } else if(paramName!=null) {
                 QName qn = ConfigUtil.resolveQName(paramName);
-                parameters.put(qn, new ParameterValue(qn, req.getParameter(paramName)));
+                parameters.put(qn, new ParameterValue(qn, req.getParameter(paramName), context.getDatatypeFactory().XS_STRING));
             } else {
                 LOGGER.info("received null parameter with value="+req.getParameter(paramName));
             }
@@ -102,7 +102,7 @@ public class ListenerServlet extends HttpServlet {
                             public void run() {
                                 try {
                                     iCtx.getGaulois().execute(iCtx.getPipe(), fpf, iCtx.getMsgListener());
-                                } catch(SaxonApiException | IOException | InvalidSyntaxException | URISyntaxException | TransformerException ex) {
+                                } catch(SaxonApiException | IOException | InvalidSyntaxException | URISyntaxException ex) {
                                     String msg = "[" + iCtx.getGaulois().getInstanceName() + "] while processing "+fpf.getFile().getName();
                                     LOGGER.error(msg, ex);
                                     iCtx.getGaulois().collectError(new GauloisRunException(msg, fpf.getFile()));

@@ -24,7 +24,7 @@ import org.junit.Test;
 public class EscapingTest {
     private static SaxonConfigurationFactory configFactory;
     @BeforeClass 
-    public static void initialize() {
+    public static void initialize() throws InvalidSyntaxException {
         configFactory = new SaxonConfigurationFactory() {
             Configuration config = Configuration.newConfiguration();
             @Override
@@ -38,11 +38,11 @@ public class EscapingTest {
     
     @Test
     public void escapeParameter() throws InvalidSyntaxException {
-        ParameterValue pv = new ParameterValue(new QName("workDir"), "file:/home/cmarchand/devel/data");
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ParameterValue pv = new ParameterValue(new QName("workDir"), "file:/home/cmarchand/devel/data", piper.getDatatypeFactory().XS_STRING);
         HashMap<QName,ParameterValue> params = new HashMap<>();
         params.put(pv.getKey(), pv);
         // n'importe lequel, aucune importance
-        GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/same-source-file.xml");
         String result = cu.resolveEscapes("$[workDir]/collection.xml", params);
         assertEquals("file:/home/cmarchand/devel/data/collection.xml", result);
@@ -53,11 +53,11 @@ public class EscapingTest {
      */
     @Test
     public void escapeBackSlash() throws InvalidSyntaxException {
-        ParameterValue pv = new ParameterValue(new QName("basedir"), "c:\\dev\\sie-efl-inneo-src");
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ParameterValue pv = new ParameterValue(new QName("basedir"), "c:\\dev\\sie-efl-inneo-src", piper.getDatatypeFactory().XS_STRING);
         HashMap<QName,ParameterValue> params = new HashMap<>();
         params.put(pv.getKey(), pv);
         // n'importe lequel, aucune importance
-        GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/same-source-file.xml");
         String result = cu.resolveEscapes("file:$[basedir]/src/main/CheckBc/xslt", params);
         assertEquals("Received "+result, "file:c:\\dev\\sie-efl-inneo-src/src/main/CheckBc/xslt", result);

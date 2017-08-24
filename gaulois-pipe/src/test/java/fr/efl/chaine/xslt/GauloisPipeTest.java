@@ -14,6 +14,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
@@ -24,12 +26,15 @@ import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.type.ValidationException;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
+import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
 
 /**
@@ -39,12 +44,13 @@ import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
 public class GauloisPipeTest {
     private static HashMap<QName,ParameterValue> emptyInputParams;
     private static SaxonConfigurationFactory configFactory;
+    private static DatatypeFactory factory;
     
     public GauloisPipeTest() {
     }
     
     @BeforeClass
-    public static void initialize() {
+    public static void initialize() throws ValidationException {
         emptyInputParams = new HashMap<>();
         configFactory = new SaxonConfigurationFactory() {
             Configuration config = Configuration.newConfiguration();
@@ -53,6 +59,7 @@ public class GauloisPipeTest {
                 return config;
             }
         };
+        factory = DatatypeFactory.getInstance(configFactory.getConfiguration());
     }
 
     @Test(expected = InvalidSyntaxException.class)
@@ -135,7 +142,7 @@ public class GauloisPipeTest {
         piper.launch();
     }
     @Test
-    public void validateComment() {
+    public void validateComment() throws ValidationException {
         try {
             GauloisPipe piper = new GauloisPipe(configFactory);
             Config config = new ConfigUtil(configFactory.getConfiguration(),piper.getUriResolver(), "./src/test/resources/comment-xslt.xml").buildConfig(emptyInputParams);
@@ -365,7 +372,7 @@ public class GauloisPipeTest {
     public void testLoadingParams() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/param-override.xml");
-        ParameterValue pv = new ParameterValue(new QName("outputDirPath"), "..");
+        ParameterValue pv = new ParameterValue(new QName("outputDirPath"), "..", factory.XS_STRING);
         HashMap<QName,ParameterValue> params = new HashMap<>();
         params.put(pv.getKey(), pv);
         Config config = cu.buildConfig(params);
@@ -425,4 +432,28 @@ public class GauloisPipeTest {
         expect.delete();
     }
     
+    @Test
+    public void testXdmValueToXsl() throws InvalidSyntaxException, SaxonApiException, URISyntaxException, IOException, ValidationException  {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/paramDate.xml");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
+        QName qnDate = new QName("date");
+        // to get a date XdmValue from saxon, we must be brilliants !
+        Processor proc = new Processor(configFactory.getConfiguration());
+        XQueryEvaluator ev = proc.newXQueryCompiler().compile("current-dateTime()").load();
+        XdmItem item = ev.evaluateSingle();
+        params.put(qnDate, new ParameterValue(qnDate, item, factory.getDatatype(new QName("xs","http://www.w3.org/2001/XMLSchema","dateTime"))));
+        Config config = cu.buildConfig(params);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("XDM_VALUE_TO_XSL");
+        piper.launch();
+        File expect = new File("target/generated-test-files/date-output.xml");
+        XdmNode document = proc.newDocumentBuilder().build(expect);
+        XPathExecutable exec = proc.newXPathCompiler().compile("/date");
+        XPathSelector selector = exec.load();
+        selector.setContextItem((XdmItem)document);
+        XdmValue result = selector.evaluate();
+        assertTrue(result.size()>0);
+    }
 }

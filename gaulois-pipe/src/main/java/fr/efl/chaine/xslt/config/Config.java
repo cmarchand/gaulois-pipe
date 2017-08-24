@@ -100,6 +100,12 @@ public class Config implements Verifiable {
         if(namespaces!=null) {
             namespaces.verify();
         }
+        for(ParameterValue pv: params.values()) {
+            LOGGER.debug(pv.toString());
+            if(pv.isAbstract()) {
+                throw new InvalidSyntaxException("Parameter "+pv.getKey().getEQName()+" is declared abstract and no value is provided for it.");
+            }
+        }
     }
     /**
      * Returns <tt>true</tt> if input files with size over multi-thread limit exist.

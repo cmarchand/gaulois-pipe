@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.Serializer;
+import net.sf.saxon.s9api.XdmAtomicValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,7 @@ public class Output implements Verifiable {
     private String absolute;
     private String prefix, suffix, name;
     private String console = null;
+    private String id;
     private final OutputProperties outputProperties;
     private boolean nullOutput = false;
     
@@ -73,7 +75,10 @@ public class Output implements Verifiable {
             @Override
             public Object defineProperty(String key, String value) throws InvalidSyntaxException {
                 // ignore @id attribute
-                if("id".equals(key)) return value;
+                if("id".equals(key)) {
+                    setId(value);
+                    return value;
+                }
                 OutputPropertyEntry ope = VALID_OUTPUT_PROPERTIES.get(key);
                 if(ope!=null) {
                     if(ope.isValueValid(value)) {
@@ -191,7 +196,9 @@ public class Output implements Verifiable {
             }
             for(ParameterValue pv:parameters.values()) {
                 LOGGER.debug("replacing $["+pv.getKey()+"]");
-                __abs = __abs.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
+                if(pv.getValue() instanceof String) {
+                    __abs = __abs.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue().toString());
+                }
             }
             File directory = __abs.startsWith("file:") ? new File(new URI(__abs)) : new File(__abs);
             ret = new File(directory, getFileName(sourceFile, parameters));
@@ -212,11 +219,14 @@ public class Output implements Verifiable {
         String filename = (prefix!=null?prefix:"") + name + (suffix!=null?suffix:"");
         String sourceName = sourceFile.getName();
         int ix = sourceName.lastIndexOf(".");
+        // FIXME: this shouldn't be supported, it has been replaced by input-* pseudo-variables
         String extension = sourceName.substring(ix);
         String basename = sourceName.substring(0, ix);
         String ret = filename.replaceAll("\\$\\{name\\}", sourceName).replaceAll("\\$\\{basename\\}", basename).replaceAll("\\$\\{extension\\}", extension);
         for(ParameterValue pv:parameters.values()) {
-            ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue());
+            if(pv.getValue() instanceof String || pv.getValue() instanceof XdmAtomicValue) {
+                ret = ret.replaceAll("\\$\\["+pv.getKey()+"\\]", pv.getValue().toString());
+            }
         }
         return ret;
     }
@@ -281,4 +291,13 @@ public class Output implements Verifiable {
         this.console = console;
     }
     public boolean isConsoleOutput() { return getConsole()!=null; }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+    
 }

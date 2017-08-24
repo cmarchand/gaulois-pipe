@@ -1,5 +1,5 @@
-<config xmlns="http://efl.fr/chaine/saxon-pipe/config"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" documentCacheSize="2">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://efl.fr/chaine/saxon-pipe/config ../../main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd" xmlns="http://efl.fr/chaine/saxon-pipe/config" documentCacheSize="2">
     <pipe mutiThreadMaxSourceSize="24349456" nbThreads="4">
         <!-- Préparation -->
         <xslt href="src/test/resources/identity.xsl">
@@ -10,7 +10,7 @@
         </output>        
     </pipe>
      <params>
-        <param name="outputDirPath" value="."/>
+        <param name="outputDirPath" value="." />
     </params>
     <sources orderBy="size" sort="desc">
         <folder href="." pattern="null"/>

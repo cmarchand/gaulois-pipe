@@ -7,6 +7,8 @@
 package fr.efl.chaine.xslt.utils;
 
 import net.sf.saxon.s9api.QName;
+import net.sf.saxon.s9api.XdmValue;
+import top.marchand.xml.gaulois.config.typing.Datatype;
 
 /**
  * A parameter value in saxon pipe.
@@ -21,17 +23,37 @@ public class ParameterValue {
     /**
      * the parameter value.
      */
-    private String value;
+    private Object value;
+    /**
+     * This parameter datatype. If not specified, it's xs:string
+     */
+    private Datatype datatype;
+    private boolean abstractParam;
 
     /**
      * Default constructor.
      *
      * @param key the parameter key
      * @param value the parameter value
+     * @param datatype the parameter datatype
      */
-    public ParameterValue(QName key, String value) {
+    @SuppressWarnings("OverridableMethodCallInConstructor")
+    public ParameterValue(QName key, Object value, Datatype datatype) {
         this.key = key;
-        this.value = value;
+        setValue(value);
+        setDatatype(datatype);
+    }
+
+    /**
+     * Constructs an abstract Parameter
+     * @param key
+     * @param datatype 
+     */
+    @SuppressWarnings("OverridableMethodCallInConstructor")
+    public ParameterValue(QName key, Datatype datatype) {
+        this.key = key;
+        setDatatype(datatype);
+        abstractParam = true;
     }
 
     /**
@@ -44,17 +66,40 @@ public class ParameterValue {
     /**
      * @return the parameter value
      */
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
     
-    public void setValue(String value) {
-        this.value=value;
+    public void setValue(Object value) {
+        if(value instanceof String) {
+            this.value=value;
+            abstractParam = false;
+        } else if(value instanceof XdmValue) {
+            this.value=value;
+            abstractParam = false;
+        } else if(value==null) {
+            this.value=value;
+            abstractParam = false;
+        } else {
+            throw new IllegalArgumentException("Only String or XdmValue are acceptable values for parameters");
+        }
     }
 
     @Override
     public String toString() {
-        return "[" + getKey() + "=" + getValue() + "]";
+        return "[" + getKey() + "=" + (abstractParam ? "<abstract>" : getValue()) + "]";
+    }
+
+    public Datatype getDatatype() {
+        return datatype;
+    }
+
+    public void setDatatype(Datatype datatype) {
+        this.datatype = datatype;
+    }
+    
+    public boolean isAbstract() {
+        return abstractParam;
     }
 
 }

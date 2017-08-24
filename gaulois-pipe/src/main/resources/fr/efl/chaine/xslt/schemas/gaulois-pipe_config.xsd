@@ -1,842 +1,765 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
-    xmlns:cfg="http://efl.fr/chaine/saxon-pipe/config"
-    targetNamespace="http://efl.fr/chaine/saxon-pipe/config" 
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    vc:minVersion="1.1">
+<xs:schema 
+  xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+  xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" 
+  xmlns:cfg="http://efl.fr/chaine/saxon-pipe/config" 
+  targetNamespace="http://efl.fr/chaine/saxon-pipe/config" 
+  elementFormDefault="qualified" 
+  attributeFormDefault="unqualified" 
+  vc:minVersion="1.1">
 
+  <xs:annotation>
+    <xs:documentation> This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/. </xs:documentation>
+  </xs:annotation>
+  <xs:element name="config" type="cfg:TConfig">
     <xs:annotation>
-        <xs:documentation> This Source Code Form is subject to the terms of the Mozilla Public
-            License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
-            one at https://mozilla.org/MPL/2.0/. </xs:documentation>
+      <xs:documentation xml:lang="fr">L'élément racine</xs:documentation>
+      <xs:documentation xml:lang="en">The root element</xs:documentation>
     </xs:annotation>
-    <xs:element name="config" type="cfg:TConfig">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr">L'élément racine</xs:documentation>
-            <xs:documentation xml:lang="en">The root element</xs:documentation>
-        </xs:annotation>
-    </xs:element>
+  </xs:element>
 
-    <xs:complexType name="TConfig">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr">La définition du pipe à appliquer, et sur quoi
-                l'appliquer</xs:documentation>
-            <xs:documentation xml:lang="en">The pipe definition, the params to set, and on what
-                apply this pipe</xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:element name="namespaces" type="cfg:TNamespaces" minOccurs="0"/>
-            <xs:element name="pipe" type="cfg:TPipe"/>
-            <xs:element name="params" type="cfg:TParams" minOccurs="0"/>
-            <xs:element name="sources" type="cfg:TSource" minOccurs="0"/>
-        </xs:sequence>
-        <xs:attribute name="documentCacheSize" default="1" type="xs:positiveInteger" use="optional">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> La taille maximale du cache de documents. Ne sert
-                    que si on traite plusieurs fois la même source, qui dans ce cas peut être mise
-                    en cache pour ne pas être parsé de multiples fois. Permet de limiter la taille
-                    du cache afin de ne pas consommer trop de mémoire. </xs:documentation>
-                <xs:documentation xml:lang="en"> The max document cache size. Used only if the same
-                    document is processed many times as source. We cache it to avoid unnecessary
-                    parsing. Used to limit the cache size. </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-    </xs:complexType>
+  <xs:complexType name="TConfig">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr">La définition du pipe à appliquer, et sur quoi l'appliquer</xs:documentation>
+      <xs:documentation xml:lang="en">The pipe definition, the params to set, and on what apply this pipe</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="namespaces" type="cfg:TNamespaces" minOccurs="0"/>
+      <xs:element name="pipe" type="cfg:TPipe"/>
+      <xs:element name="params" type="cfg:TAbstractParams" minOccurs="0"/>
+      <xs:element name="sources" type="cfg:TSource" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="documentCacheSize" default="1" type="xs:positiveInteger" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> La taille maximale du cache de documents. Ne sert que si on traite plusieurs fois la même source, qui dans ce cas peut être mise en cache pour ne pas être parsé de multiples fois. Permet de limiter la taille du cache afin de ne pas consommer trop de mémoire. </xs:documentation>
+        <xs:documentation xml:lang="en"> The max document cache size. Used only if the same document is processed many times as source. We cache it to avoid unnecessary parsing. Used to limit the cache size. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
 
-    <xs:complexType name="TPipe">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr"> La définition d'un enchainement de XSL à appliquer. Un
-                Pipe doit se terminer soit par un tee, soit par un output </xs:documentation>
-            <xs:documentation xml:lang="en"> The definition of steps to chain. A pipe must start by
-                a xslt, and finish by either a output or a tee </xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:choice minOccurs="1" maxOccurs="1">
-                <xs:element name="choose" type="cfg:TChoose"/>
-                <xs:element name="xslt" type="cfg:TXslt"/>
-                <xs:element name="tee" type="cfg:TTee"/>
-                <xs:element name="output" type="cfg:TOutput"/>
-            </xs:choice>
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:element name="choose" type="cfg:TChoose"/>
-                <xs:element name="xslt" type="cfg:TXslt"/>
-                <xs:element name="java" type="cfg:TJava"/>
-                <xs:element name="tee" type="cfg:TTee"/>
-                <xs:element name="output" type="cfg:TOutput"/>
-            </xs:choice>
-        </xs:sequence>
-        <xs:attribute name="nbThreads" type="cfg:positiveInt" default="1" use="optional">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Permet de définir le nombre de thread à utiliser
-                    pour faire tourner ce pipe. Si en ligne de commande, cette information est
-                    fournie, elle écrasera celle définie ici. </xs:documentation>
-                <xs:documentation xml:lang="en"> The number of threads to use to run this step. If
-                    given on command-line argument, overrides this value. </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="mutiThreadMaxSourceSize">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Permet de définir la taille maximale d'une source
-                    qui permet de la traiter en multi-thread. Au delà de cette taille, toutes les
-                    sources seront traitées en mono-thread, avant de traiter les autres en
-                    multi-thread. Cela permet d'éviter les java.lang.OutOfMemoryError </xs:documentation>
-                <xs:documentation xml:lang="en"> The max size a source can be processed as
-                    multi-thread. Above this size, all sources are processed mono-thread. This is
-                    done to avoid the java.lang.OutOfMemoryError. </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="traceOutput" type="cfg:TraceOutput">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr">Permet d'indiquer où faire sortir les traces. c.f. http://blog.xml.rocks/debugging-complex-xslt-modules/ pour des explications sur les traces.</xs:documentation>
-                <xs:documentation xml:lang="en">Where to write traces. c.f. http://blog.xml.rocks/debugging-complex-xslt-modules/ for traces explanations</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:assert
-            xpathDefaultNamespace="http://efl.fr/chaine/saxon-pipe/config"
-            test="
+  <xs:complexType name="TPipe">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> La définition d'un enchainement de XSL à appliquer. Un Pipe doit se terminer soit par un tee, soit par un output </xs:documentation>
+      <xs:documentation xml:lang="en"> The definition of steps to chain. A pipe must start by a xslt, and finish by either a output or a tee </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:choice minOccurs="1" maxOccurs="1">
+        <xs:element name="choose" type="cfg:TChoose"/>
+        <xs:element name="xslt" type="cfg:TXslt"/>
+        <xs:element name="tee" type="cfg:TTee"/>
+        <xs:element name="output" type="cfg:TOutput"/>
+      </xs:choice>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="choose" type="cfg:TChoose"/>
+        <xs:element name="xslt" type="cfg:TXslt"/>
+        <xs:element name="java" type="cfg:TJava"/>
+        <xs:element name="tee" type="cfg:TTee"/>
+        <xs:element name="output" type="cfg:TOutput"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="nbThreads" type="cfg:positiveInt" default="1" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Permet de définir le nombre de thread à utiliser pour faire tourner ce pipe. Si en ligne de commande, cette information est fournie, elle écrasera celle définie ici. </xs:documentation>
+        <xs:documentation xml:lang="en"> The number of threads to use to run this step. If given on command-line argument, overrides this value. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="mutiThreadMaxSourceSize">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Permet de définir la taille maximale d'une source qui permet de la traiter en multi-thread. Au delà de cette taille, toutes les sources seront traitées en mono-thread, avant de traiter les autres en multi-thread. Cela permet d'éviter les java.lang.OutOfMemoryError </xs:documentation>
+        <xs:documentation xml:lang="en"> The max size a source can be processed as multi-thread. Above this size, all sources are processed mono-thread. This is done to avoid the java.lang.OutOfMemoryError. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="traceOutput" type="cfg:TraceOutput">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr">Permet d'indiquer où faire sortir les traces. c.f. http://blog.xml.rocks/debugging-complex-xslt-modules/ pour des explications sur les traces.</xs:documentation>
+        <xs:documentation xml:lang="en">Where to write traces. c.f. http://blog.xml.rocks/debugging-complex-xslt-modules/ for traces explanations</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:assert xpathDefaultNamespace="http://efl.fr/chaine/saxon-pipe/config" test="
             if(not(@traceOutput)) then empty(descendant::cfg:xslt[@traceActive]) else true()" xmlns:cfg="http://efl.fr/chaine/saxon-pipe/config"/>
-    </xs:complexType>
-    
-    <xs:complexType name="TRestrictedPipe">
-        <xs:sequence>
-            <xs:choice minOccurs="1" maxOccurs="unbounded">
-                <xs:element name="xslt" type="cfg:TXslt"/>
-                <xs:element name="java" type="cfg:TJava"/>
-                <xs:element name="tee" type="cfg:TTee"/>
-                <xs:element name="output" type="cfg:TOutput"/>
-            </xs:choice>
-        </xs:sequence>
-        <xs:attribute name="nbThreads" type="cfg:positiveInt" use="prohibited"/>
-        <xs:attribute name="mutiThreadMaxSourceSize" use="prohibited"/>
-    </xs:complexType>
+  </xs:complexType>
 
-    <xs:complexType name="TTee">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr"> Permet de router un flux vers deux pipes différents. Il n'y a pas de limitation au nombre de sous-pipe qu'on peut mettre, mais il ne faut pas abuser ! </xs:documentation>
-            <xs:documentation xml:lang="en"> Allows a fork in the pipe. There no limit upper limit to sub-pipes, but be reasonable !</xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:element name="pipe" type="cfg:TRestrictedPipe" minOccurs="2" maxOccurs="unbounded"/>
-        </xs:sequence>
-    </xs:complexType>
+  <xs:complexType name="TRestrictedPipe">
+    <xs:sequence>
+      <xs:choice minOccurs="1" maxOccurs="unbounded">
+        <xs:element name="xslt" type="cfg:TXslt"/>
+        <xs:element name="java" type="cfg:TJava"/>
+        <xs:element name="tee" type="cfg:TTee"/>
+        <xs:element name="output" type="cfg:TOutput"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="nbThreads" type="cfg:positiveInt" use="prohibited"/>
+    <xs:attribute name="mutiThreadMaxSourceSize" use="prohibited"/>
+  </xs:complexType>
 
-    <xs:complexType name="TSource">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr">Les sources sur lesquelles appliquer le
-                pipe.</xs:documentation>
-            <xs:documentation xml:lang="en">Sources to apply pipe on.</xs:documentation>
-        </xs:annotation>
-        <xs:choice maxOccurs="unbounded">
-            <xs:element name="file" type="cfg:TFile"/>
-            <xs:element name="folder" type="cfg:TFolder"/>
-            <xs:element name="listener" type="cfg:TListener"/>
-        </xs:choice>
-        <xs:attribute name="orderBy" default="size">
-            <xs:simpleType>
-                <xs:restriction base="xs:string">
-                    <xs:enumeration value="size">
-                        <xs:annotation>
-                            <xs:documentation xml:lang="fr">Les fichiers sont triés par
-                                taille</xs:documentation>
-                            <xs:documentation xml:lang="en">Sources are sorted by
-                                size</xs:documentation>
-                        </xs:annotation>
-                    </xs:enumeration>
-                    <xs:enumeration value="name">
-                        <xs:annotation>
-                            <xs:documentation xml:lang="fr">Les fichiers sont triés par
-                                nom</xs:documentation>
-                            <xs:documentation xml:lang="en">Sources are sorted by
-                                name</xs:documentation>
-                        </xs:annotation>
-                    </xs:enumeration>
-                    <xs:enumeration value="define">
-                        <xs:annotation>
-                            <xs:documentation xml:lang="fr"> Les fichiers sont triés dans l'ordre où
-                                ils sont trouvés dans la définition de sources </xs:documentation>
-                            <xs:documentation xml:lang="en"> Sources are sorted as they are defined
-                                in the config file </xs:documentation>
-                        </xs:annotation>
-                    </xs:enumeration>
-                </xs:restriction>
-            </xs:simpleType>
-        </xs:attribute>
-        <xs:attribute name="sort" default="desc">
-            <xs:simpleType>
-                <xs:restriction base="xs:string">
-                    <xs:enumeration value="asc">
-                        <xs:annotation>
-                            <xs:documentation xml:lang="fr"> Ordre ascendant. Ne peut pas
-                                s'appliquer à @orderBy=define </xs:documentation>
-                            <xs:documentation xml:lang="en"> Ascending order. Can not be used with
-                                @orderBy=define </xs:documentation>
-                        </xs:annotation>
-                    </xs:enumeration>
-                    <xs:enumeration value="desc">
-                        <xs:annotation>
-                            <xs:documentation xml:lang="fr">Ordre descendant.</xs:documentation>
-                            <xs:documentation xml:lang="en"> Descending order. Can not be used with
-                                @orderBy=define </xs:documentation>
-                        </xs:annotation>
-                    </xs:enumeration>
-                </xs:restriction>
-            </xs:simpleType>
-        </xs:attribute>
-        <xs:assert test="count(listener) &lt;= 1"/>
-    </xs:complexType>
+  <xs:complexType name="TTee">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> Permet de router un flux vers deux pipes différents. Il n'y a pas de limitation au nombre de sous-pipe qu'on peut mettre, mais il ne faut pas abuser ! </xs:documentation>
+      <xs:documentation xml:lang="en"> Allows a fork in the pipe. There no limit upper limit to sub-pipes, but be reasonable !</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="pipe" type="cfg:TRestrictedPipe" minOccurs="2" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
 
-    <xs:complexType name="TFile">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr"> Définit un fichier source. Si le fichier spécifié dans
-                @href est introuvable, ou n'est pas un fichier standard, une erreur devra être
-                levée. </xs:documentation>
-            <xs:documentation xml:lang="en"> Defines a source file. If the file specified in @href
-                is not available, or is not a regular file, an errorshould be thrown.
-            </xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:element name="param" type="cfg:TParam" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
-        <xs:attribute name="href" type="xs:anyURI" use="required">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Le fichier à utiliser. Le fichier doit
-                    impérativemenbt exister et être un fichier standard. </xs:documentation>
-                <xs:documentation xml:lang="en"> The file to process. The file must exists and be a
-                    regular file. </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-    </xs:complexType>
-    
-    <xs:complexType name="TFolder">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr"> La définition d'un contenu de fichiers, basée sur un
-                répertoire. On recherche dans ce répertoire tous les fichiers qui correspondent à
-                @pattern, éventuellement récursivement (@recurse) </xs:documentation>
-            <xs:documentation xml:lang="en"> A fileset, based on a folder. Selected files will match
-                @pattern, and can be search recursively (@recurse) </xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:element name="param" type="cfg:TParam" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
-        <xs:attribute name="href" type="xs:anyURI" use="required">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Le répertoire dans lequel prendre les fichiers. Si
-                    ce répertoire n'existe pas ou si ce n'est pas un répertoire, doit lever une
-                    erreur. </xs:documentation>
-                <xs:documentation xml:lang="en"> The folder to search in. If the folder does not
-                    exists or is not a floder, an error should be thrown. </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="pattern" type="xs:string" default="$.*^">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Une expression régulière permettant de filtrer sur
-                    les noms de fichiers. L'expression régulière est au format java :
-                    http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html Si non
-                    fournit, $.*^ est utilisé. </xs:documentation>
-                <xs:documentation xml:lang="en"> A regex to filter file names. The regx must conform
-                    to http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html If not
-                    present, $.*^ is used. </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="recurse" type="xs:boolean">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Permet d'indiquer si on doit parcourir les
-                    sous-répertoires pour trouver des fichiers </xs:documentation>
-                <xs:documentation xml:lang="en"> Search recursively or not... </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-    </xs:complexType>
-    
-    <xs:complexType name="TOutput">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr"> Permet de définir la stratégie à appliquer pour
-                produire les fichiers destination </xs:documentation>
-            <xs:documentation xml:lang="en"> Defines the output strategy </xs:documentation>
-        </xs:annotation>
-        <xs:choice>
-            <xs:sequence>
-                <xs:element name="folder" type="cfg:TOutputFolder">
-                    <xs:annotation>
-                        <xs:documentation xml:lang="fr"> Permet de définir dans quel répertoire
-                            placer la sortie </xs:documentation>
-                        <xs:documentation xml:lang="en"> The folder to put files in
-                        </xs:documentation>
-                    </xs:annotation>
-                </xs:element>
-                <xs:element name="fileName" type="cfg:TFileName">
-                    <xs:annotation>
-                        <xs:documentation xml:lang="fr"> Permet de définir le nom de fichier. On
-                            peut utiliser des valeurs de paramètres avec la syntaxe $[paramName] </xs:documentation>
-                        <xs:documentation xml:lang="en"> Defines the file name. One can use
-                            parameters values : $[paramName] </xs:documentation>
-                    </xs:annotation>
-                </xs:element>
-            </xs:sequence>
-            <xs:element name="null" type="xs:string" fixed="">
-                <xs:annotation>
-                    <xs:documentation xml:lang="fr">Pour définir une sortie qu'on ne veut pas</xs:documentation>
-                    <xs:documentation xml:lang="en">To define a null output</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="console">
-                <xs:complexType>
-                    <xs:attribute name="which" default="out">
-                        <xs:simpleType>
-                            <xs:restriction base="xs:string">
-                                <xs:enumeration value="out">
-                                    <xs:annotation>
-                                        <xs:documentation>Standard output</xs:documentation>
-                                    </xs:annotation>
-                                </xs:enumeration>
-                                <xs:enumeration value="err">
-                                    <xs:annotation>
-                                        <xs:documentation>Error output</xs:documentation>
-                                    </xs:annotation>
-                                </xs:enumeration>
-                            </xs:restriction>
-                        </xs:simpleType>
-                    </xs:attribute>
-                </xs:complexType>
-            </xs:element>
-        </xs:choice>
-        <xs:attribute name="id" type="xs:ID" use="required">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Un identifiant, pour simplifier la construction des
-                    pipes. Reservé pour un usage futur. </xs:documentation>
-                <xs:documentation xml:lang="en"> An ID. required, but not used. Reserved for future
-                    use. </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="byte-order-mark" type="cfg:TYesNo">
-            <xs:annotation>
-                <xs:documentation>Output property byte-order-mask</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="escape-uri-attributes" type="cfg:TYesNo">
-            <xs:annotation>
-                <xs:documentation>Output property escape-uri-attributes</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="include-content-type" type="cfg:TYesNo">
-            <xs:annotation>
-                <xs:documentation>Output property include-content-type</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="indent" type="cfg:TYesNo">
-            <xs:annotation>
-                <xs:documentation>Output property indent</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="omit-xml-declaration" type="cfg:TYesNo">
-            <xs:annotation>
-                <xs:documentation>Output property omit-xml-declaration</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="saxon-recognize-binary" type="cfg:TYesNo">
-            <xs:annotation>
-                <xs:documentation>Output property saxon-specific
-                    saxon-recognize-binary</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="standalone" type="cfg:TYesNo">
-            <xs:annotation>
-                <xs:documentation>Output property standalone</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="cdata-section-elements" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property cdata-section-elements</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="doctype-public" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property doctype-public</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="doctype-system" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property doctype-system</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="encoding" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property encoding</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="media-type" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property media-type</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="saxon-attribute-order" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property saxon-specific
-                    saxon-attribute-order</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="saxon-character-representation" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property saxon-specific
-                    saxon-character-representation</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="saxon-double-space" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property saxon-specific
-                    saxon-double-space</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="saxon-implicit-result-document" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property saxon-specific
-                    saxon-implicit-result-document</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="saxon-indent-spaces" type="xs:int">
-            <xs:annotation>
-                <xs:documentation>Output property saxon-specific
-                    saxon-indent-spaces</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="saxon-line-length" type="xs:int">
-            <xs:annotation>
-                <xs:documentation>Output property saxon-specific
-                    saxon-line-length</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="saxon-suppress-indentation" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property saxon-specific
-                    saxon-suppress-indentation</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="undeclare-prefixes" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property undeclare-prefixes</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="use-character-maps" type="xs:string">
-            <xs:annotation>
-                <xs:documentation>Output property use-character-maps</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="method">
-            <xs:annotation>
-                <xs:documentation>Output property method</xs:documentation>
-            </xs:annotation>
-            <xs:simpleType>
-                <xs:restriction base="xs:string">
-                    <xs:enumeration value="xml"/>
-                    <xs:enumeration value="xhtml"/>
-                    <xs:enumeration value="html"/>
-                    <xs:enumeration value="text"/>
-                </xs:restriction>
-            </xs:simpleType>
-        </xs:attribute>
-        <xs:attribute name="normalization-form">
-            <xs:annotation>
-                <xs:documentation>Output property normalization-form</xs:documentation>
-            </xs:annotation>
-            <xs:simpleType>
-                <xs:restriction base="xs:string">
-                    <xs:enumeration value="NFC"/>
-                    <xs:enumeration value="NFD"/>
-                    <xs:enumeration value="NFKC"/>
-                    <xs:enumeration value="NFKD"/>
-                    <xs:enumeration value="none"/>
-                </xs:restriction>
-            </xs:simpleType>
-        </xs:attribute>
-        <xs:attribute name="version">
-            <xs:annotation>
-                <xs:documentation>Output property version</xs:documentation>
-            </xs:annotation>
-            <xs:simpleType>
-                <xs:restriction base="xs:string">
-                    <xs:enumeration value="1.0"/>
-                    <xs:enumeration value="1.1"/>
-                </xs:restriction>
-            </xs:simpleType>
-        </xs:attribute>
-    </xs:complexType>
-    
-    <xs:complexType name="TOutputFolder">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr"> Permet de définir le folder de sortie </xs:documentation>
-            <xs:documentation xml:lang="en"> Defines an output folder </xs:documentation>
-        </xs:annotation>
-        <xs:attribute name="relative" type="xs:anyURI">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Permet de définir un chemin relatif </xs:documentation>
-                <xs:documentation xml:lang="en"> A relative path. </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="to">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Permet de définir par rapport à quoi un chemin est
-                    relatif. source-file permet de créer un chemin relatif au fichier source traité
-                    par le pipe ${.+} permet de spécifier une system.property contenant un nom de
-                    répertoire. Utile avec ${user.home} par exemple </xs:documentation>
-                <xs:documentation xml:lang="en"> Define to what a relative path is. Use with
-                    relative. source-file is a reserved key-word : the relative path is relative to
-                    source file ${.+} substitutes a system property. For example ${user.home}
-                    $[parameter] substitutes the parameter value </xs:documentation>
-            </xs:annotation>
-            <xs:simpleType>
-                <xs:restriction base="xs:string">
-                    <xs:pattern value="(source-file|current-folder|[$].+)"/>
-                </xs:restriction>
-            </xs:simpleType>
-        </xs:attribute>
-        <xs:attribute name="absolute" type="xs:anyURI">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Permet de définir un chemin absolu. On peut
-                    utiliser ${system.property} pour utiliser une propriété système, et on peut
-                    utiliser $[parameter] pour utiliser la valeur d'un paramètre. Seuls les
-                    paramètres définis au niveau de la config sont utilisables. </xs:documentation>
-                <xs:documentation xml:lang="en"> An absolute path. ${.+} substitutes a system
-                    property. For example ${user.home} $[parameter] substitutes the parameter value
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:assert test="not(@relative) or (@relative and @to)"/>
-        <xs:assert test="not(@relative and @absolute)"/>
-        <xs:assert test="(@absolute and not(@to)) or not(@absolute)"/>
-    </xs:complexType>
-
-    <xs:complexType name="TFileName">
-        <xs:attribute name="prefix" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr">Permet de spécificer un préfixe à
-                    ajouter</xs:documentation>
-                <xs:documentation xml:lang="en">The prefix to add to the file
-                    name</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="suffix" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr">Permet de spécifier un suffixe à
-                    ajouter</xs:documentation>
-                <xs:documentation xml:lang="en">A suffix to add to the file name</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="name" type="xs:string" use="required">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr"> Permet de spécifier le nom à utiliser. On peut
-                    utiliser - ${name} qui est le nom du fichier source traité - ${basename} qui est
-                    le nom de base (sans extension) du fichier source traité - ${extension} qui est
-                    l'extension (dernier point et caractères suivants) du fichier source traité -
-                    toute autre chaine de caractère, qui sera utilisée telle quelle </xs:documentation>
-                <xs:documentation xml:lang="en"> The name to use. This name will be concatenate to
-                    @prefix and @suffix, if presents. One can use : - ${name} : the source file
-                    name, without path - ${basename} : the source file name, without extension -
-                    ${extension} : the source file extension - any constant string, use as this.
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-    </xs:complexType>
-
-    <xs:complexType name="TParams">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr"> Permet de passer tous ces paramètres à tous les Steps
-                du pipe, sans distinction. Si un même paramètre d'init est spécifié de façon globale
-                (ici) et pour une XSL, c'est la version spécifique à la XSL qui sera passée. </xs:documentation>
-            <xs:documentation xml:lang="en"> Give all these parameters to each step of the pipe If
-                the same parameter is defined at global level and in a XSL level, the XSL level
-                overrides the global level. </xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:element name="param" type="cfg:TParam" minOccurs="1" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:documentation xml:lang="fr">Le paramètre à passer à tous les
-                        steps</xs:documentation>
-                    <xs:documentation xml:lang="en">The parameter to give to all
-                        steps</xs:documentation>
-                </xs:annotation>
-            </xs:element>
-        </xs:sequence>
-    </xs:complexType>
-
-    <xs:complexType name="TXslt">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr"> Une XSL à utiliser dans le pipe. Il est possible
-                d'utiliser dans le pipe plusieurs fois la même XSL, éventuellement avec des
-                paramètres différents </xs:documentation>
-            <xs:documentation xml:lang="en"> A XSL to use un the pipe. </xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:element name="param" type="cfg:TParam" minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:documentation xml:lang="fr"> Un paramètre à passer à la XSL. La valeur de ce
-                        paramètre sera la même pour tous les fichiers traités par le pipe. Si le
-                        même paramètre est définit au niveau d'une source, la valeur définie au
-                        niveau de la source écrasera celle définie au niveau de la XSL. </xs:documentation>
-                    <xs:documentation xml:lang="en"> A parameter to give to the XSL. The parameter
-                        value will be the same for all sources processed by the pipe. If a source
-                        defines the same parameter with a different value, the source-level
-                        parameter will override the xsl-level. </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-        </xs:sequence>
-        <xs:attribute name="id" type="xs:ID" use="optional"/>
-        <xs:attribute name="href" type="xs:anyURI" use="required">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr">La référence à la XSL qui doit être
-                    utilisée</xs:documentation>
-                <xs:documentation xml:lang="en"> The xsl to use. $[parameter] will be substituted by
-                    the global parameter value. </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="traceActive" use="optional">
-            <xs:annotation>
-                <xs:documentation xml:lang="en">If set to true, a traceListener will be added to transformer. Ancestor &lt;pipe&gt; MUST have the @traceOutput set.</xs:documentation>
-                <xs:documentation xml:lang="fr">Si positionné à true, un TraceListener sera ajouté. Il faut définir le @traceOutput sur le &lt;pipe&gt; ancètre.</xs:documentation>
-            </xs:annotation>
-            <xs:simpleType>
-                <xs:restriction base="xs:boolean">
-                    <xs:pattern value="true"/>
-                </xs:restriction>
-            </xs:simpleType>
-        </xs:attribute>
-        <xs:attribute name="debug" use="optional">
-            <xs:annotation>
-                <xs:documentation xml:lang="en">If set, the result of this XSL is written to a file called id-$[input-name]</xs:documentation>
-                <xs:documentation xml:lang="fr">Si définit, le résultat de cette XSL est écrit dans un fichier nommé id-$[input-name]</xs:documentation>
-            </xs:annotation>
-            <xs:simpleType>
-                <xs:restriction base="xs:boolean">
-                    <xs:pattern value="true"/>
-                </xs:restriction>
-            </xs:simpleType>
-        </xs:attribute>
-        <xs:assert test="if(@debug) then not(empty(@id)) else true()"/>
-    </xs:complexType>
-
-    <xs:complexType name="TJava">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr"> Un step écrit en Java. Cette classe doit étendre
-                fr.efl.chaine.xslt.StepJava </xs:documentation>
-            <xs:documentation xml:lang="en"> A Java Step to use in the pipe. This java class must
-                extends fr.efl.chaine.xslt.StepJava </xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:element name="param" type="cfg:TParam" minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:documentation xml:lang="fr"> Un paramètre à passer au step. La valeur sera
-                        la même pour toutes les sources passées dans le pipe. </xs:documentation>
-                    <xs:documentation xml:lang="en"> A parameter to give to step instance. The value
-                        of the parameter will be the same for all sources processed by the pipe.
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-        </xs:sequence>
-        <xs:attribute name="class" type="xs:string" use="required">
-            <xs:annotation>
-                <xs:documentation>The fully qualified class name</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-    </xs:complexType>
-
-    <xs:complexType name="TParam">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr">Un paramètre à passer à une XSL</xs:documentation>
-            <xs:documentation xml:lang="en">A parameter to give to a step</xs:documentation>
-        </xs:annotation>
-        <xs:attribute name="name" type="cfg:QName" use="required">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr">Le nom du paramètre, tel que définit dans la
-                    XSL</xs:documentation>
-                <xs:documentation xml:lang="en">The parameter QName, as defined in the XSL. TODO :
-                    allow the ClarkName</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="value" type="xs:string" use="required">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr">La valeur à passer au paramètre. Il n'est pas permis
-                    de passer une expression XPath (dommage !)</xs:documentation>
-                <xs:documentation xml:lang="en">The parameter value. Unfortunately, it can't be an
-                    XPath expression, only an atomic value</xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-    </xs:complexType>
-
-    <xs:complexType name="TListener">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr"> Un listener permettant d'etre à l'écoute de nouveaux
-                fichiers à traiter. Un listener écoute sur une SOCKET, suivant le protocole HTTP Les
-                fichiers à ajouter se font avec une requete POST, avec comme contenu l'URL du
-                fichier à traiter L'ordre d'arret se fait par une requete DELETE avec comme contenu
-                le mot clé spécifié </xs:documentation>
-            <xs:documentation xml:lang="en"> A listener that waits for new files to process. A
-                listener listens on a socket, on HTTP protocol. Add a file to process with POST
-                request with file URL as content Stop order are processed on DELETE method, with the
-                specified keyword </xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:element name="java" type="cfg:TJava" minOccurs="0">
-                <xs:annotation>
-                    <xs:documentation xml:lang="fr"> Permet de déclencher un traitement une fois que
-                        tous les fichiers soumis ont été traités. Comme ce traitement est exécuté en
-                        dehors de tout pipeline seules les méthodes <tt>open()</tt> et
-                            <tt>close()</tt> du <tt>Receiver</tt> seront appelées. De la meme façon,
-                        La méthode <tt>setDestination(Destination)</tt> du <tt>StepJava</tt> ne sera
-                        pas appelée. Le receiver ne devra donc pas assumer que la destination est
-                        toujours non nulle. </xs:documentation>
-                    <xs:documentation xml:lang="en"> Allows to start a task once all submitted files
-                        are processed. This <tt>StepJava</tt> is run outside of any pipline, with no
-                        source document. Only the methods <tt>Receiver.open()</tt> and
-                            <tt>Receiver.close()</tt> will be called. The method
-                            <tt>StepJava.setDestination(Destination)</tt> will never be call. The
-                        implemented <tt>Receiver</tt> must not rely on having a non null
-                        destination. </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-        </xs:sequence>
-        <xs:attribute name="port" type="cfg:positiveInt" use="optional" default="8888"/>
-        <xs:attribute name="stopKeyword" use="required" type="cfg:TKeyword"/>
-    </xs:complexType>
-    
-    <xs:complexType name="TNamespaces">
-        <xs:annotation>
-            <xs:documentation xml:lang="en">A declaration of prefixes &amp; namespaces mapping that may be used in choose/when/@test</xs:documentation>
-            <xs:documentation xml:lang="fr">La liste des namespace mappings utilisables dans //choose/when/@test</xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:element name="mapping">
-                <xs:complexType>
-                    <xs:attribute name="prefix">
-                        <xs:simpleType>
-                            <xs:restriction base="xs:string">
-                                <xs:pattern value="[a-z][a-z0-9]*"/>
-                            </xs:restriction>
-                        </xs:simpleType>
-                    </xs:attribute>
-                    <xs:attribute name="uri" type="xs:anyURI"/>
-                </xs:complexType>
-            </xs:element>
-        </xs:sequence>
-    </xs:complexType>
-    
-    <xs:complexType name="TChoose">
-        <xs:annotation>
-            <xs:documentation xml:lang="en">
-                A xslt-like choose, which allows to construct the pipe, depending on input document XPath 
-                tests results. Each when/@test is evaluated ; the first that returns true is processed.
-                In case none of when are evaluated to true, the otherwise is processed. otherwise is required.
-            </xs:documentation>
-            <xs:documentation xml:lang="fr">
-                Un choose commen en XSL, qui permet de construire un pipe différent basé sur des tests XPath
-                réalisés sur le document traité.
-                Chaque when/@test est évalué ; le premier évalué à true est a son contenu ajouté au pipe. Si 
-                aucun when n'est évalué à true, le contenu du otherwise est ajouté au pipe.
-                otherwise est obligatoire.
-            </xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:element name="when" type="cfg:TWhen" maxOccurs="unbounded"/>
-            <xs:element name="otherwise" type="cfg:TOtherwise"/>
-        </xs:sequence>
-    </xs:complexType>
-    
-    <xs:complexType name="TWhen">
-        <xs:annotation>
-            <xs:documentation xml:lang="fr">Un cas de test</xs:documentation>
-            <xs:documentation xml:lang="en">Test case</xs:documentation>
-        </xs:annotation>
-        <xs:sequence>
-            <xs:choice maxOccurs="unbounded">
-                <xs:element name="xslt" type="cfg:TXslt"/>
-                <xs:element name="java" type="cfg:TJava"/>
-                <xs:element name="tee" type="cfg:TTee"/>
-            </xs:choice>
-        </xs:sequence>
-        <xs:attribute name="test" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="fr">
-                    Une expression XPath qui doit retourner un boolean.
-                    On peut utiliser des espaces de nommages, si ils sont déclarés dans le
-                    /config/namespaces
-                    Si l'expression renvoie autre chose qu'un boolean, une erreur est levée.
-                </xs:documentation>
-                <xs:documentation xml:lang="en">
-                    An XPath expression, tha tmust return a boolean.
-                    If it returns anything else than a boolean, throws an error.
-                    Namespaces may be used, if there are defined in /config/namespaces.
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-    </xs:complexType>
-
-    <xs:complexType name="TOtherwise">
-        <xs:complexContent>
-            <xs:restriction base="cfg:TWhen">
-                <xs:sequence>
-                    <xs:choice maxOccurs="unbounded">
-                        <xs:element name="xslt" type="cfg:TXslt"/>
-                        <xs:element name="java" type="cfg:TJava"/>
-                        <xs:element name="tee" type="cfg:TTee"/>
-                    </xs:choice>
-                </xs:sequence>
-            </xs:restriction>
-        </xs:complexContent>
-    </xs:complexType>
-    <xs:simpleType name="positiveInt">
+  <xs:complexType name="TSource">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr">Les sources sur lesquelles appliquer le pipe.</xs:documentation>
+      <xs:documentation xml:lang="en">Sources to apply pipe on.</xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="file" type="cfg:TFile"/>
+      <xs:element name="folder" type="cfg:TFolder"/>
+      <xs:element name="listener" type="cfg:TListener"/>
+    </xs:choice>
+    <xs:attribute name="orderBy" default="size">
+      <xs:simpleType>
         <xs:restriction base="xs:string">
-            <xs:pattern value="[0-9]+|$\[.*\]"/>
+          <xs:enumeration value="size">
+            <xs:annotation>
+              <xs:documentation xml:lang="fr">Les fichiers sont triés par taille</xs:documentation>
+              <xs:documentation xml:lang="en">Sources are sorted by size</xs:documentation>
+            </xs:annotation>
+          </xs:enumeration>
+          <xs:enumeration value="name">
+            <xs:annotation>
+              <xs:documentation xml:lang="fr">Les fichiers sont triés par nom</xs:documentation>
+              <xs:documentation xml:lang="en">Sources are sorted by name</xs:documentation>
+            </xs:annotation>
+          </xs:enumeration>
+          <xs:enumeration value="define">
+            <xs:annotation>
+              <xs:documentation xml:lang="fr"> Les fichiers sont triés dans l'ordre où ils sont trouvés dans la définition de sources </xs:documentation>
+              <xs:documentation xml:lang="en"> Sources are sorted as they are defined in the config file </xs:documentation>
+            </xs:annotation>
+          </xs:enumeration>
         </xs:restriction>
-    </xs:simpleType>
-    
-    <xs:simpleType name="TraceOutput">
-        <xs:union memberTypes="xs:anyURI cfg:TOutputs">
-        </xs:union>
-    </xs:simpleType>
-    <xs:simpleType name="TOutputs">
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="sort" default="desc">
+      <xs:simpleType>
         <xs:restriction base="xs:string">
-            <xs:enumeration value="#standard">
-                <xs:annotation>
-                    <xs:documentation xml:lang="en">Use standard Logger, as defined by net.sf.saxon.Configuration#getLogger()</xs:documentation>
-                    <xs:documentation xml:lang="fr">Utilise le logger standard de Saxon, tel que définit dans net.sf.saxon.Configuration#getLogger()</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
-            <xs:enumeration value="#logger">
-                <xs:annotation>
-                    <xs:documentation xml:lang="en">Use GauloisPipe logger, and use log4j to configure it.</xs:documentation>
-                    <xs:documentation xml:lang="fr">Utilise le logger Log4J de GauloisPipe</xs:documentation>
-                </xs:annotation>
-            </xs:enumeration>
+          <xs:enumeration value="asc">
+            <xs:annotation>
+              <xs:documentation xml:lang="fr"> Ordre ascendant. Ne peut pas s'appliquer à @orderBy=define </xs:documentation>
+              <xs:documentation xml:lang="en"> Ascending order. Can not be used with @orderBy=define </xs:documentation>
+            </xs:annotation>
+          </xs:enumeration>
+          <xs:enumeration value="desc">
+            <xs:annotation>
+              <xs:documentation xml:lang="fr">Ordre descendant.</xs:documentation>
+              <xs:documentation xml:lang="en"> Descending order. Can not be used with @orderBy=define </xs:documentation>
+            </xs:annotation>
+          </xs:enumeration>
         </xs:restriction>
-    </xs:simpleType>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:assert test="count(listener) &lt;= 1"/>
+  </xs:complexType>
 
-    <!-- import from XSL schema -->
-    <xs:simpleType name="QName">
+  <xs:complexType name="TFile">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> Définit un fichier source. Si le fichier spécifié dans @href est introuvable, ou n'est pas un fichier standard, une erreur devra être levée. </xs:documentation>
+      <xs:documentation xml:lang="en"> Defines a source file. If the file specified in @href is not available, or is not a regular file, an errorshould be thrown. </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="param" type="cfg:TParam" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="href" type="xs:anyURI" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Le fichier à utiliser. Le fichier doit impérativemenbt exister et être un fichier standard. </xs:documentation>
+        <xs:documentation xml:lang="en"> The file to process. The file must exists and be a regular file. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="TFolder">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> La définition d'un contenu de fichiers, basée sur un répertoire. On recherche dans ce répertoire tous les fichiers qui correspondent à @pattern, éventuellement récursivement (@recurse) </xs:documentation>
+      <xs:documentation xml:lang="en"> A fileset, based on a folder. Selected files will match @pattern, and can be search recursively (@recurse) </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="param" type="cfg:TParam" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="href" type="xs:anyURI" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Le répertoire dans lequel prendre les fichiers. Si ce répertoire n'existe pas ou si ce n'est pas un répertoire, doit lever une erreur. </xs:documentation>
+        <xs:documentation xml:lang="en"> The folder to search in. If the folder does not exists or is not a floder, an error should be thrown. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="pattern" type="xs:string" default="$.*^">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Une expression régulière permettant de filtrer sur les noms de fichiers. L'expression régulière est au format java : http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html Si non fournit, $.*^ est utilisé. </xs:documentation>
+        <xs:documentation xml:lang="en"> A regex to filter file names. The regx must conform to http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html If not present, $.*^ is used. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="recurse" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Permet d'indiquer si on doit parcourir les sous-répertoires pour trouver des fichiers </xs:documentation>
+        <xs:documentation xml:lang="en"> Search recursively or not... </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="TOutput">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> Permet de définir la stratégie à appliquer pour produire les fichiers destination </xs:documentation>
+      <xs:documentation xml:lang="en"> Defines the output strategy </xs:documentation>
+    </xs:annotation>
+    <xs:choice>
+      <xs:sequence>
+        <xs:element name="folder" type="cfg:TOutputFolder">
+          <xs:annotation>
+            <xs:documentation xml:lang="fr"> Permet de définir dans quel répertoire placer la sortie </xs:documentation>
+            <xs:documentation xml:lang="en"> The folder to put files in </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="fileName" type="cfg:TFileName">
+          <xs:annotation>
+            <xs:documentation xml:lang="fr"> Permet de définir le nom de fichier. On peut utiliser des valeurs de paramètres avec la syntaxe $[paramName] </xs:documentation>
+            <xs:documentation xml:lang="en"> Defines the file name. One can use parameters values : $[paramName] </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+      <xs:element name="null" type="xs:string" fixed="">
         <xs:annotation>
-            <xs:documentation> A QName. This schema does not use the built-in type xs:QName, but
-                rather defines its own QName type. Although xs:QName would define the correct
-                validation on these attributes, a schema processor would expand unprefixed QNames
-                incorrectly when constructing the PSVI, because (as defined in XML Schema errata) an
-                unprefixed xs:QName is assumed to be in the default namespace, which is not the
-                correct assumption for XSLT. The data type is defined as a restriction of the
-                built-in type Name, restricted so that it can only contain one colon which must not
-                be the first or last character. TODO: change implementation to allow use ClarkeForm
-            </xs:documentation>
+          <xs:documentation xml:lang="fr">Pour définir une sortie qu'on ne veut pas</xs:documentation>
+          <xs:documentation xml:lang="en">To define a null output</xs:documentation>
         </xs:annotation>
-        <xs:restriction base="xs:Name">
-            <xs:pattern value="([^:]+:)?[^:]+"/>
-        </xs:restriction>
-    </xs:simpleType>
-
-    <xs:simpleType name="TYesNo">
+      </xs:element>
+      <xs:element name="console">
+        <xs:complexType>
+          <xs:attribute name="which" default="out">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="out">
+                  <xs:annotation>
+                    <xs:documentation>Standard output</xs:documentation>
+                  </xs:annotation>
+                </xs:enumeration>
+                <xs:enumeration value="err">
+                  <xs:annotation>
+                    <xs:documentation>Error output</xs:documentation>
+                  </xs:annotation>
+                </xs:enumeration>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+    <xs:attribute name="id" type="xs:ID" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Un identifiant, pour simplifier la construction des pipes. Reservé pour un usage futur. </xs:documentation>
+        <xs:documentation xml:lang="en"> An ID. required, but not used. Reserved for future use. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="byte-order-mark" type="cfg:TYesNo">
+      <xs:annotation>
+        <xs:documentation>Output property byte-order-mask</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="escape-uri-attributes" type="cfg:TYesNo">
+      <xs:annotation>
+        <xs:documentation>Output property escape-uri-attributes</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="include-content-type" type="cfg:TYesNo">
+      <xs:annotation>
+        <xs:documentation>Output property include-content-type</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="indent" type="cfg:TYesNo">
+      <xs:annotation>
+        <xs:documentation>Output property indent</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="omit-xml-declaration" type="cfg:TYesNo">
+      <xs:annotation>
+        <xs:documentation>Output property omit-xml-declaration</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="saxon-recognize-binary" type="cfg:TYesNo">
+      <xs:annotation>
+        <xs:documentation>Output property saxon-specific saxon-recognize-binary</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="standalone" type="cfg:TYesNo">
+      <xs:annotation>
+        <xs:documentation>Output property standalone</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="cdata-section-elements" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property cdata-section-elements</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="doctype-public" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property doctype-public</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="doctype-system" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property doctype-system</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="encoding" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property encoding</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="media-type" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property media-type</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="saxon-attribute-order" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property saxon-specific saxon-attribute-order</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="saxon-character-representation" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property saxon-specific saxon-character-representation</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="saxon-double-space" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property saxon-specific saxon-double-space</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="saxon-implicit-result-document" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property saxon-specific saxon-implicit-result-document</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="saxon-indent-spaces" type="xs:int">
+      <xs:annotation>
+        <xs:documentation>Output property saxon-specific saxon-indent-spaces</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="saxon-line-length" type="xs:int">
+      <xs:annotation>
+        <xs:documentation>Output property saxon-specific saxon-line-length</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="saxon-suppress-indentation" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property saxon-specific saxon-suppress-indentation</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="undeclare-prefixes" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property undeclare-prefixes</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="use-character-maps" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>Output property use-character-maps</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="method">
+      <xs:annotation>
+        <xs:documentation>Output property method</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
         <xs:restriction base="xs:string">
-            <xs:enumeration value="yes"/>
-            <xs:enumeration value="no"/>
+          <xs:enumeration value="xml"/>
+          <xs:enumeration value="xhtml"/>
+          <xs:enumeration value="html"/>
+          <xs:enumeration value="text"/>
         </xs:restriction>
-    </xs:simpleType>
-
-    <xs:simpleType name="TKeyword">
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="normalization-form">
+      <xs:annotation>
+        <xs:documentation>Output property normalization-form</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
         <xs:restriction base="xs:string">
-            <!--xs:pattern value="[-_a-zA-Z0-9]{3,}"/-->
+          <xs:enumeration value="NFC"/>
+          <xs:enumeration value="NFD"/>
+          <xs:enumeration value="NFKC"/>
+          <xs:enumeration value="NFKD"/>
+          <xs:enumeration value="none"/>
         </xs:restriction>
-    </xs:simpleType>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="version">
+      <xs:annotation>
+        <xs:documentation>Output property version</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="1.0"/>
+          <xs:enumeration value="1.1"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="TOutputFolder">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> Permet de définir le folder de sortie </xs:documentation>
+      <xs:documentation xml:lang="en"> Defines an output folder </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="relative" type="xs:anyURI">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Permet de définir un chemin relatif </xs:documentation>
+        <xs:documentation xml:lang="en"> A relative path. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="to">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Permet de définir par rapport à quoi un chemin est relatif. source-file permet de créer un chemin relatif au fichier source traité par le pipe ${.+} permet de spécifier une system.property contenant un nom de répertoire. Utile avec ${user.home} par exemple </xs:documentation>
+        <xs:documentation xml:lang="en"> Define to what a relative path is. Use with relative. source-file is a reserved key-word : the relative path is relative to source file ${.+} substitutes a system property. For example ${user.home} $[parameter] substitutes the parameter value </xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:pattern value="(source-file|current-folder|[$].+)"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="absolute" type="xs:anyURI">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Permet de définir un chemin absolu. On peut utiliser ${system.property} pour utiliser une propriété système, et on peut utiliser $[parameter] pour utiliser la valeur d'un paramètre. Seuls les paramètres définis au niveau de la config sont utilisables. </xs:documentation>
+        <xs:documentation xml:lang="en"> An absolute path. ${.+} substitutes a system property. For example ${user.home} $[parameter] substitutes the parameter value </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:assert test="not(@relative) or (@relative and @to)"/>
+    <xs:assert test="not(@relative and @absolute)"/>
+    <xs:assert test="(@absolute and not(@to)) or not(@absolute)"/>
+  </xs:complexType>
+
+  <xs:complexType name="TFileName">
+    <xs:attribute name="prefix" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr">Permet de spécificer un préfixe à ajouter</xs:documentation>
+        <xs:documentation xml:lang="en">The prefix to add to the file name</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="suffix" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr">Permet de spécifier un suffixe à ajouter</xs:documentation>
+        <xs:documentation xml:lang="en">A suffix to add to the file name</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Permet de spécifier le nom à utiliser. On peut utiliser - ${name} qui est le nom du fichier source traité - ${basename} qui est le nom de base (sans extension) du fichier source traité - ${extension} qui est l'extension (dernier point et caractères suivants) du fichier source traité - toute autre chaine de caractère, qui sera utilisée telle quelle </xs:documentation>
+        <xs:documentation xml:lang="en"> The name to use. This name will be concatenate to @prefix and @suffix, if presents. One can use : - ${name} : the source file name, without path - ${basename} : the source file name, without extension - ${extension} : the source file extension - any constant string, use as this. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="TParams">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> Permet de passer tous ces paramètres à tous les Steps du pipe, sans distinction. Si un même paramètre d'init est spécifié de façon globale (ici) et pour une XSL, c'est la version spécifique à la XSL qui sera passée. </xs:documentation>
+      <xs:documentation xml:lang="en"> Give all these parameters to each step of the pipe If the same parameter is defined at global level and in a XSL level, the XSL level overrides the global level. </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="param" type="cfg:TParam" minOccurs="1" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="fr">Le paramètre à passer à tous les steps</xs:documentation>
+          <xs:documentation xml:lang="en">The parameter to give to all steps</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="TAbstractParams">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> Permet de passer tous ces paramètres à tous les Steps du pipe, sans distinction. Si un même paramètre d'init est spécifié de façon globale (ici) et pour une XSL, c'est la version spécifique à la XSL qui sera passée. Permet d'utiliser des paramètres abstraits.</xs:documentation>
+      <xs:documentation xml:lang="en"> Give all these parameters to each step of the pipe If the same parameter is defined at global level and in a XSL level, the XSL level overrides the global level. Allows abstract params use.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="param" type="cfg:TAbstractParam" minOccurs="1" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="fr">Le paramètre à passer à tous les steps</xs:documentation>
+          <xs:documentation xml:lang="en">The parameter to give to all steps</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="TXslt">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> Une XSL à utiliser dans le pipe. Il est possible d'utiliser dans le pipe plusieurs fois la même XSL, éventuellement avec des paramètres différents </xs:documentation>
+      <xs:documentation xml:lang="en"> A XSL to use un the pipe. </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="param" type="cfg:TParam" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="fr"> Un paramètre à passer à la XSL. La valeur de ce paramètre sera la même pour tous les fichiers traités par le pipe. Si le même paramètre est définit au niveau d'une source, la valeur définie au niveau de la source écrasera celle définie au niveau de la XSL. </xs:documentation>
+          <xs:documentation xml:lang="en"> A parameter to give to the XSL. The parameter value will be the same for all sources processed by the pipe. If a source defines the same parameter with a different value, the source-level parameter will override the xsl-level. </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:ID" use="optional"/>
+    <xs:attribute name="href" type="xs:anyURI" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr">La référence à la XSL qui doit être utilisée</xs:documentation>
+        <xs:documentation xml:lang="en"> The xsl to use. $[parameter] will be substituted by the global parameter value. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="traceActive" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">If set to true, a traceListener will be added to transformer. Ancestor &lt;pipe&gt; MUST have the @traceOutput set.</xs:documentation>
+        <xs:documentation xml:lang="fr">Si positionné à true, un TraceListener sera ajouté. Il faut définir le @traceOutput sur le &lt;pipe&gt; ancètre.</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:boolean">
+          <xs:pattern value="true"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="debug" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">If set, the result of this XSL is written to a file called id-$[input-name]</xs:documentation>
+        <xs:documentation xml:lang="fr">Si définit, le résultat de cette XSL est écrit dans un fichier nommé id-$[input-name]</xs:documentation>
+      </xs:annotation>
+      <xs:simpleType>
+        <xs:restriction base="xs:boolean">
+          <xs:pattern value="true"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:assert test="if(@debug) then not(empty(@id)) else true()"/>
+  </xs:complexType>
+
+  <xs:complexType name="TJava">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> Un step écrit en Java. Cette classe doit étendre fr.efl.chaine.xslt.StepJava </xs:documentation>
+      <xs:documentation xml:lang="en"> A Java Step to use in the pipe. This java class must extends fr.efl.chaine.xslt.StepJava </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="param" type="cfg:TParam" minOccurs="0" maxOccurs="unbounded">
+        <xs:annotation>
+          <xs:documentation xml:lang="fr"> Un paramètre à passer au step. La valeur sera la même pour toutes les sources passées dans le pipe. </xs:documentation>
+          <xs:documentation xml:lang="en"> A parameter to give to step instance. The value of the parameter will be the same for all sources processed by the pipe. </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="class" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>The fully qualified class name</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="TParam">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr">Un paramètre à passer à une XSL</xs:documentation>
+      <xs:documentation xml:lang="en">A parameter to give to a step</xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="cfg:QName" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Le nom du paramètre, tel que définit dans la XSL. La substitution avec d'autres valeurs de paramètres ($[parameterName]) s'applique. Les QNames peuvent être écrits sous la forme EQName (https://www.w3.org/TR/xpath-30/#prod-xpath30-EQName) ou URIQualifiedName (https://www.w3.org/TR/xpath-30/#prod-xpath30-URIQualifiedName). </xs:documentation>
+        <xs:documentation xml:lang="en"> The parameter QName, as defined in the XSL. Substitution of other parameter values ($[parameterName]) applies. QNames can be written as EQNames (https://www.w3.org/TR/xpath-30/#prod-xpath30-EQName) and as URIQualifiedNames (https://www.w3.org/TR/xpath-30/#prod-xpath30-URIQualifiedName). </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="value" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr">La valeur à passer au paramètre. Il n'est pas permis de passer une expression XPath (dommage !)</xs:documentation>
+        <xs:documentation xml:lang="en">The parameter value. Unfortunately, it can't be an XPath expression, only an atomic value</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="as" type="xs:QName" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">This allows to strongly type the parameter value, when push to XSL. Valid types are Sequence Type, as defined in https://www.w3.org/TR/xslt-30/#dt-sequence-type </xs:documentation>
+        <xs:documentation xml:lang="fr">Permet d'imposer un type pour le paramètre. Les types valides sont des Sequence Type, tels que définis dans https://www.w3.org/TR/xslt-30/#dt-sequence-type</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  
+  <xs:complexType name="TAbstractParam">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr">Un paramètre à passer à un Step. Contrairement à cfg:TParam, ce param peut ne pas avoir de valeur, il est alors abstrait et ne sert qu'à définir son type. Un paramètre avec ce nom DEVRA être fournit à l'extérieur de cette configuration.</xs:documentation>
+      <xs:documentation xml:lang="en">A parameter to give to a step. Opposite to cfg:TParam, this param may have no value ; it is then abstract, and used only to define its datatype. A paramt with this name MUST be provided outside of this configuration.</xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="cfg:QName" use="required">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Le nom du paramètre, tel que définit dans la XSL. La substitution avec d'autres valeurs de paramètres ($[parameterName]) s'applique. Les QNames peuvent être écrits sous la forme EQName (https://www.w3.org/TR/xpath-30/#prod-xpath30-EQName) ou URIQualifiedName (https://www.w3.org/TR/xpath-30/#prod-xpath30-URIQualifiedName). </xs:documentation>
+        <xs:documentation xml:lang="en"> The parameter QName, as defined in the XSL. Substitution of other parameter values ($[parameterName]) applies. QNames can be written as EQNames (https://www.w3.org/TR/xpath-30/#prod-xpath30-EQName) and as URIQualifiedNames (https://www.w3.org/TR/xpath-30/#prod-xpath30-URIQualifiedName). </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="value" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr">La valeur à passer au paramètre. Il n'est pas permis de passer une expression XPath (dommage !)</xs:documentation>
+        <xs:documentation xml:lang="en">The parameter value. Unfortunately, it can't be an XPath expression, only an atomic value</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="as" type="xs:QName" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="en">
+          This allows to strongly type the parameter value, when push to XSL. 
+          Valid types are Sequence Type, as defined in https://www.w3.org/TR/xslt-30/#dt-sequence-type.
+          Maps and Arrays are not supported.
+          Are also allowed special values document(), element(), element()*. See documentation on how these particular datatypes are managed.
+        </xs:documentation>
+        <xs:documentation xml:lang="fr">
+          Permet d'imposer un type pour le paramètre. 
+          Les types valides sont des Sequence Type, tels que définis dans https://www.w3.org/TR/xslt-30/#dt-sequence-type.
+          Les Maps et Arrays ne sont pas supportés.
+          Les valeurs spéciales suivantes sont aussi autorisées : document(), element(), element()*
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="abstract" type="cfg:TTrue" use="optional">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr">Pour indiquer que ce paramètre est abstrait. Sa valeur DEVRA être fournie à l'extérieur de cette configuration.</xs:documentation>
+        <xs:documentation xml:lang="en">Indicates this parameter is abstract. Its value MUST be provided outside of this configuration.</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:assert test="count(@value | @abstract) eq 1">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr">Soit la valeur est définie, soit le paramètre est abstrait</xs:documentation>
+        <xs:documentation xml:lang="en">Either value is provided, or param is abstract</xs:documentation>
+      </xs:annotation>
+    </xs:assert>
+    <xs:assert test="if(exists(@abstract)) then exists(@as) else true()">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr">Si le paramètre est abstrait, son type est requis.</xs:documentation>
+        <xs:documentation xml:lang="en">If the param is abstract, datatype is required.</xs:documentation>
+      </xs:annotation>
+    </xs:assert>
+  </xs:complexType>
+
+  <xs:complexType name="TListener">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr"> Un listener permettant d'etre à l'écoute de nouveaux fichiers à traiter. Un listener écoute sur une SOCKET, suivant le protocole HTTP Les fichiers à ajouter se font avec une requete POST, avec comme contenu l'URL du fichier à traiter L'ordre d'arret se fait par une requete DELETE avec comme contenu le mot clé spécifié </xs:documentation>
+      <xs:documentation xml:lang="en"> A listener that waits for new files to process. A listener listens on a socket, on HTTP protocol. Add a file to process with POST request with file URL as content Stop order are processed on DELETE method, with the specified keyword </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="java" type="cfg:TJava" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation xml:lang="fr"> Permet de déclencher un traitement une fois que tous les fichiers soumis ont été traités. Comme ce traitement est exécuté en dehors de tout pipeline seules les méthodes <tt>open()</tt> et <tt>close()</tt> du <tt>Receiver</tt> seront appelées. De la meme façon, La méthode <tt>setDestination(Destination)</tt> du <tt>StepJava</tt> ne sera pas appelée. Le receiver ne devra donc pas assumer que la destination est toujours non nulle. </xs:documentation>
+          <xs:documentation xml:lang="en"> Allows to start a task once all submitted files are processed. This <tt>StepJava</tt> is run outside of any pipline, with no source document. Only the methods <tt>Receiver.open()</tt> and <tt>Receiver.close()</tt> will be called. The method <tt>StepJava.setDestination(Destination)</tt> will never be call. The implemented <tt>Receiver</tt> must not rely on having a non null destination. </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="port" type="cfg:positiveInt" use="optional" default="8888"/>
+    <xs:attribute name="stopKeyword" use="required" type="cfg:TKeyword"/>
+  </xs:complexType>
+
+  <xs:complexType name="TNamespaces">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">A declaration of prefixes &amp; namespaces mapping that may be used in choose/when/@test</xs:documentation>
+      <xs:documentation xml:lang="fr">La liste des namespace mappings utilisables dans //choose/when/@test</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="mapping">
+        <xs:complexType>
+          <xs:attribute name="prefix">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="[a-z][a-z0-9]*"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="uri" type="xs:anyURI"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TChoose">
+    <xs:annotation>
+      <xs:documentation xml:lang="en"> A xslt-like choose, which allows to construct the pipe, depending on input document XPath tests results. Each when/@test is evaluated ; the first that returns true is processed. In case none of when are evaluated to true, the otherwise is processed. otherwise is required. </xs:documentation>
+      <xs:documentation xml:lang="fr"> Un choose commen en XSL, qui permet de construire un pipe différent basé sur des tests XPath réalisés sur le document traité. Chaque when/@test est évalué ; le premier évalué à true est a son contenu ajouté au pipe. Si aucun when n'est évalué à true, le contenu du otherwise est ajouté au pipe. otherwise est obligatoire. </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="when" type="cfg:TWhen" maxOccurs="unbounded"/>
+      <xs:element name="otherwise" type="cfg:TOtherwise"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TWhen">
+    <xs:annotation>
+      <xs:documentation xml:lang="fr">Un cas de test</xs:documentation>
+      <xs:documentation xml:lang="en">Test case</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="xslt" type="cfg:TXslt"/>
+        <xs:element name="java" type="cfg:TJava"/>
+        <xs:element name="tee" type="cfg:TTee"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="test" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="fr"> Une expression XPath qui doit retourner un boolean. On peut utiliser des espaces de nommages, si ils sont déclarés dans le /config/namespaces Si l'expression renvoie autre chose qu'un boolean, une erreur est levée. </xs:documentation>
+        <xs:documentation xml:lang="en"> An XPath expression, tha tmust return a boolean. If it returns anything else than a boolean, throws an error. Namespaces may be used, if there are defined in /config/namespaces. </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="TOtherwise">
+    <xs:complexContent>
+      <xs:restriction base="cfg:TWhen">
+        <xs:sequence>
+          <xs:choice maxOccurs="unbounded">
+            <xs:element name="xslt" type="cfg:TXslt"/>
+            <xs:element name="java" type="cfg:TJava"/>
+            <xs:element name="tee" type="cfg:TTee"/>
+          </xs:choice>
+        </xs:sequence>
+      </xs:restriction>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:simpleType name="positiveInt">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9]+|$\[.*\]"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TraceOutput">
+    <xs:union memberTypes="xs:anyURI cfg:TOutputs"> </xs:union>
+  </xs:simpleType>
+  <xs:simpleType name="TOutputs">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="#standard">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Use standard Logger, as defined by net.sf.saxon.Configuration#getLogger()</xs:documentation>
+          <xs:documentation xml:lang="fr">Utilise le logger standard de Saxon, tel que définit dans net.sf.saxon.Configuration#getLogger()</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="#logger">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Use GauloisPipe logger, and use log4j to configure it.</xs:documentation>
+          <xs:documentation xml:lang="fr">Utilise le logger Log4J de GauloisPipe</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- import from XSL schema -->
+  <xs:simpleType name="QName">
+    <xs:annotation>
+      <xs:documentation> A QName. This schema does not use the built-in type xs:QName, but rather defines its own QName type. Although xs:QName would define the correct validation on these attributes, a schema processor would expand unprefixed QNames incorrectly when constructing the PSVI, because (as defined in XML Schema errata) an unprefixed xs:QName is assumed to be in the default namespace, which is not the correct assumption for XSLT. The data type is defined as a restriction of the built-in type Name, restricted so that it can only contain one colon which must not be the first or last character. TODO: change implementation to allow use ClarkeForm </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:Name">
+      <xs:pattern value="([^:]+:)?[^:]+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TYesNo">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="yes"/>
+      <xs:enumeration value="no"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TKeyword">
+    <xs:restriction base="xs:string">
+      <!--xs:pattern value="[-_a-zA-Z0-9]{3,}"/-->
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="TTrue">
+    <xs:restriction base="xs:boolean">
+      <xs:pattern value="true"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
 </xs:schema>
