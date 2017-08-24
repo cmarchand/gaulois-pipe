@@ -384,6 +384,15 @@ public class GauloisPipe {
     public List<Exception> getErrors() {
         return errors;
     }
+    
+    /**
+     * Returns the config the gaulois-pipe is configured to process.
+     * Pipe is inside the config.
+     * @return The actual config.
+     */
+    public Config getConfig() {
+        return config;
+    }
 
     /**
      * Execute the pipe for the specified input stream to the specified
