@@ -75,11 +75,6 @@
             <version>2.3</version>
             <scope>compile</scope>
         </dependency>
-        <!--dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.5</version>
-        </dependency-->
         <dependency>
             <groupId>net.sf.saxon</groupId>
             <artifactId>Saxon-HE</artifactId>
@@ -143,11 +138,11 @@
             <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
-<dependency>
-  <groupId>net.timewalker.ffmq</groupId>
-  <artifactId>ffmq4-core</artifactId>
-  <version>4.0.0</version>
-</dependency>
+        <!--dependency>
+            <groupId>net.timewalker.ffmq</groupId>
+            <artifactId>ffmq4-core</artifactId>
+            <version>4.0.0</version>
+        </dependency-->
     </dependencies>
 
     <distributionManagement>
