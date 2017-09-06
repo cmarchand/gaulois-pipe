@@ -456,4 +456,20 @@ public class GauloisPipeTest {
         XdmValue result = selector.evaluate();
         assertTrue(result.size()>0);
     }
+    
+    @Test
+    public void testFilenameWithAccent() throws InvalidSyntaxException, SaxonApiException, URISyntaxException, IOException, ValidationException {
+        File expect = new File("target/generated-test-files/àâäéèêëïîùûüôö.xml");
+        if(expect.exists()) expect.delete();
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/filenameWithAccent.xml");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
+        Config config = cu.buildConfig(params);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("FILENAME_WITH_ACCENT");
+        piper.launch();
+        assertTrue(expect.exists());
+        expect.delete();
+    }
 }

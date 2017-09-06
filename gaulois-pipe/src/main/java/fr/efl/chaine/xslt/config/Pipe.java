@@ -43,7 +43,7 @@ public class Pipe implements Verifiable {
         return multithreadMaxSourceSize;
     }
 
-    void setMultithreadMaxSourceSize(int multithreadMaxSourceSize) {
+    public void setMultithreadMaxSourceSize(int multithreadMaxSourceSize) {
         this.multithreadMaxSourceSize = multithreadMaxSourceSize;
     }
 
@@ -51,7 +51,7 @@ public class Pipe implements Verifiable {
         return nbThreads;
     }
 
-    void setNbThreads(int nbThreads) {
+    public void setNbThreads(int nbThreads) {
         this.nbThreads = nbThreads;
     }
 
@@ -60,10 +60,10 @@ public class Pipe implements Verifiable {
     }
     
     /**
-     * Ajoute une XSL au pipe
+     * Adds an xslt to the pipe
      * @param xsl The xsl to add
-     * @throws fr.efl.chaine.xslt.InvalidSyntaxException If this xsl is added in a invlid location
-     * @throws IllegalStateException Si on a déjà ajouté un <tt>&lt;tee&gt;</tt> ou un <tt>&lt;output&gt;</tt>
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException If this xsl is added in a invalid location
+     * @throws IllegalStateException If a <tt>&lt;tee&gt;</tt> or a <tt>&lt;output&gt;</tt> has already been added
      */
     public void addXslt(ParametrableStep xsl) throws InvalidSyntaxException {
         if(output!=null || tee!=null) {
