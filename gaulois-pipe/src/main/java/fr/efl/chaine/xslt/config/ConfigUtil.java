@@ -7,6 +7,8 @@
 package fr.efl.chaine.xslt.config;
 
 import java.io.File;
+
+import fr.efl.chaine.xslt.GauloisPipe;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.utils.ParametersMerger;
@@ -87,8 +89,12 @@ public class ConfigUtil {
         this.skipSchemaValidation=skipSchemaValidation;
         Pattern pattern = Pattern.compile("[a-z].+:.+");
         if(pattern.matcher(configUri).matches()) {
-            try {
-                URL url = new URL(configUri);
+            try {            	
+                URL url;
+                if (configUri.startsWith("cp:")) 
+                	url = GauloisPipe.class.getResource(configUri.substring(3));
+                else
+                	url = new URL(configUri); 
                 InputStream is = url.openStream();
                 if(is==null) {
                     throw new InvalidSyntaxException(configUri+" not found or can not be open");
