@@ -52,15 +52,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-	<repositories>
-		<!-- For jmx 1.1 dependency not found in maven central repository -->
-		<repository>
-			<id>repository.jboss.org-public</id>
-			<name>JBoss.org Maven repository</name>
-			<url>https://repository.jboss.org/nexus/content/groups/public</url>
-		</repository>
-	</repositories>
-
     <dependencies>
         <dependency>
             <groupId>org.opengis.cite.xerces</groupId>
