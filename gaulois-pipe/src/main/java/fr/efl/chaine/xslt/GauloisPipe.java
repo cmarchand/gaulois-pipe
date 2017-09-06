@@ -1273,83 +1273,17 @@ public class GauloisPipe {
         sendError(sw.getBuffer().toString());
     }
     protected void sendError(String error) {
-//        try {
-//            Message msg = jmsSession.createTextMessage(error);
-//            jmsProducer.send(msg);
-//        } catch(JMSException jmsEx) {
-//            LOGGER.error(jmsEx.getMessage()+" while sending error via JMS");
-//            LOGGER.error("Error was "+error);
-//        }
         errors.add(error);
     }
     
     protected void startErrorCollector() {
-//        try {
-//            LOGGER.debug("Creating JMS engine");
-//            jmsEngine = new FFMQEngine(jmsUUID = UUID.randomUUID().toString(), createJmsEngineSettings());
-//            QueueDefinition queueDef = new QueueDefinition();
-//            queueDef.setName(JMS_QUEUE_NAME);
-//            queueDef.setUseJournal(false);
-//            queueDef.setMaxNonPersistentMessages(1000);
-//            queueDef.check();
-//            jmsEngine.deploy();
-//            LOGGER.debug("JMS engine deployed");
-//            jmsEngine.createQueue(queueDef);
-//            LOGGER.debug("JMS queue "+JMS_QUEUE_NAME+" created");
-//            
-//            Hashtable<String,String> jndiEnv = new Hashtable();
-//            jndiEnv.put(Context.INITIAL_CONTEXT_FACTORY, FFMQConstants.JNDI_CONTEXT_FACTORY);
-//            jndiEnv.put(Context.PROVIDER_URL, "vm://"+jmsUUID);
-//            Context context = new InitialContext(jndiEnv);
-//            // Lookup a connection factory in the context
-//            ConnectionFactory connFactory = (ConnectionFactory)context.lookup(FFMQConstants.JNDI_CONNECTION_FACTORY_NAME);
-//            // Obtain a JMS connection from the factory
-//            Connection conn = connFactory.createConnection();
-//            conn.start();
-//            jmsSession = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-//            Queue jmsQueue = jmsSession.createQueue(JMS_QUEUE_NAME);
-//            jmsProducer = jmsSession.createProducer(jmsQueue);
-//            jmsQueueConsumer = jmsSession.createConsumer(jmsQueue);
-//        } catch(IOException | JMSException | NamingException ex) {
-//            throw new RuntimeException("Unable to start gaulois-pipe error collector", ex);
-//        }
     }
     protected int terminateErrorCollector() {
-//        TextMessage msg;
-//        do {
-//            try {
-//                msg = (TextMessage)jmsQueueConsumer.receiveNoWait();
-//                if(msg!=null) {
-//                    errors.add(msg.getText());
-//                    LOGGER.error(msg.getText());
-//                }
-//            } catch(JMSException ex) {
-//                msg = null;
-//                LOGGER.error(ex.getMessage()+" while getting messages from errors queue");
-//            }
-//        } while(msg!=null);
-//        try {
-//            jmsSession.close();
-//        } catch (JMSException ex) {
-//            // ignore
-//        }
-//        jmsEngine.undeploy();
         for(String error: errors) {
             LOGGER.error(error);
         }
         return errors.size();
     }
-//    protected Settings createJmsEngineSettings() throws IOException {
-//        Settings settings = new Settings();
-//        File defaultTmpDir = new File(System.getProperty("java.io.tmpdir"));
-//        File jmsDir = Files.createTempDirectory(defaultTmpDir.toPath(),jmsUUID).toFile();
-//        String jmsDirName = jmsDir.getAbsolutePath();
-//        settings.setStringProperty(FFMQCoreSettings.DESTINATION_DEFINITIONS_DIR, jmsDirName);
-//        settings.setStringProperty(FFMQCoreSettings.BRIDGE_DEFINITIONS_DIR, jmsDirName);
-//        settings.setStringProperty(FFMQCoreSettings.TEMPLATES_DIR, jmsDirName);
-//        settings.setStringProperty(FFMQCoreSettings.DEFAULT_DATA_DIR, jmsDirName);
-//        return settings;
-//    }
     
     private XSLTTraceListener buildTraceListener(final String outputDest) {
         if(outputDest==null) return null;
