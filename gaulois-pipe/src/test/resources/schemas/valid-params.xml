@@ -12,6 +12,13 @@ can obtain one at https://mozilla.org/MPL/2.0/.
     xsi:schemaLocation='http://efl.fr/chaine/saxon-pipe/config ../../../../src/main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd'>
     <pipe nbThreads="1">
         <xslt href="cp:/uppercase.xsl"/>
+        <xslt href="cp:/uppercase.xsl">
+            <param name="p2" value="v2"/>                     <!-- should be valid -->
+            <param name="p3" value="v3" as="xs:string"/>      <!-- should be valid -->
+            <param name="p4" as="xs:string" value="test"/> <!-- should be valid --> 
+            <param name="Q{top:marchand:xml}foe" value="v5"/> <!-- should be valid --> 
+            <param name="{top:marchand:xml}foe2" value="v6"/> <!-- should be valid --> 
+        </xslt>
         <output id="pipe2">
             <console />
         </output>
@@ -20,6 +27,8 @@ can obtain one at https://mozilla.org/MPL/2.0/.
         <param name="p2" value="v2"/>                     <!-- should be valid -->
         <param name="p3" value="v3" as="xs:string"/>      <!-- should be valid -->
         <param name="p4" as="xs:string" abstract="true"/> <!-- should be valid --> 
+        <param name="Q{top:marchand:xml}foe" value="v5"/> <!-- should be valid --> 
+        <param name="{top:marchand:xml}foe2" value="v6"/> <!-- should be valid --> 
     </params>
     <sources orderBy="size" sort="desc">
         <file href="src/test/resources/source.xml"/>

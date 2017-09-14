@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="test-case.xsd">
+  <qname>foe</qname>
+  <qname xmlns:bar="top:marchand:xml">bar:foe</qname>
+  <qname>{top:marchand:xml:ns1}foe</qname>
+  <qname>Q{top:marchand:xml:ns1}foe</qname>
+</root>

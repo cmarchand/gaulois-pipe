@@ -72,6 +72,7 @@ public class SchemaConfigTest {
         Config config = cu.buildConfig(inputParams);
         config.verify();
     }
+    @Test
     public void allValidAbstractParamsTest() throws InvalidSyntaxException, SaxonApiException {
         GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/schemas/valid-params.xml");
