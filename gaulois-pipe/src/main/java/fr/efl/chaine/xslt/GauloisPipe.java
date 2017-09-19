@@ -58,12 +58,14 @@ import javax.xml.transform.stream.StreamResult;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
+import net.sf.saxon.lib.FeatureKeys;
 import net.sf.saxon.lib.StandardErrorListener;
 import net.sf.saxon.lib.StandardLogger;
 import net.sf.saxon.trace.XSLTTraceListener;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.ValidationException;
 import org.apache.commons.io.output.NullOutputStream;
+import org.xml.sax.EntityResolver;
 import org.xmlresolver.Resolver;
 import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
@@ -137,6 +139,10 @@ public class GauloisPipe {
         this.configurationFactory = configurationFactory;
         Configuration saxonConfig=configurationFactory.getConfiguration();
         saxonConfig.setURIResolver(getUriResolver());
+        // issue #30
+        if(getEntityResolver() != null) {
+            saxonConfig.setConfigurationProperty(FeatureKeys.ENTITY_RESOLVER_CLASS, getEntityResolver().getClass().getName());
+        }
         xslCache = new HashMap<>();
         try {
             datatypeFactory = DatatypeFactory.getInstance(saxonConfig);
@@ -1080,11 +1086,27 @@ public class GauloisPipe {
         }
     }
 
+    /**
+     * Returns the entity resolver to use.
+     * In default implementation, returns an instance of <tt>org.xmlresolver.Resolver</tt>
+     * @see #getEntityResolver() 
+     * @return The URI resolver to use
+     */
     public URIResolver getUriResolver() {
         if(uriResolver==null) {
             uriResolver = buildUriResolver(configurationFactory.getConfiguration().getURIResolver());
         }
         return uriResolver;
+    }
+    /**
+     * Returns the Entity resolver to use.
+     * Default implementation returns {@link #getUriResolver() }, which returns a <tt>org.xmlresolver.Resolver</tt>,
+     * which is also an EntityResolver. If you override {@link #getUriResolver() }, be careful, you may need to override
+     * this method too.
+     * @return The entity resolver to use
+     */
+    public EntityResolver getEntityResolver() {
+        return (EntityResolver)getUriResolver();
     }
 
     private static final transient String USAGE_PROMPT = "\nUSAGE:\njava " + GauloisPipe.class.getName() + "\n"
