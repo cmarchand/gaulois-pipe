@@ -10,7 +10,7 @@
     <parent>
         <groupId>top.marchand.xml</groupId>
         <artifactId>gaulois-pipe-parent</artifactId>
-        <version>1.03.03-SNAPSHOT</version>
+        <version>1.03.03-RC1</version>
     </parent>
 
 
