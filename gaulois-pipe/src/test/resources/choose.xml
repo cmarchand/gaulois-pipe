@@ -13,19 +13,21 @@ can obtain one at https://mozilla.org/MPL/2.0/.
         <mapping prefix="n" uri="http://www.minefi.gouv.fr/cp/helios/pes_v2/paye_1_1"/>
     </namespaces>
     <pipe nbThreads="1" mutiThreadMaxSourceSize="">
-        <xslt href="cp:/identity.xsl"/>
-        <choose>
-            <when test="/n:DocumentPaye/n:Annee/@V/xs:integer(.) gt 2012">
-                <xslt href="cp:/uppercase.xsl"/>
-            </when>
-            <otherwise>
-                <xslt href="cp:/identity.xsl"/>
-            </otherwise>
-        </choose>
-        <output id="main">
-            <folder absolute="./target/generated-test-files"></folder>
-            <fileName name="$[input-basename]-choose.xml"/>
-        </output>
+      <xslt href="cp:/identity.xsl"/>
+      <choose>
+        <when test="/n:DocumentPaye/n:Annee/@V/xs:integer(.) gt 2012">
+          <xslt href="cp:/uppercase.xsl"/>
+          <xslt href="cp:/xsl/underscore.xsl"/>
+        </when>
+        <otherwise>
+          <xslt href="cp:/identity.xsl"/>
+          <xslt href="cp:/xsl/underscore.xsl"/>
+        </otherwise>
+      </choose>
+      <output id="main">
+        <folder absolute="./target/generated-test-files"></folder>
+        <fileName name="$[input-basename]-choose.xml"/>
+      </output>
     </pipe>
     <sources orderBy="size" sort="desc">
         <file href="src/test/resources/paye1.xml"/>

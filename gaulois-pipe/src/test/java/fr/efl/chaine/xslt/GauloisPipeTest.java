@@ -9,6 +9,7 @@ package fr.efl.chaine.xslt;
 import fr.efl.chaine.xslt.config.Config;
 import fr.efl.chaine.xslt.config.ConfigUtil;
 import fr.efl.chaine.xslt.config.ParametrableStep;
+import fr.efl.chaine.xslt.utils.MutableBoolean;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,6 +20,8 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -34,6 +37,9 @@ import net.sf.saxon.type.ValidationException;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
 
@@ -336,6 +342,21 @@ public class GauloisPipeTest {
         piper.launch();
         File expect = new File("target/generated-test-files/paye1-choose.xml");
         assertTrue("The file target/generated-test-files/paye1-choose.xml does not exists", expect.exists());
+        SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
+        final MutableBoolean prefixed = new MutableBoolean();
+        parser.parse(expect, new DefaultHandler() {
+            @Override
+            public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+                super.startElement(uri, localName, qName, attributes);
+                // WARNING : We have a SAX1.0 parser, not namespace aware. So localName is always empty
+                // MUST check on qName
+                if("FileName".equals(qName)) {
+                    String value=attributes.getValue("V");
+                    prefixed.setValue(value.startsWith("_"));
+                }
+            }
+        });
+        assertTrue("Attribute is not prefixed, second XSL has not been run", prefixed.getValue());
         expect.delete();
         expect = new File("target/generated-test-files/paye2-choose.xml");
         assertTrue("The file target/generated-test-files/paye2-choose.xml does not exists", expect.exists());

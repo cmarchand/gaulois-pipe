@@ -11,8 +11,6 @@ import net.sf.saxon.event.Receiver;
 import net.sf.saxon.s9api.Destination;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.TeeDestination;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A TeeDestination where main destination in unknown when building.

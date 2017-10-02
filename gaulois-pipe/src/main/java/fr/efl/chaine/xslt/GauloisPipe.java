@@ -20,6 +20,7 @@ import fr.efl.chaine.xslt.config.Tee;
 import fr.efl.chaine.xslt.config.WhenEntry;
 import fr.efl.chaine.xslt.config.Xslt;
 import fr.efl.chaine.xslt.listener.HttpListener;
+import fr.efl.chaine.xslt.utils.DoubleDestination;
 import fr.efl.chaine.xslt.utils.ParametersMerger;
 import fr.efl.chaine.xslt.utils.ParametrableFile;
 import fr.efl.chaine.xslt.utils.TeeDebugDestination;
@@ -473,15 +474,16 @@ public class GauloisPipe {
             }
         }
         HashMap<QName,ParameterValue> parameters = ParametersMerger.addInputInParameters(ParametersMerger.merge(input.getParameters(), config.getParams()),input.getFile(), datatypeFactory);
-        XsltTransformer transformer = buildTransformer(
+        DoubleDestination dd = buildTransformer(
                 pipe, 
                 input.getFile(), 
                 input.getFile().toURI().toURL().toExternalForm(), 
                 parameters,
                 listener, source, false, outputs.length>0 ? outputs[0] : null);
         LOGGER.debug("["+instanceName+"] transformer build");
-        transformer.setInitialContextNode(source);
-        transformer.transform();
+        XsltTransformer t = (XsltTransformer)(dd.getStart());
+        t.setInitialContextNode(source);
+        t.transform();
         long duration = System.currentTimeMillis() - start;
         String distinctName = input.toString();
         try {
@@ -508,11 +510,11 @@ public class GauloisPipe {
      * @throws java.net.URISyntaxException When URI is invalid
      * @throws java.io.FileNotFoundException And when the file can not be found !
      */
-    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) 
+    private DoubleDestination buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean... isFake) 
             throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         return buildTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree, false, new HashMap<String,OutputStream>());
     }
-    private XsltTransformer buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean isFake, Map<String, OutputStream> ... outputs) 
+    private DoubleDestination buildTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, boolean isFake, Map<String, OutputStream> ... outputs) 
             throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         LOGGER.trace("in buildTransformer(Pipe,...)");
         XsltTransformer first = null;
@@ -599,6 +601,7 @@ public class GauloisPipe {
                 if(documentTree==null) {
                     // here, we are in a pre-compile xsl step, ignore the choose...
                 } else {
+                    boolean whenEntrySelected=false;
                     for(WhenEntry when:cStep.getConditions()) {
                         XPathSelector select = xpc.compile(when.getTest()).load();
                         select.setContextItem(documentTree);
@@ -613,13 +616,19 @@ public class GauloisPipe {
                             for(ParametrableStep innerStep:when.getSteps()) {
                                 fakePipe.addXslt(innerStep);
                             }
-                            Destination currentDestination = buildTransformer(fakePipe, inputFile, inputFileUri, parameters, listener, documentTree, true, new HashMap<String,OutputStream>());
+                            DoubleDestination dd = buildTransformer(fakePipe, inputFile, inputFileUri, parameters, listener, documentTree, true, new HashMap<String,OutputStream>());
                             if(previousTransformer!=null) {
-                                assignStepToDestination(previousTransformer, currentDestination);
+                                assignStepToDestination(previousTransformer, (Destination)(dd.getStart()));
                             }
-                            previousTransformer = currentDestination;
+                            // issue #31 : we have to found the last restination of this pipe
+                            // TODO: correct problem
+                            previousTransformer = dd.getEnd();
+                            whenEntrySelected = true;
                             break;
                         }
+                    }
+                    if(!whenEntrySelected) {
+                        throw new InvalidSyntaxException("no when or otherwise selected for "+inputFileUri);
                     }
                 }
             } else if(step instanceof JavaStep) {
@@ -680,7 +689,7 @@ public class GauloisPipe {
                 throw new InvalidSyntaxException("A tee can not be the root of a pipe");
             }
         }
-        Destination nextStep = null;
+        DoubleDestination nextStep = null;
         if(pipe.getTee()!=null) {
             LOGGER.trace("after having construct xslts, build tee");
             nextStep = buildTransformer(pipe.getTee(), inputFile, inputFileUri, parameters, listener, documentTree, outputs[0]);
@@ -689,11 +698,11 @@ public class GauloisPipe {
             nextStep = buildSerializer(pipe.getOutput(),inputFile,parameters, outputs[0]);
         }
         if(nextStep!=null) {
-            assignStepToDestination(previousTransformer, nextStep);
+            assignStepToDestination(previousTransformer, (Destination)(nextStep.getStart()));
         } else if(!isFake) {
             throw new InvalidSyntaxException("Pipe "+pipe.toString()+" has no terminal Step.");
         }
-        return first;
+        return new DoubleDestination(first, (Destination)previousTransformer);
     }
     
     private void assignStepToDestination(Object assignee, Destination assigned) throws IllegalArgumentException {
@@ -744,7 +753,7 @@ public class GauloisPipe {
         return ret;
     }
     
-    private Destination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, Map<String, OutputStream> outputs) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+    private DoubleDestination buildTransformer(Tee tee, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, Map<String, OutputStream> outputs) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         LOGGER.trace("in buildTransformer(Tee,...)");
         List<Destination> dests = new ArrayList<>();
         if(tee==null) {
@@ -754,7 +763,9 @@ public class GauloisPipe {
             throw new InvalidSyntaxException("tee.getPipes() est null !");
         }
         for(Pipe pipe:tee.getPipes()) {
-            dests.add(buildShortPipeTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree, outputs));
+            dests.add(
+                    (Destination)(buildShortPipeTransformer(pipe, inputFile, inputFileUri, parameters, listener, documentTree, outputs).getStart())
+            );
         }
         while(dests.size()>1) {
             Destination d1 = dests.remove(0);
@@ -762,9 +773,9 @@ public class GauloisPipe {
             if(d1==d2) throw new IllegalArgumentException("d1 et d2 sont la meme destination");
             dests.add(new TeeDestination(d2, d1));
         }
-        return dests.get(0);
+        return new DoubleDestination(dests.get(0), dests.get(dests.size()-1));
     }
-    private Destination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, Map<String, OutputStream> outputs) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
+    private DoubleDestination buildShortPipeTransformer(Pipe pipe, File inputFile, String inputFileUri, HashMap<QName,ParameterValue> parameters, MessageListener listener, XdmNode documentTree, Map<String, OutputStream> outputs) throws InvalidSyntaxException, URISyntaxException, MalformedURLException, SaxonApiException, FileNotFoundException, IOException {
         if(!pipe.getXslts().hasNext()) {
             if(pipe.getOutput()!=null) {
                 return buildSerializer(pipe.getOutput(),inputFile, parameters, outputs);
@@ -776,11 +787,13 @@ public class GauloisPipe {
         }
     }
     
-    private Destination buildSerializer(Output output, File inputFile, HashMap<QName,ParameterValue> parameters, Map<String,OutputStream> outputs) throws InvalidSyntaxException, URISyntaxException {
+    private DoubleDestination buildSerializer(Output output, File inputFile, HashMap<QName,ParameterValue> parameters, Map<String,OutputStream> outputs) throws InvalidSyntaxException, URISyntaxException {
         if(output.isNullOutput()) {
-            return processor.newSerializer(new NullOutputStream());
+            Destination s = processor.newSerializer(new NullOutputStream());
+            return new DoubleDestination(s, s);
         } else if(output.isConsoleOutput()) {
-            return processor.newSerializer("out".equals(output.getConsole())?System.out:System.err);
+            Destination s = processor.newSerializer("out".equals(output.getConsole())?System.out:System.err);
+            return new DoubleDestination(s, s);
         }
         final File destinationFile = output.getDestinationFile(inputFile, parameters);
         final Serializer ret;
@@ -810,9 +823,9 @@ public class GauloisPipe {
                     ret.close();
                 }
             };
-            return dest;
+            return new DoubleDestination(dest, dest);
         } else {
-            return ret;
+            return new DoubleDestination(ret, ret);
         }
     }
     
