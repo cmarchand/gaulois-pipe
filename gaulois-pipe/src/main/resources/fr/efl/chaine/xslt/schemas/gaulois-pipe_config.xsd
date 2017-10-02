@@ -85,6 +85,7 @@
         <xs:element name="xslt" type="cfg:TXslt"/>
         <xs:element name="java" type="cfg:TJava"/>
         <xs:element name="tee" type="cfg:TTee"/>
+        <xs:element name="choose" type="cfg:TChoose"/>
         <xs:element name="output" type="cfg:TOutput"/>
       </xs:choice>
     </xs:sequence>

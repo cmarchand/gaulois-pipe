@@ -362,6 +362,19 @@ public class GauloisPipeTest {
         assertTrue("The file target/generated-test-files/paye2-choose.xml does not exists", expect.exists());
         expect.delete();
     }
+    @Test
+    public void testChooseInsideTee() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/chooseInsideTee.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("CHOOSE_INSIDE_TEE");
+        piper.launch();
+        File expect = new File("target/generated-test-files/paye1-chooseInsideTee.xml");
+        assertTrue("The file target/generated-test-files/paye1-chooseInsideTee.xml does not exists", expect.exists());
+        expect.delete();
+    }
     @Test(expected = InvalidSyntaxException.class)
     public void testNoSource() throws Exception {
         GauloisPipe piper = new GauloisPipe(configFactory);
