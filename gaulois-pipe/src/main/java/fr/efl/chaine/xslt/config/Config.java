@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 public class Config implements Verifiable {
     public static final int MAX_DOCUMENT_CACHE_SIZE = 1;
     static final QName ATTR_DOCUMENT_CACHE_SIZE = new QName("documentCacheSize");
-    static final String NS = "http://efl.fr/chaine/saxon-pipe/config";
+    public static final String NS = "http://efl.fr/chaine/saxon-pipe/config";
     static final QName PARAMS_CHILD = new QName(NS, "params");
     private Pipe pipe;
     private final HashMap<QName,ParameterValue> params;

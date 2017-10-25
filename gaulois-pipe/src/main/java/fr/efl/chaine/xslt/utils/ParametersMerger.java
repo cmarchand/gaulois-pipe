@@ -6,12 +6,13 @@
  */
 package fr.efl.chaine.xslt.utils;
 
+import fr.efl.chaine.xslt.GauloisPipe;
+import fr.efl.chaine.xslt.config.Config;
 import java.io.File;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
@@ -29,6 +30,7 @@ public class ParametersMerger {
     public static final QName INPUT_ABSOLUTE = new QName("input-absolute");
     public static final QName INPUT_RELATIVE_FILE = new QName("input-relative-file");
     public static final QName INPUT_RELATIVE_DIR = new QName("input-relative-dir");
+    public static final QName GP_STATIC_BASE_URI = new QName(Config.NS, "static-base-uri");
 
 
     /**

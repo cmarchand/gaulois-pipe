@@ -507,4 +507,52 @@ public class GauloisPipeTest {
         assertTrue(expect.exists());
         expect.delete();
     }
+    
+    public void testStaticBaseUri() throws InvalidSyntaxException, SaxonApiException, URISyntaxException, IOException, ValidationException {
+        File expect = new File("target/generated-test-file/static-base-uri-ret.xml");
+        if(expect.exists()) expect.delete();
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/static-base-uri.xml");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
+        Config config = cu.buildConfig(params);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("STATIC-BASE-URI");
+        piper.launch();
+        assertTrue(expect.exists());
+        Processor proc = new Processor(configFactory.getConfiguration());
+        XdmNode document = proc.newDocumentBuilder().build(expect);
+        XPathExecutable exec = proc.newXPathCompiler().compile("/ret/*/text()");
+        XPathSelector selector = exec.load();
+        selector.setContextItem((XdmItem)document);
+        XdmValue result = selector.evaluate();
+        String staticBaseUri = result.itemAt(0).getStringValue();
+        String gpStaticBaseUri = result.itemAt(1).getStringValue();
+        assertTrue("gp:staticBaseUri does not ends with target/classes/xsl/static-base-uri-ret.xml", gpStaticBaseUri.endsWith("target/classes/xsl/static-base-uri-ret.xml"));
+        expect.delete();
+    }
+    
+    @Test
+    public void testIllegalXml() throws Exception {
+        File expect1 = new File("target/generated-test-files/illegal-xml-notWellFormed.xml");
+        File expect2 = new File("target/generated-test-files/illegal-xml-illegal-xml.xml");
+        if(expect1.exists()) expect1.delete();
+        if(expect2.exists()) expect2.delete();
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/illegal-xml.xml");
+        try {
+            Config config = cu.buildConfig(emptyInputParams);
+            config.verify();
+            piper.setConfig(config);
+            piper.setInstanceName("ILLEGAL-XML");
+            piper.launch();
+        } catch(Throwable ex) {
+            ex.printStackTrace(System.err);
+            throw ex;
+        }
+        assertTrue(expect2.getAbsolutePath()+" does not exists", expect2.exists());
+        assertTrue(!expect1.exists());
+        expect2.delete();
+        assertEquals("It should have 1 error", 1, piper.getErrors().size());
+    }
 }

@@ -344,6 +344,7 @@ public class GauloisPipe {
                     }
                 }
             };
+            LOGGER.debug("["+instanceName+"] submitting "+fpf.getFile().getName());
             service.execute(r);
         }
         if(listener==null) {
@@ -441,6 +442,7 @@ public class GauloisPipe {
         boolean avoidCache = input.getAvoidCache();
         long start = System.currentTimeMillis();
         String key = input.getFile().getAbsolutePath().intern();
+        LOGGER.debug("["+instanceName+"] starting execute on "+key);
         XdmNode source = documentCache.get(key);
         if(source==null || avoidCache) {
             if(!avoidCache && documentCache.isLoading(instanceName)) {
@@ -724,13 +726,20 @@ public class GauloisPipe {
         String __href = (String)ParametersMerger.processParametersReplacement(href, parameters);
         LOGGER.debug("loading "+__href);
         XsltExecutable xsl = xslCache.get(__href);
+        Source xslSource = null;
+        Exception sourceEx = null;
+        try {
+            xslSource = getUriResolver().resolve(href, getCurrentDirUri());
+        } catch(TransformerException tEx) {
+            sourceEx = tEx;
+        }
         if(xsl==null) {
             LOGGER.trace(__href+" not in cache");
             try {
-                Source xslSource = getUriResolver().resolve(href, getCurrentDirUri());
                 if(xslSource==null) {
                     throw new FileNotFoundException("Unable to resolve "+href);
                 }
+                if(sourceEx!=null) throw sourceEx;
                 xsl = xsltCompiler.compile(xslSource);
                 xslCache.put(__href, xsl);
             } catch(SaxonApiException ex) {
@@ -746,9 +755,19 @@ public class GauloisPipe {
             } catch(FileNotFoundException ex) {
                 LOGGER.error("while compiling "+__href);
                 throw ex;
+            } catch(Exception ex) {
+                // implementation requirement, but we already have catch all throwable exceptions
             }
         }
         XsltTransformer ret = xsl.load();
+        try {
+            
+            ret.setParameter(
+                    ParametersMerger.GP_STATIC_BASE_URI, 
+                    datatypeFactory.getDatatype(new QName(DatatypeFactory.NS_XSD, "anyURI")).convert(xslSource.getSystemId(), configurationFactory.getConfiguration()));
+        } catch(ValidationException ex) {
+            LOGGER.error("while setting gp:static-base-uri parameter", ex);
+        }
         ret.setErrorListener(errorListener);
         return ret;
     }
@@ -1394,4 +1413,11 @@ public class GauloisPipe {
         }
     }
     public DatatypeFactory getDatatypeFactory() { return datatypeFactory; }
+    /**
+     * Tells Gaulois whether cp protocol impementation has been installed or not.
+     * This method must be called <strong>before</strong> the first instanciation of GauloisPipe.
+     * @param installed 
+     */
+    public static void setProtocolInstalled(final boolean installed) { protocolInstalled = installed; }
+    public static boolean isProtocolInstalled() { return protocolInstalled; }
 }

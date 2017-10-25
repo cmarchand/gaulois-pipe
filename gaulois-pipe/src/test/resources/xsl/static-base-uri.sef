@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://ns.saxonica.com/xslt/export" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vv="http://saxon.sf.net/generated-variable" xmlns:java-type="http://saxon.sf.net/java-type" version="30" packageVersion="1" saxonVersion="9.7.0.13" timeStamp="2017-10-24T09:55:16.787+02:00">
+ <co id="0" vis="PUBLIC" binds="">
+  <globalParam name="Q{http://efl.fr/chaine/saxon-pipe/config}static-base-uri" type="xs:anyURI?" line="0" visibility="PUBLIC">
+   <empty/>
+  </globalParam>
+ </co>
+ <co id="1" binds="0">
+  <globalVariable name="Q{http://saxon.sf.net/generated-variable}gg951050903" type="xs:string?" line="22" module="file:/home/ext-cmarchand/devel/github/gaulois-pipe/gaulois-pipe/src/test/resources/xsl/static-base-uri.xsl" visibility="PRIVATE">
+   <convert vn="31" baseUri="file:/home/ext-cmarchand/devel/github/gaulois-pipe/gaulois-pipe/src/test/resources/xsl/static-base-uri.xsl" ns="xsl=http://www.w3.org/1999/XSL/Transform gp=http://efl.fr/chaine/saxon-pipe/config xs=http://www.w3.org/2001/XMLSchema math=http://www.w3.org/2005/xpath-functions/math xd=http://www.oxygenxml.com/ns/doc/xsl" line="22" from="xs:anyURI" to="xs:string">
+    <gVarRef name="Q{http://efl.fr/chaine/saxon-pipe/config}static-base-uri" bSlot="0"/>
+   </convert>
+  </globalVariable>
+ </co>
+ <co id="2" binds="1">
+  <mode onNo="TC" flags="dW" patternSlots="0">
+   <templateRule prec="0" prio="0.5" seq="0" rank="0" minImp="0" slots="0" flags="os" line="19" module="file:/home/ext-cmarchand/devel/github/gaulois-pipe/gaulois-pipe/src/test/resources/xsl/static-base-uri.xsl">
+    <p.withUpper role="match" axis="parent" upFirst="false">
+     <p.nodeTest test="element()"/>
+     <p.nodeTest test="document-node()"/>
+    </p.withUpper>
+    <elem role="action" vn="31" baseUri="file:/home/ext-cmarchand/devel/github/gaulois-pipe/gaulois-pipe/src/test/resources/xsl/static-base-uri.xsl" ns="xsl=http://www.w3.org/1999/XSL/Transform gp=http://efl.fr/chaine/saxon-pipe/config xs=http://www.w3.org/2001/XMLSchema math=http://www.w3.org/2005/xpath-functions/math xd=http://www.oxygenxml.com/ns/doc/xsl" line="21" name="ret" namespaces="gp=http://efl.fr/chaine/saxon-pipe/config">
+     <sequence>
+      <elem name="static-base-uri">
+       <valueOf flags="S">
+        <str val="file:/home/ext-cmarchand/devel/github/gaulois-pipe/gaulois-pipe/src/test/resources/xsl/static-base-uri.xsl"/>
+       </valueOf>
+      </elem>
+      <elem xmlns:gp="http://efl.fr/chaine/saxon-pipe/config" line="22" name="gp:static-base-uri" namespaces="gp=http://efl.fr/chaine/saxon-pipe/config">
+       <valueOf>
+        <gVarRef name="Q{http://saxon.sf.net/generated-variable}gg951050903" bSlot="0"/>
+       </valueOf>
+      </elem>
+     </sequence>
+    </elem>
+   </templateRule>
+  </mode>
+ </co>
+ <overridden/>
+ <output>
+  <property name="{http://saxon.sf.net/}stylesheet-version" value="30"/>
+ </output>
+ <decimalFormat decimal-separator="46" grouping-separator="44" digit="35" minus-sign="45" percent="37" per-mille="8240" zero-digit="48" exponent-separator="101" pattern-separator="59" infinity="Infinity" NaN="NaN"/>
+</package>
+<?Σ 1b67f667?>
