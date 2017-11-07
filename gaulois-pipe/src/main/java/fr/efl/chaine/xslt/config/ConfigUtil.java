@@ -98,7 +98,7 @@ public class ConfigUtil {
                     __isConfigUriTrueURI = true;
                 }
             } catch (IOException ex) {
-                throw new InvalidSyntaxException(configUri+" not found or can not be open");
+                throw new InvalidSyntaxException(configUri+" not found or can not be open",ex);
             }
         } else {
             File file = new File(configUri);
