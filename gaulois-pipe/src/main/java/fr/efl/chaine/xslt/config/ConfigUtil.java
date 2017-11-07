@@ -90,16 +90,13 @@ public class ConfigUtil {
         Pattern pattern = Pattern.compile("[a-z].+:.+");
         if(pattern.matcher(configUri).matches()) {
             try {            	
-                URL url;
-                if (configUri.startsWith("cp:")) 
-                	url = GauloisPipe.class.getResource(configUri.substring(3));
-                else
-                	url = new URL(configUri); 
-                InputStream is = url.openStream();
-                if(is==null) {
-                    throw new InvalidSyntaxException(configUri+" not found or can not be open");
+                URL url = new URL(configUri); 
+                try (InputStream is = url.openStream()) {
+                    if(is==null) {
+                        throw new InvalidSyntaxException(configUri+" not found or can not be open");
+                    }
+                    __isConfigUriTrueURI = true;
                 }
-                __isConfigUriTrueURI = true;
             } catch (IOException ex) {
                 throw new InvalidSyntaxException(configUri+" not found or can not be open");
             }
@@ -144,6 +141,14 @@ public class ConfigUtil {
                     LOGGER.error("java.protocol.handler.pkgs="+System.getProperty("java.protocol.handler.pkgs"));
                     LOGGER.error("while parsing config",er);
                     throw er;
+                }
+            }
+            if(LOGGER.isDebugEnabled() && __isConfigUriTrueURI) {
+                // check if resolver can resolve URI
+                LOGGER.debug("trying to resolve "+configUri);
+                Source source = uriResolver.resolve(configUri, null);
+                if(source==null) {
+                    LOGGER.error(configUri+" can not be resolved. Please try again, setting org.xmlresolver logger to DEBUG");
                 }
             }
             XdmNode configRoot = 
