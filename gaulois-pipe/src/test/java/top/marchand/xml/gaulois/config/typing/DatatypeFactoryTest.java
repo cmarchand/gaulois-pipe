@@ -67,7 +67,7 @@ public class DatatypeFactoryTest {
         QName xsInt= new QName(DatatypeFactory.NS_XSD, "xs:int+");
         Datatype intDT = instance.getDatatype(xsInt);
         assertFalse("xs:int+ allows empty sequence", intDT.allowsEmpty());
-        assertTrue("xs:int? doest not allow multiple values", intDT.allowsMultiple());
+        assertTrue("xs:int+ doest not allow multiple values", intDT.allowsMultiple());
         XdmValue ret = intDT.convert("4", saxonConfiguration);
         assertTrue("value is not a XdmAtomicValue", ret instanceof XdmAtomicValue);
         ret = intDT.convert("(4,5, 6 , 7 )", saxonConfiguration);
@@ -84,6 +84,17 @@ public class DatatypeFactoryTest {
         QName qn = new QName("document()?");
         Datatype dt = instance.getDatatype(qn);
         assertTrue("Datatype for document()? does not allow empty", dt.allowsEmpty());
+    }
+    
+    @Test
+    public void getValueForSingleDatatypeWithMultipleValue() throws ValidationException {
+        QName qn = new QName(DatatypeFactory.NS_XSD, "xs:string");
+        Datatype dt = instance.getDatatype(qn);
+        assertFalse("xs:string allows multiple", dt.allowsMultiple());
+        String inputValue="1, 2, 3";
+        XdmValue value = dt.convert(inputValue, saxonConfiguration);
+        assertEquals(inputValue+" do not produces a single value", 1, value.size());
+        assertEquals(inputValue, value.toString());
     }
     
 }

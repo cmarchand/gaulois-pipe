@@ -123,28 +123,32 @@ public class DatatypeFactory {
             @Override
             public XdmValue convert(String input, Configuration configuration) throws ValidationException {
                 if(input==null && allowsEmpty()) return XdmValue.wrap(null);
-                else if(input==null) throw new ValidationException(qn.toString()+" does not aloow empty sequence");
-                String sValue = input.trim();
-                if(sValue.startsWith("(") && sValue.endsWith(")")) {
-                    sValue = sValue.substring(1, sValue.length()-1);
-                }
-                String[] values = sValue.split("[ ]*,[ ]*");
-                if(values.length>1 && allowsMultiple()) {
-                    XdmValue xValue = null;
-                    // certainly could be optimized, but I do not expect having 1000 values in a parameter definition...
-                    for(String value:values) {
-                        XdmValue ret = XdmValue.wrap(converter.convertString(value).asAtomic());
-                        if(xValue==null) {
-                            xValue = ret;
-                        } else {
-                            xValue= xValue.append(ret);
-                        }
+                else if(input==null) throw new ValidationException(qn.toString()+" does not allow empty sequence");
+                if(allowsMultiple()) {
+                    String sValue = input.trim();
+                    if(sValue.startsWith("(") && sValue.endsWith(")")) {
+                        sValue = sValue.substring(1, sValue.length()-1);
                     }
-                    return xValue;
-                } else if(values.length==1) {
-                    return XdmValue.wrap(converter.convertString(values[0]).asAtomic());
+                    String[] values = sValue.split("[ ]*,[ ]*");
+                    if(values.length>1) {
+                        XdmValue xValue = null;
+                        // certainly could be optimized, but I do not expect having 1000 values in a parameter definition...
+                        for(String value:values) {
+                            XdmValue ret = XdmValue.wrap(converter.convertString(value).asAtomic());
+                            if(xValue==null) {
+                                xValue = ret;
+                            } else {
+                                xValue= xValue.append(ret);
+                            }
+                        }
+                        return xValue;
+                    } else if(values.length==1) {
+                        return XdmValue.wrap(converter.convertString(values[0]).asAtomic());
+                    } else {
+                        throw new ValidationException("can not cast "+input+" to "+qn);
+                    }
                 } else {
-                    throw new ValidationException("can not cat "+input+" to "+qn);
+                    return XdmValue.wrap(converter.convertString(input).asAtomic());
                 }
             }
         };
