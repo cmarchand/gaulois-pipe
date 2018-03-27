@@ -47,6 +47,18 @@ public class EscapingTest {
         String result = cu.resolveEscapes("$[workDir]/collection.xml", params);
         assertEquals("file:/home/cmarchand/devel/data/collection.xml", result);
     }
+
+    @Test
+    public void escapeXslPathWithParam() throws InvalidSyntaxException {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ParameterValue pv = new ParameterValue(new QName("path"), "file:/home/cmarchand/devel/data", piper.getDatatypeFactory().XS_STRING);
+        HashMap<QName,ParameterValue> params = new HashMap<>();
+        params.put(pv.getKey(), pv);
+        // n'importe lequel, aucune importance
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/same-source-file.xml");
+        String result = cu.resolveEscapes("$[path]/src/test/resources/identity.xsl", params);
+        assertEquals("file:/home/cmarchand/devel/data/src/test/resources/identity.xsl", result);
+    }
     /**
      * Issue #14
      * @throws InvalidSyntaxException 

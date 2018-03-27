@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Parameter;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -554,5 +555,42 @@ public class GauloisPipeTest {
         assertTrue(!expect1.exists());
         expect2.delete();
         assertEquals("It should have 1 error", 1, piper.getErrors().size());
+    }
+    
+    @Test
+    public void testXslPathWithParam() throws Exception {
+        File currentDir = new File(System.getProperty("user.dir")).getAbsoluteFile();
+        if(!"gaulois-pipe".equals(currentDir.getName())) {
+            throw new IllegalStateException("tests must be run from gaulois-pipe directory. currentDir is "+currentDir.getAbsolutePath());
+        } else {
+            File oxygenProject = new File(currentDir, "gaulois-pipe.xpr");
+            if(!oxygenProject.exists()) {
+                // we may be in parent project directory. Try to go to gaulois-pipe subdir
+                currentDir = new File(currentDir, "gaulois-pipe");
+                if(!currentDir.exists() && !currentDir.isDirectory()) {
+                    throw new IllegalStateException("Unable to locate gaulois-pipe sub-directory");
+                }
+                oxygenProject = new File(currentDir, "gaulois-pipe.xpr");
+                if(!oxygenProject.exists()) {
+                    throw new IllegalStateException("Unable to locate gaulois-pipe.xpr project file in "+currentDir.getAbsolutePath()+", it should not be the correct folder");
+                }
+            }
+        }
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/config/xslPathWithParam.xml");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
+        ParameterValue p = new ParameterValue(new QName("path"), currentDir.toURI().toString(), factory.XS_STRING);
+        params.put(p.getKey(), p);
+        try {
+            Config config = cu.buildConfig(params);
+            config.verify();
+            piper.setConfig(config);
+            piper.setInstanceName("XSL-PATH-WITH-PARAM");
+            piper.launch();
+        } catch(Throwable ex) {
+            ex.printStackTrace(System.err);
+            throw ex;
+        }
+        
     }
 }

@@ -11,6 +11,7 @@ import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.File;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -74,7 +75,13 @@ public class Xslt implements ParametrableStep {
             } else if(href.startsWith("cp:")) {
                 // nope
             } else {
-                file = new File(href);
+                // issue 38
+                try {
+                    URI uri = new URI(href);
+                    file = new File(uri);
+                } catch(Exception ex) {
+                    file = new File(href);
+                }
             }
         }
         return file;
@@ -90,8 +97,13 @@ public class Xslt implements ParametrableStep {
                         throw new InvalidSyntaxException("Unable to load "+href+". Either jar file does not exist, or entry does not exist in.");
                     }
                 } else if(href.startsWith("cp:")) {
-                    URL url = GauloisPipe.class.getResource(href.substring(3));
-                    if(url==null) throw new InvalidSyntaxException("Unable to load "+href+" from classpath. Did you start with a '/' ?");
+                    // FIXME : create a URL
+                    // URL url = GauloisPipe.class.getResource(href.substring(3));
+                    try {
+                        URL url = new URL(href);
+                    } catch(MalformedURLException ex) {
+                        throw new InvalidSyntaxException("Unable to load "+href+" from classpath. Did you start with a '/' ?");
+                    }
                 } else  {
                     File xslFile = getFile();
                     if(!xslFile.exists() || !xslFile.isFile()) {

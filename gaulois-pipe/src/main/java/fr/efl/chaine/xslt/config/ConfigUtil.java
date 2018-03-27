@@ -470,13 +470,14 @@ public class ConfigUtil {
         }
     }
     String resolveEscapes(String input, HashMap<QName,ParameterValue> params) {
-        LOGGER.debug("resolveEscapes in "+input+" with "+params);
         if(input==null) return input;
         String ret = input;
-        if(input.equals("$[destDir]/$[input-name]")) {
-            System.out.println("on y est !");
-        }
-        return (String)ParametersMerger.processParametersReplacement(ret, params);
+//        if(ret.equals("$[path]/src/test/resources/identity.xsl")) {
+//            System.out.println("on y est !");
+//        }
+        ret = (String)ParametersMerger.processParametersReplacement(ret, params);
+        LOGGER.debug("resolveEscapes in "+input+" with "+params+" -> "+ret);
+        return ret;
     }
     private Collection<CfgFile> buildFolderContent(XdmNode node, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
         LOGGER.trace("buildFolderContent on "+node.getNodeName());
