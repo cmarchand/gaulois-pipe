@@ -7,7 +7,7 @@
     </layout>
   </appender>
   <logger name="org.xmlresolver">
-    <level value="WARN"/>
+    <level value="TRACE"/>
   </logger>
   <logger name="org.apache">
       <level value="WARN"/>

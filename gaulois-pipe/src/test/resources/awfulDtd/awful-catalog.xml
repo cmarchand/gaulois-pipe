@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE catalog PUBLIC "-//OASIS//DTD Entity Resolution XML Catalog V1.0//EN" "http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd">
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+  <public publicId="GAULOIS//AWFUL" uri="/home/ext-cmarchand/devel/github/gaulois-pipe/gaulois-pipe/src/test/resoruces/auwfulDtd/awful.dtd"/>
+</catalog>

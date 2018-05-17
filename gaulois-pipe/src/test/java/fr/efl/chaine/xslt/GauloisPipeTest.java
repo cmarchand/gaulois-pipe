@@ -16,13 +16,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Parameter;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.URIResolver;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -41,6 +41,8 @@ import org.junit.BeforeClass;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+import org.xmlresolver.Catalog;
+import org.xmlresolver.Resolver;
 import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
 
@@ -591,6 +593,25 @@ public class GauloisPipeTest {
             ex.printStackTrace(System.err);
             throw ex;
         }
-        
+    }
+    
+    @Test
+    public void testAwfulDtd() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory) {
+            @Override
+            protected URIResolver buildUriResolver(URIResolver defaultUriResolver) {
+                return new Resolver(new Catalog("src/test/resources/awfulDtd/awful-catalog.xml"));
+            }
+        };
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/awfulDtd/awfulPipe.xml");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
+        Config config = cu.buildConfig(params);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("AWFUL_DTD");
+        piper.launch();
+        File expect = new File("target/generated-test-files/inputFile-awful.xml");
+        assertTrue("file inputFile-awful.xml does not exist",expect.exists());
+        expect.delete();
     }
 }

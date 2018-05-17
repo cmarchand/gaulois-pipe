@@ -8,7 +8,6 @@ package fr.efl.chaine.xslt.config;
 
 import java.io.File;
 
-import fr.efl.chaine.xslt.GauloisPipe;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import fr.efl.chaine.xslt.utils.ParametersMerger;
