@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -46,15 +47,20 @@ import java.net.URI;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.Duration;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
@@ -67,6 +73,9 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.ValidationException;
 import org.apache.commons.io.output.NullOutputStream;
 import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import org.xmlresolver.Resolver;
 import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
@@ -111,8 +120,11 @@ public class GauloisPipe {
     private String currentDirUri;
     private GPErrorListener errorListener;
     
-    
     private DatatypeFactory datatypeFactory;
+    
+    private SAXParserFactory saxParserFactory;
+    private BlockingQueue<XMLReader> readers;
+            
 
     /**
      * The property name to specify the debug output directory
@@ -192,8 +204,16 @@ public class GauloisPipe {
      * @throws java.net.URISyntaxException Because MVN forces to have comments...
      */
     @SuppressWarnings("ThrowFromFinallyBlock")
-    public void launch() throws InvalidSyntaxException, FileNotFoundException, SaxonApiException, URISyntaxException, IOException {
+    public void launch() throws InvalidSyntaxException, FileNotFoundException, SaxonApiException, URISyntaxException, IOException, ParserConfigurationException, SAXException {
         initDebugDirectory();
+        saxParserFactory = SAXParserFactory.newInstance();
+        saxParserFactory.setNamespaceAware(true);
+        readers = new ArrayBlockingQueue<>(5);
+        while(readers.remainingCapacity()>0) {
+            XMLReader reader = saxParserFactory.newSAXParser().getXMLReader();
+            reader.setEntityResolver(getEntityResolver());
+            readers.add(reader);
+        }
         errors = Collections.synchronizedList(new ArrayList<String>());
         errorListener = new GPErrorListener(errors);
         long start = System.currentTimeMillis();
@@ -458,7 +478,21 @@ public class GauloisPipe {
                         if(config.isLogFileSize()) {
                             LOGGER.info("["+instanceName+"] "+input.toString()+" as input: "+input.getFile().length());
                         }
-                        source = builder.build(input.getFile());
+                        // issue #39
+                        XMLReader xmlReader = null;
+                        try {
+                            try {
+                                xmlReader = readers.take();
+                                SAXSource saxSource = new SAXSource(xmlReader, new InputSource(new FileInputStream(input.getFile())));
+                                source = builder.build(saxSource);
+                            } finally {
+                                readers.put(xmlReader);
+                            }
+                        } catch(InterruptedException ex) {
+                            LOGGER.error("Problem with XMLReader pool");
+                            throw new SaxonApiException("Problem with XMLReader pool. This has nothing to do with Saxon", ex);
+                        }
+                        // end issue #39
                         if(!avoidCache && config.getSources().getFileUsage(input.getFile())>1) {
                             // on ne le met en cache que si il est utilisé plusieurs fois !
                             LOGGER.debug("["+instanceName+"] caching "+key);
@@ -974,7 +1008,7 @@ public class GauloisPipe {
         }
         try {
             gauloisPipe.launch();
-        } catch (InvalidSyntaxException | SaxonApiException | URISyntaxException | IOException ex) {
+        } catch (InvalidSyntaxException | SaxonApiException | URISyntaxException | IOException | SAXException | ParserConfigurationException ex) {
             LOGGER.error(ex.getMessage(), ex);
             gauloisPipe.collectError(ex);
         } finally {
