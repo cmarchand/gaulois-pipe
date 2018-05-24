@@ -471,7 +471,7 @@ public class GauloisPipeTest {
     }
     
     @Test
-    public void testXdmValueToXsl() throws InvalidSyntaxException, SaxonApiException, URISyntaxException, IOException, ValidationException  {
+    public void testXdmValueToXsl() throws Exception  {
         GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/paramDate.xml");
         HashMap<QName,ParameterValue> params = new HashMap<>();
@@ -496,7 +496,7 @@ public class GauloisPipeTest {
     }
     
     @Test
-    public void testFilenameWithAccent() throws InvalidSyntaxException, SaxonApiException, URISyntaxException, IOException, ValidationException {
+    public void testFilenameWithAccent() throws Exception {
         File expect = new File("target/generated-test-files/àâäéèêëïîùûüôö.xml");
         if(expect.exists()) expect.delete();
         GauloisPipe piper = new GauloisPipe(configFactory);
@@ -511,7 +511,7 @@ public class GauloisPipeTest {
         expect.delete();
     }
     
-    public void testStaticBaseUri() throws InvalidSyntaxException, SaxonApiException, URISyntaxException, IOException, ValidationException {
+    public void testStaticBaseUri() throws Exception {
         File expect = new File("target/generated-test-file/static-base-uri-ret.xml");
         if(expect.exists()) expect.delete();
         GauloisPipe piper = new GauloisPipe(configFactory);

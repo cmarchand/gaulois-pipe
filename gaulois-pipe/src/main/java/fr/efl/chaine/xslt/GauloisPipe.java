@@ -484,6 +484,7 @@ public class GauloisPipe {
                             try {
                                 xmlReader = readers.take();
                                 SAXSource saxSource = new SAXSource(xmlReader, new InputSource(new FileInputStream(input.getFile())));
+                                saxSource.setSystemId(input.getFile().toURI().toString());
                                 source = builder.build(saxSource);
                             } finally {
                                 readers.put(xmlReader);
