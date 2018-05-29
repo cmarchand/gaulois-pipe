@@ -9,7 +9,9 @@ package fr.efl.chaine.xslt.config;
 import fr.efl.chaine.xslt.InvalidSyntaxException;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.File;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmNode;
 import org.slf4j.Logger;
@@ -33,6 +35,8 @@ public class Config implements Verifiable {
     private boolean skipSchemaValidation;
     public Namespaces namespaces;
     private File currentDir;
+    // issue #40
+    private List<URL> schemaLocations;
     /**
      * This has nothing to do in Configuration, but for implementation reason,
      * it's here...
@@ -141,6 +145,15 @@ public class Config implements Verifiable {
 
     public void setNamespaces(Namespaces namespaces) {
         this.namespaces = namespaces;
+    }
+
+    // issue #40
+    public List<URL> getSchemaLocations() {
+        return schemaLocations;
+    }
+
+    public void setSchemaLocations(List<URL> schemaLocations) {
+        this.schemaLocations = schemaLocations;
     }
     
 }

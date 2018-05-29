@@ -45,6 +45,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.io.OutputStream;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -62,6 +63,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
@@ -70,9 +72,9 @@ import net.sf.saxon.lib.StandardErrorListener;
 import net.sf.saxon.lib.StandardLogger;
 import net.sf.saxon.trace.XSLTTraceListener;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.SchemaException;
 import net.sf.saxon.type.ValidationException;
 import org.apache.commons.io.output.NullOutputStream;
-import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -240,6 +242,16 @@ public class GauloisPipe {
         try {
             Configuration saxonConfig = configurationFactory.getConfiguration();
             LOGGER.debug("configuration is a "+saxonConfig.getClass().getName());
+            // issue #40 : load schemas
+            for(URL url: config.getSchemaLocations()) {
+                try {
+                    saxonConfig.addSchemaSource(new StreamSource(url.toExternalForm()));
+                } catch(SchemaException ex) {
+                    // we do not throw Exception, if no XSL requires schemas, pipe will work.
+                    // but print ERRORS in output
+                    errorListener.error(new TransformerException("unable to load schema "+url.toExternalForm(), ex));
+                }
+            }
             // this is now done in constructor
             // saxonConfig.setURIResolver(buildUriResolver(saxonConfig.getURIResolver()));
             processor = new Processor(saxonConfig);

@@ -35,7 +35,9 @@ import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.type.ValidationException;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Assume;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -631,5 +633,11 @@ public class GauloisPipeTest {
         File expect = new File("target/generated-test-files/inputFile-awful-external.xml");
         assertTrue("file inputFile-awful.xml does not exist",expect.exists());
         expect.delete();
+    }
+    
+    @Test
+    public void testSchemaUse() {
+        Assume.assumeTrue(configFactory.getConfiguration().getClass().getName().equals("com.saxonica.config.EnterpriseConfiguration"));
+        assertTrue(false);
     }
 }

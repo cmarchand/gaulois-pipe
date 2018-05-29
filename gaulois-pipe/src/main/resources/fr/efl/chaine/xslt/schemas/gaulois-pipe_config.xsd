@@ -25,6 +25,7 @@
     </xs:annotation>
     <xs:sequence>
       <xs:element name="namespaces" type="cfg:TNamespaces" minOccurs="0"/>
+      <xs:element name="grammars" type="cfg:TGrammars" minOccurs="0"/>
       <xs:element name="pipe" type="cfg:TPipe"/>
       <xs:element name="params" type="cfg:TAbstractParams" minOccurs="0"/>
       <xs:element name="sources" type="cfg:TSource" minOccurs="0"/>
@@ -662,6 +663,27 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="TGrammars">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Grammars that should be loaded into Saxon configuration. Required to process schema-aware XSL.</xs:documentation>
+      <xs:documentation xml:lang="fr">Les grammaires qui doivent être chargées dans la configuration Saxon. C'est nécessaire pour les XSL schema-aware</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="schema" minOccurs="1" maxOccurs="unbounded" type="cfg:TSchema"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="TSchema">
+    <xs:annotation>
+      <xs:documentation>A schema location</xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="href" type="xs:anyURI">
+      <xs:annotation>
+        <xs:documentation>The location where schema can be loaded from</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="TChoose">

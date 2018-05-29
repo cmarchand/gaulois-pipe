@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -37,6 +38,7 @@ import net.sf.saxon.s9api.Axis;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
+import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathSelector;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
@@ -70,6 +72,7 @@ public class ConfigUtil {
     private static final QName QN_PARAM = new QName(Config.NS,"param");
     private static final QName QN_NULL = new QName(Config.NS, "null");
     private static final QName AS_NAME = new QName("as");
+    private static final QName QN_GRAMMARS = new QName(Config.NS, "grammars");
     private final File currentDir;
     private final Configuration saxonConfig;
     private final URIResolver uriResolver;
@@ -154,7 +157,9 @@ public class ConfigUtil {
                     __isConfigUriTrueURI ? 
                     processor.newDocumentBuilder().build(uriResolver.resolve(configUri,null)) :
                     processor.newDocumentBuilder().build(new File(configUri));
-            XPathSelector xs = processor.newXPathCompiler().compile("/*").load();
+            XPathCompiler xc = processor.newXPathCompiler();
+            xc.declareNamespace("cfg", Config.NS);
+            XPathSelector xs = xc.compile("/*").load();
             xs.setContextItem(configRoot);
             XdmNode root = (XdmNode)xs.evaluateSingle();
             if(CONFIG_EL.equals(root.getNodeName())) {
@@ -174,6 +179,21 @@ public class ConfigUtil {
                 }
                 config.setNamespaces(namespaces);
                 it.close();
+                // grammars issue #40
+                XPathSelector gs = xc.compile("cfg:grammars/cfg:schema/@href").load();
+                gs.setContextItem(root);
+                it=gs.evaluate().iterator();
+                List<URL> grammars = new ArrayList<>();
+                while(it.hasNext()) {
+                    String href = it.next().getStringValue();
+                    try {
+                        grammars.add(new URL(href));
+                    } catch(MalformedURLException ex) {
+                        throw new InvalidSyntaxException("schema URI "+href+" is not a valid URL", ex);
+                    }
+                }
+                it.close();
+                config.setSchemaLocations(grammars);
                 // params
 //                config.getParams().putAll(inputParameters);
                 HashMap<QName, ParameterValue> configParameters = new HashMap<>();
