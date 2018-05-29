@@ -130,7 +130,7 @@
         <dependency>
             <groupId>top.marchand.xml.ext-funct</groupId>
             <artifactId>basex</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0-98</version>
             <scope>test</scope>
         </dependency>
         <!--dependency>
@@ -296,7 +296,7 @@
               <dependency>
                 <groupId>net.sf.saxon</groupId>
                 <artifactId>Saxon-HE</artifactId>
-                <version>9.7.0-4</version>
+                <version>9.8.0-12</version>
               </dependency>
             </dependencies>
         </profile>
@@ -309,7 +309,7 @@
               <dependency>
                 <groupId>net.sf.saxon</groupId>
                 <artifactId>Saxon-HE</artifactId>
-                <version>9.7.0-4</version>
+                <version>9.8.0-12</version>
               </dependency>
             </dependencies>
         </profile>

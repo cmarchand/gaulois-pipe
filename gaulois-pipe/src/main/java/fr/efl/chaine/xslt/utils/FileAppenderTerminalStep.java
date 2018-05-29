@@ -17,6 +17,7 @@ import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.expr.parser.Location;
 import net.sf.saxon.om.NamespaceBinding;
+import net.sf.saxon.om.NamespaceBindingSet;
 import net.sf.saxon.om.NodeName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.trans.XPathException;
@@ -79,9 +80,6 @@ public class FileAppenderTerminalStep extends StepJava {
         public void startElement(NodeName nn, SchemaType st, Location lctn, int i) throws XPathException {}
 
         @Override
-        public void namespace(NamespaceBinding nb, int i) throws XPathException {}
-
-        @Override
         public void attribute(NodeName nn, SimpleType st, CharSequence cs, Location lctn, int i) throws XPathException {}
 
         @Override
@@ -127,6 +125,9 @@ public class FileAppenderTerminalStep extends StepJava {
         public String getSystemId() {
             return systemId;
         }
+
+        @Override
+        public void namespace(NamespaceBindingSet nbs, int i) throws XPathException { }
         
     }
     

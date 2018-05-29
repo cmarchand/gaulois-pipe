@@ -207,6 +207,7 @@ public class GauloisPipe {
      * @throws java.net.URISyntaxException Because MVN forces to have comments...
      * @throws javax.xml.parsers.ParserConfigurationException If a SAXParser configuration issue is thrown
      * @throws org.xml.sax.SAXException If a SAXException is thrown
+     * @throws javax.xml.transform.TransformerException If a TransformerException is thrown
      */
     @SuppressWarnings("ThrowFromFinallyBlock")
     public void launch() throws 
@@ -216,6 +217,7 @@ public class GauloisPipe {
             URISyntaxException, 
             IOException, 
             ParserConfigurationException, 
+            TransformerException, 
             SAXException {
         initDebugDirectory();
         saxParserFactory = SAXParserFactory.newInstance();
@@ -1035,7 +1037,7 @@ public class GauloisPipe {
         }
         try {
             gauloisPipe.launch();
-        } catch (InvalidSyntaxException | SaxonApiException | URISyntaxException | IOException | SAXException | ParserConfigurationException ex) {
+        } catch (InvalidSyntaxException | SaxonApiException | URISyntaxException | IOException | SAXException | ParserConfigurationException | TransformerException ex) {
             LOGGER.error(ex.getMessage(), ex);
             gauloisPipe.collectError(ex);
         } finally {

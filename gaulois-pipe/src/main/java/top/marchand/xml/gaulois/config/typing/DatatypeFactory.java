@@ -123,7 +123,9 @@ public class DatatypeFactory {
             @Override
             public XdmValue convert(String input, Configuration configuration) throws ValidationException {
                 if(input==null && allowsEmpty()) return XdmValue.wrap(null);
-                else if(input==null) throw new ValidationException(qn.toString()+" does not allow empty sequence");
+                else if(input==null) {
+                    throw new ValidationException(qn.toString()+" does not allow empty sequence", new Exception());
+                }
                 if(allowsMultiple()) {
                     String sValue = input.trim();
                     if(sValue.startsWith("(") && sValue.endsWith(")")) {
@@ -145,7 +147,7 @@ public class DatatypeFactory {
                     } else if(values.length==1) {
                         return XdmValue.wrap(converter.convertString(values[0]).asAtomic());
                     } else {
-                        throw new ValidationException("can not cast "+input+" to "+qn);
+                        throw new ValidationException("can not cast "+input+" to "+qn, new Exception());
                     }
                 } else {
                     return XdmValue.wrap(converter.convertString(input).asAtomic());
@@ -171,7 +173,7 @@ public class DatatypeFactory {
         } else if(typeName.startsWith("document(")) {
             return constructDocumentParserDatatype(qn, allowsEmpty, allowsMultiple);
         } else {
-            throw new ValidationException("Only document() and element() are supported for node types");
+            throw new ValidationException("Only document() and element() are supported for node types", new Exception());
         }
     }
     private Datatype constructElementParserDatatype(final QName qn, final boolean allowsEmpty, final boolean allowsMultiple) throws ValidationException {
@@ -195,11 +197,11 @@ public class DatatypeFactory {
                     XPathSelector selector = compiler.compile("/fake:document/node()").load();
                     selector.setContextItem(documentNode);
                     XdmValue ret = selector.evaluate();
-                    if(ret.size()==0 && !allowsEmpty()) throw new ValidationException(qn.toString()+" does not allow empty sequence");
-                    if(ret.size()>1 && !allowsMultiple()) throw new ValidationException(qn.toString()+" does not allow sequence with more than one element");
+                    if(ret.size()==0 && !allowsEmpty()) throw new ValidationException(qn.toString()+" does not allow empty sequence", new Exception());
+                    if(ret.size()>1 && !allowsMultiple()) throw new ValidationException(qn.toString()+" does not allow sequence with more than one element", new Exception());
                     return ret;
                 } catch(SaxonApiException ex) {
-                    throw new ValidationException(input+" can not be casted to "+qn.toString());
+                    throw new ValidationException(input+" can not be casted to "+qn.toString(), new Exception());
                 }
             }
         };
@@ -207,7 +209,7 @@ public class DatatypeFactory {
     private Datatype constructDocumentParserDatatype(final QName qn, final boolean allowsEmpty, final boolean allowsMultiple) throws ValidationException {
         String localName= qn.getLocalName();
         if(localName.endsWith("*") || localName.endsWith("+")) {
-            throw new ValidationException("Multiple documents are not allowed");
+            throw new ValidationException("Multiple documents are not allowed", new Exception());
         }
         return new Datatype() {
             @Override
@@ -237,7 +239,7 @@ public class DatatypeFactory {
                         }
                     }
                     if(is==null) {
-                        throw new ValidationException("Unable to load document "+input);
+                        throw new ValidationException("Unable to load document "+input, new Exception());
                     }
                     source = new StreamSource(is);
                 }
