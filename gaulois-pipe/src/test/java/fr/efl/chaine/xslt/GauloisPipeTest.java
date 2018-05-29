@@ -15,8 +15,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
@@ -611,6 +609,26 @@ public class GauloisPipeTest {
         piper.setInstanceName("AWFUL_DTD");
         piper.launch();
         File expect = new File("target/generated-test-files/inputFile-awful.xml");
+        assertTrue("file inputFile-awful.xml does not exist",expect.exists());
+        expect.delete();
+    }
+
+    @Test
+    public void testAwfulDtdExternalDocument() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory) {
+            @Override
+            protected URIResolver buildUriResolver(URIResolver defaultUriResolver) {
+                return new Resolver(new Catalog("src/test/resources/awfulDtd/awful-catalog.xml"));
+            }
+        };
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/awfulDtd/awfulPipeWithDocument.xml");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
+        Config config = cu.buildConfig(params);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("AWFUL_DTD");
+        piper.launch();
+        File expect = new File("target/generated-test-files/inputFile-awful-external.xml");
         assertTrue("file inputFile-awful.xml does not exist",expect.exists());
         expect.delete();
     }

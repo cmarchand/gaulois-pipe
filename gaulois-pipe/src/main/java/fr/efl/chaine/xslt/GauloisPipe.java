@@ -76,6 +76,7 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
+import org.xml.sax.ext.EntityResolver2;
 import org.xmlresolver.Resolver;
 import top.marchand.xml.gaulois.config.typing.DatatypeFactory;
 import top.marchand.xml.gaulois.impl.DefaultSaxonConfigurationFactory;
@@ -140,7 +141,7 @@ public class GauloisPipe {
      * Constructs a new GauloisPipe.
      * This constructor is the main one, the other one is only for backward compatibility.
      * @param configurationFactory The configuration factory to use
-     * @throws fr.efl.chaine.xslt.InvalidSyntaxException
+     * @throws fr.efl.chaine.xslt.InvalidSyntaxException If a problem in configuration exists
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public GauloisPipe(final SaxonConfigurationFactory configurationFactory) throws InvalidSyntaxException {
@@ -202,9 +203,18 @@ public class GauloisPipe {
      * @throws java.io.FileNotFoundException If a file is not found...
      * @throws net.sf.saxon.s9api.SaxonApiException If a SaxonApi problem occurs
      * @throws java.net.URISyntaxException Because MVN forces to have comments...
+     * @throws javax.xml.parsers.ParserConfigurationException If a SAXParser configuration issue is thrown
+     * @throws org.xml.sax.SAXException If a SAXException is thrown
      */
     @SuppressWarnings("ThrowFromFinallyBlock")
-    public void launch() throws InvalidSyntaxException, FileNotFoundException, SaxonApiException, URISyntaxException, IOException, ParserConfigurationException, SAXException {
+    public void launch() throws 
+            InvalidSyntaxException, 
+            FileNotFoundException, 
+            SaxonApiException, 
+            URISyntaxException, 
+            IOException, 
+            ParserConfigurationException, 
+            SAXException {
         initDebugDirectory();
         saxParserFactory = SAXParserFactory.newInstance();
         saxParserFactory.setNamespaceAware(true);
@@ -459,6 +469,10 @@ public class GauloisPipe {
         if(outputs.length>1) {
             throw new InvalidSyntaxException("Only one outputs map is allowed.");
         }
+        // sets the EntityResolver in a ThreadLocal, to be used by generated XMLReaders
+        // See top.marchand.xml.gaulois.resolve.GauloisSAXParserFactory
+        ThreadLocal<EntityResolver2> th = new ThreadLocal<>();
+        th.set(getEntityResolver());
         boolean avoidCache = input.getAvoidCache();
         long start = System.currentTimeMillis();
         String key = input.getFile().getAbsolutePath().intern();
@@ -1172,8 +1186,8 @@ public class GauloisPipe {
      * this method too.
      * @return The entity resolver to use
      */
-    public EntityResolver getEntityResolver() {
-        return (EntityResolver)getUriResolver();
+    public EntityResolver2 getEntityResolver() {
+        return (EntityResolver2)getUriResolver();
     }
 
     private static final transient String USAGE_PROMPT = "\nUSAGE:\njava " + GauloisPipe.class.getName() + "\n"
@@ -1451,7 +1465,7 @@ public class GauloisPipe {
     /**
      * Tells Gaulois whether cp protocol impementation has been installed or not.
      * This method must be called <strong>before</strong> the first instanciation of GauloisPipe.
-     * @param installed 
+     * @param installed Define if CP protocol handler has already been installed
      */
     public static void setProtocolInstalled(final boolean installed) { protocolInstalled = installed; }
     public static boolean isProtocolInstalled() { return protocolInstalled; }

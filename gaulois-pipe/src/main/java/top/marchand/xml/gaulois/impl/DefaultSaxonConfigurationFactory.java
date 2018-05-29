@@ -23,6 +23,7 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmSequenceIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import top.marchand.xml.gaulois.resolve.GauloisSAXParserFactory;
 
 /**
  * A default SaxonConfigurationFactory that loads xpath extension functions into configuration.
@@ -66,6 +67,8 @@ public class DefaultSaxonConfigurationFactory extends SaxonConfigurationFactory 
         // default construct
         createConfigurationObject();
         LOGGER.debug("configuration is a "+configuration.getClass().getName());
+        // issue 39
+        configuration.setSourceParserClass(GauloisSAXParserFactory.class.getName());
         ClassLoader cl = getClass().getClassLoader();
         if(cl instanceof URLClassLoader) {
             Processor proc = new Processor(configuration);

@@ -18,25 +18,25 @@ public interface Datatype {
     
     /**
      * Returns true if this datatype is an atomic datatype
-     * @return 
+     * @return if this datatype represents and atomic value
      */
     boolean isAtomic();
     
     /**
      * Returns true if sequences are allowed
-     * @return 
+     * @return if multiple values are allowed (sequence with more than 1 item)
      */
     boolean allowsMultiple();
     
     /**
      * Return true if empty sequence is allowed.
-     * @return 
+     * @return if empty is allowed, if empty-sequence aloowed
      */
     boolean allowsEmpty();
     
     /**
      * Convert <tt>input</tt> as this datatype
-     * @param input
+     * @param input The input value to convert
      * @param configuration The saxon Configuration to rely on
      * @return The corresponding XdmValue
      * @throws net.sf.saxon.type.ValidationException If <tt>input</tt>is not castable into this datatype

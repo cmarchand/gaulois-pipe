@@ -46,8 +46,8 @@ public class ParameterValue {
 
     /**
      * Constructs an abstract Parameter
-     * @param key
-     * @param datatype 
+     * @param key The param key
+     * @param datatype The param datatype
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public ParameterValue(QName key, Datatype datatype) {
