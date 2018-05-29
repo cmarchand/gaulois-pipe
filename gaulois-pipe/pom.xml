@@ -76,11 +76,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>net.sf.saxon</groupId>
-            <artifactId>Saxon-HE</artifactId>
-            <version>9.7.0-4</version>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.6.1</version>
@@ -297,29 +292,41 @@
                     </plugin>
                 </plugins>
             </build>
+            <dependencies>
+              <dependency>
+                <groupId>net.sf.saxon</groupId>
+                <artifactId>Saxon-HE</artifactId>
+                <version>9.7.0-4</version>
+              </dependency>
+            </dependencies>
         </profile>
         <profile>
-            <id>ELS</id>
-            <pluginRepositories>
-                <pluginRepository>
-                    <id>nexus-public</id>
-                    <url>http://srvic/nexus/content/groups/public</url>
-                    <layout>default</layout>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </pluginRepository>
-            </pluginRepositories>
-            <repositories>
-                <repository>
-                    <id>nexus-public</id>
-                    <url>http://srvic/nexus/content/groups/public</url>
-                    <layout>default</layout>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
+            <id>default</id>
+            <activation>
+              <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+              <dependency>
+                <groupId>net.sf.saxon</groupId>
+                <artifactId>Saxon-HE</artifactId>
+                <version>9.7.0-4</version>
+              </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+          <id>EE</id>
+          <dependencies>
+            <dependency>
+              <groupId>extern.net.sf.saxon</groupId>
+              <artifactId>saxonee</artifactId>
+              <version>9.8.0.12</version>
+            </dependency>
+            <dependency>
+              <groupId>extern.net.sf.saxon</groupId>
+              <artifactId>saxonee-license</artifactId>
+              <version>9.8.2018</version>
+            </dependency>
+          </dependencies>
         </profile>
     </profiles>
 </project>
