@@ -14,6 +14,7 @@ import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,6 +22,7 @@ import java.util.Properties;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.URIResolver;
+import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -32,6 +34,8 @@ import net.sf.saxon.s9api.XQueryEvaluator;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
+import net.sf.saxon.s9api.XsltCompiler;
+import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.type.ValidationException;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -636,8 +640,43 @@ public class GauloisPipeTest {
     }
     
     @Test
-    public void testSchemaUse() {
+    public void testSchemaUseUncompiled() throws Exception {
+        // check this is run only if we have a Saxon EE configuration
         Assume.assumeTrue(configFactory.getConfiguration().getClass().getName().equals("com.saxonica.config.EnterpriseConfiguration"));
-        assertTrue(false);
+
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/EE/gp-schema-aware.xml");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
+        Config config = cu.buildConfig(params);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("SCHEMA-AWARE-UNCOMPILED");
+        piper.launch();
+        File expect = new File("target/generated-test-files/input-schema-aware-result.xml");
+        assertTrue("file "+expect.getName()+" does not exist",expect.exists());
+        expect.delete();
+    }
+    @Test
+    public void testSchemaUseCompiled() throws Exception {
+        // check this is run only if we have a Saxon EE configuration
+        Assume.assumeTrue(configFactory.getConfiguration().getClass().getName().equals("com.saxonica.config.EnterpriseConfiguration"));
+
+        // compile XSL
+        Processor proc = new Processor(configFactory.getConfiguration());
+        File xslFile = new File("src/test/resources/EE/schema-aware.xsl");
+        XsltExecutable xExec = proc.newXsltCompiler().compile(new StreamSource(xslFile));
+        xExec.export(new FileOutputStream(new File("target/test-classes/EE/schema-aware.sef")));
+        // run pipe
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/EE/gp-schema-aware-compiled.xml");
+        HashMap<QName,ParameterValue> params = new HashMap<>();
+        Config config = cu.buildConfig(params);
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("SCHEMA-AWARE-COMPILED");
+        piper.launch();
+        File expect = new File("target/generated-test-files/input-schema-aware-result.xml");
+        assertTrue("file "+expect.getName()+" does not exist",expect.exists());
+        expect.delete();
     }
 }

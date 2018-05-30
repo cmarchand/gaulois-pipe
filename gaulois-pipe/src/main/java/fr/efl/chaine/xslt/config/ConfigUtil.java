@@ -183,14 +183,10 @@ public class ConfigUtil {
                 XPathSelector gs = xc.compile("cfg:grammars/cfg:schema/@href").load();
                 gs.setContextItem(root);
                 it=gs.evaluate().iterator();
-                List<URL> grammars = new ArrayList<>();
+                List<String> grammars = new ArrayList<>();
                 while(it.hasNext()) {
                     String href = it.next().getStringValue();
-                    try {
-                        grammars.add(new URL(href));
-                    } catch(MalformedURLException ex) {
-                        throw new InvalidSyntaxException("schema URI "+href+" is not a valid URL", ex);
-                    }
+                    grammars.add(href);
                 }
                 it.close();
                 config.setSchemaLocations(grammars);

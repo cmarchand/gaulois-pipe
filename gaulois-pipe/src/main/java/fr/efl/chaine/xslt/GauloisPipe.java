@@ -245,17 +245,16 @@ public class GauloisPipe {
             Configuration saxonConfig = configurationFactory.getConfiguration();
             LOGGER.debug("configuration is a "+saxonConfig.getClass().getName());
             // issue #40 : load schemas
-            for(URL url: config.getSchemaLocations()) {
+            for(String url: config.getSchemaLocations()) {
                 try {
-                    saxonConfig.addSchemaSource(new StreamSource(url.toExternalForm()));
+                    Source schemaSource = getUriResolver().resolve(url, getCurrentDirUri());
+                    saxonConfig.addSchemaSource(schemaSource);
                 } catch(SchemaException ex) {
                     // we do not throw Exception, if no XSL requires schemas, pipe will work.
                     // but print ERRORS in output
-                    errorListener.error(new TransformerException("unable to load schema "+url.toExternalForm(), ex));
+                    errorListener.error(new TransformerException("unable to load schema "+url, ex));
                 }
             }
-            // this is now done in constructor
-            // saxonConfig.setURIResolver(buildUriResolver(saxonConfig.getURIResolver()));
             processor = new Processor(saxonConfig);
             xsltCompiler = processor.newXsltCompiler();
             builder = processor.newDocumentBuilder();

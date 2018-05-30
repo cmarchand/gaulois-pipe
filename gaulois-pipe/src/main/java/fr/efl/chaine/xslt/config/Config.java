@@ -36,7 +36,7 @@ public class Config implements Verifiable {
     public Namespaces namespaces;
     private File currentDir;
     // issue #40
-    private List<URL> schemaLocations;
+    private List<String> schemaLocations;
     /**
      * This has nothing to do in Configuration, but for implementation reason,
      * it's here...
@@ -148,11 +148,11 @@ public class Config implements Verifiable {
     }
 
     // issue #40
-    public List<URL> getSchemaLocations() {
+    public List<String> getSchemaLocations() {
         return schemaLocations;
     }
 
-    public void setSchemaLocations(List<URL> schemaLocations) {
+    public void setSchemaLocations(List<String> schemaLocations) {
         this.schemaLocations = schemaLocations;
     }
     

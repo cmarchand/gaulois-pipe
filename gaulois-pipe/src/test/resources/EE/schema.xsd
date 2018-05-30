@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema 
+  xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+  elementFormDefault="qualified"
+  attributeFormDefault="unqualified"
+  xmlns:gpt="top:marchand:xml:gaulois:tests"
+  targetNamespace="top:marchand:xml:gaulois:tests">
+  
+  <xs:element name="data" type="gpt:Data"/>
+  
+  <xs:complexType name="Data" mixed="true">
+    <xs:attribute name="id" type="xs:ID" use="required"/>
+  </xs:complexType>
+  
+</xs:schema>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://efl.fr/chaine/saxon-pipe/config"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://efl.fr/chaine/saxon-pipe/config ../../../main/resources/fr/efl/chaine/xslt/schemas/gaulois-pipe_config.xsd">
+  <grammars>
+    <schema href="cp:/EE/schema.xsd"/>
+  </grammars>
+  <pipe>
+    <xslt href="cp:/EE/schema-aware.sef"/>
+    <output id="main">
+      <folder absolute="./target/generated-test-files"/>
+      <fileName name="$[input-basename]-result.xml"/>
+    </output>
+  </pipe>
+  <sources>
+    <folder href="src/test/resources/EE" recurse="false" pattern="input-schema-aware\.xml"/>
+  </sources>
+</config>
