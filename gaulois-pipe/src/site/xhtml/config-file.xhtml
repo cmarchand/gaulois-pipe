@@ -62,10 +62,13 @@
         </div>
         <p>Under <span class="code">&lt;config&gt;</span> element, we may have :</p>
         <ul>
+            <li>An optional <span class="code"><a href="#namespaces">namespaces</a></span></li>
+            <li>An optional <span class="code"><a href="#grammars">grammars</a></span></li>
             <li>A <span class="code"><a href="#pipe">pipe</a></span></li>
             <li>A <span class="code"><a href="#params">params</a></span></li>
             <li>A <span class="code"><a href="#sources">sources</a></span></li>
         </ul>
+      
         <h3><a id="pipe"></a>pipe</h3>
         <h4>Attributes</h4>
         <table>
@@ -259,5 +262,45 @@
         <p>When the DELETE request is received, and if it is valid, the server does not accepts
             anymore files, the http server stops, and gaulois-pipe stops when all input files have
             been processed.</p>
+      
+      <h4><a id="namespaces"/>Namespaces</h4>
+      <p><span class="code">namespaces</span> are used to define namespace/prefix bindings, to be used in XPath
+        expression in <span class="code"><a href="#choose">choose</a></span>.</p>
+      <div class="source">
+        <pre>
+    &lt;namespaces&gt;
+        &lt;mapping prefix="n" uri="http://www.minefi.gouv.fr/cp/helios/pes_v2/paye_1_1"/&gt;
+    &lt;/namespaces&gt;
+    &lt;pipe&gt;
+      &lt;xslt href="cp:/identity.xsl"/&gt;
+      &lt;choose&gt;
+        &lt;when test="/n:DocumentPaye/n:Annee/@V/xs:integer(.) gt 2012"&gt;
+    ...          
+        </pre>
+      </div>
+      <p>Here, when evaluating <span class="code">/n:DocumentPaye/n:Annee/@V</span>, <span class="code">n</span> prefix is 
+        bound to <span class="code">http://www.minefi.gouv.fr/cp/helios/pes_v2/paye_1_1</span></p>
+      <p>You may define as many <span class="code">mapping</span>s as you need.</p>
+      
+      <h4><a id="grammars"/>Grammars</h4>
+      <p><span class="code">grammars</span> allow to define schemas used by Saxon in xsl. If a XL uses 
+        <span class="code">&lt;xsl:import-schema href="..."/&lt;</span>, when Saxon compiles the XSL, the schema
+        is stored in Saxon <a href="http://saxonica.com/html/documentation/javadoc/net/sf/saxon/Configuration.html">Configuration</a>,
+      and the schema is available when executing XSL.</p>
+      <p>If you use compiled XSL (i.e. .sef files), compiled XSL does not contains imported schema, and then, when running XSL,
+        error <span class="code">SXPK0003</span> is raised. To avoid this, you may declare in grammars the schema(s) your XSL will use.
+        Then, gaulois-pipe is able to load declared schemas in Saxon configuration, and make them available when running XSL.</p>
+      <div class="source">
+        <pre>
+&lt;config xmlns="http://efl.fr/chaine/saxon-pipe/config"&gt;
+  &lt;grammars&gt;
+    &lt;schema href="cp:/EE/schema.xsd"/&gt;
+  &lt;/grammars&gt;
+  &lt;pipe&gt;
+    &lt;xslt href="cp:/EE/schema-aware.xsl"/&gt;
+...
+        </pre>
+      </div>
+      <p>As usual, relative URI may be used, and they are relative to current directory.</p>
     </body>
 </html>

@@ -223,6 +223,7 @@
     </meta>
     <projectTree name="gaulois-pipe.xpr">
         <folder path="src/main/"/>
+        <folder path="src/site/"/>
         <folder path="src/test/"/>
     </projectTree>
 </project>
