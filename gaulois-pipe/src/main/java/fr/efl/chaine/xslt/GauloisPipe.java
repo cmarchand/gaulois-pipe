@@ -63,7 +63,6 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
 import net.sf.saxon.event.Receiver;
@@ -248,6 +247,7 @@ public class GauloisPipe {
             for(String url: config.getSchemaLocations()) {
                 try {
                     Source schemaSource = getUriResolver().resolve(url, getCurrentDirUri());
+                    LOGGER.info("Loading schema "+url);
                     saxonConfig.addSchemaSource(schemaSource);
                 } catch(SchemaException ex) {
                     // we do not throw Exception, if no XSL requires schemas, pipe will work.
