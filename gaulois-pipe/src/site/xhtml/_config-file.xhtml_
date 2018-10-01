@@ -19,46 +19,46 @@
                         ../../../src/main/resources/fr/efl/chaine/xslt/schemas/saxon-pipe_config.xsd"&gt;
     &lt;pipe mutiThreadMaxSourceSize="24349456" nbThreads="4" traceOutput="logs/trace.log">
         &lt;xslt href="./src/test/resources/step1.xsl">
-            &lt;param name="p-step1" value="step1"/>
-        &lt;/xslt>
-        &lt;tee>
-            &lt;pipe1>
-                &lt;xslt href="./src/test/resources/step2.xsl" traceActive="true">
-                    &lt;param name="p-step2" value="step2"/>
-                &lt;/xslt>
-                &lt;output id="step1">
-                    &lt;folder relative="./target/generated-test-files" to="${user.dir}"/>
-                    &lt;fileName name="step1-output.xml"/>
-                &lt;/output>
-            &lt;/pipe1>
-            &lt;pipe2>
-                &lt;tee>
-                    &lt;pipe1>
-                        &lt;xslt href="./src/test/resources/step3.xsl">
-                            &lt;param name="p-step3" value="step3"/>
-                        &lt;/xslt>
-                        &lt;output id="step3">
-                            &lt;folder relative="./target/generated-test-files" to="${user.dir}"/>
-                            &lt;fileName name="step3-output.xml"/>
-                        &lt;/output>
-                    &lt;/pipe1>
-                    &lt;pipe2>
-                        &lt;output id="step2">
-                            &lt;folder relative="./target/generated-test-files" to="${user.dir}"/>
-                            &lt;fileName name="step2-output.xml"/>
-                        &lt;/output>
-                    &lt;/pipe2>
-                &lt;/tee>
-            &lt;/pipe2>
-        &lt;/tee>
-    &lt;/pipe>
-    &lt;params>
-        &lt;param name="p-general" value="GENERAL"/>
-    &lt;/params>
-    &lt;sources>
-        &lt;folder href="./src/test/resources" pattern="source.*xml"/>
-    &lt;/sources>
-&lt;/config></pre>
+            &lt;param name="p-step1" value="step1"/&gt;
+        &lt;/xslt&gt;
+        &lt;tee&gt;
+            &lt;pipe1&gt;
+                &lt;xslt href="./src/test/resources/step2.xsl" traceActive="true"&gt;
+                    &lt;param name="p-step2" value="step2"/&gt;
+                &lt;/xslt&gt;
+                &lt;output id="step1"&gt;
+                    &lt;folder relative="./target/generated-test-files" to="${user.dir}"/&gt;
+                    &lt;fileName name="step1-output.xml"/&gt;
+                &lt;/output&gt;
+            &lt;/pipe1&gt;
+            &lt;pipe2&gt;
+                &lt;tee&gt;
+                    &lt;pipe1&gt;
+                        &lt;xslt href="./src/test/resources/step3.xsl"&gt;
+                            &lt;param name="p-step3" value="step3"/&gt;
+                        &lt;/xslt&gt;
+                        &lt;output id="step3"&gt;
+                            &lt;folder relative="./target/generated-test-files" to="${user.dir}"/&gt;
+                            &lt;fileName name="step3-output.xml"/&gt;
+                        &lt;/output&gt;
+                    &lt;/pipe1&gt;
+                    &lt;pipe2&gt;
+                        &lt;output id="step2"&gt;
+                            &lt;folder relative="./target/generated-test-files" to="${user.dir}"/&gt;
+                            &lt;fileName name="step2-output.xml"/&gt;
+                        &lt;/output&gt;
+                    &lt;/pipe2&gt;
+                &lt;/tee&gt;
+            &lt;/pipe2&gt;
+        &lt;/tee&gt;
+    &lt;/pipe&gt;
+    &lt;params&gt;
+        &lt;param name="p-general" value="GENERAL"/&gt;
+    &lt;/params&gt;
+    &lt;sources&gt;
+        &lt;folder href="./src/test/resources" pattern="source.*xml"/&gt;
+    &lt;/sources&gt;
+&lt;/config&gt;</pre>
         </div>
         <p>Under <span class="code">&lt;config&gt;</span> element, we may have :</p>
         <ul>
@@ -154,19 +154,19 @@
         <p>A choose allows you to control the structure of the pipe, depending on XPath expression evaluations. It's very similar to XSL 
             syntax, except that otherwise is required. A choose must always "return" a sub-pipe.</p>
         <pre>
-            &lt;xslt href="cp:/pre-process.xsl"/>
-            &lt;choose>
-                &lt;when test="/mydoc/meta/@pubYear/xs:integer(.) lt 2000">
-                    &lt;xslt href="cp:/very-old-fashion.xsl"/>
-                &lt;/when>
-                &lt;when test="/mydoc/meta/@pubYear/xs:integer(.) lt 2000">
-                    &lt;xslt href="cp:/old-fashion.xsl"/>
-                &lt;/when>
-                &lt;otherwise>
-                    &lt;xsl href="cp:/current.xsl"/>
-                &lt;/otherwise>
-            &lt;/choose>
-            &lt;output id="main">...&lt;/output>
+            &lt;xslt href="cp:/pre-process.xsl"/&gt;
+            &lt;choose&gt;
+                &lt;when test="/mydoc/meta/@pubYear/xs:integer(.) lt 2000"&gt;
+                    &lt;xslt href="cp:/very-old-fashion.xsl"/&gt;
+                &lt;/when&gt;
+                &lt;when test="/mydoc/meta/@pubYear/xs:integer(.) lt 2000"&gt;
+                    &lt;xslt href="cp:/old-fashion.xsl"/&gt;
+                &lt;/when&gt;
+                &lt;otherwise&gt;
+                    &lt;xsl href="cp:/current.xsl"/&gt;
+                &lt;/otherwise&gt;
+            &lt;/choose&gt;
+            &lt;output id="main"&gt;...&lt;/output&gt;
         </pre>
         <p>The XPath expressions are evaluated on the input document, and are not evaluated on the result document of the previous step.</p>
 
