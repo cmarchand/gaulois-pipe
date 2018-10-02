@@ -5,11 +5,7 @@ This section explains how a gaulois-pipe config file must be, and how it is inte
 
 ### Namespace
 
-The whole config file is in
-
-http://efl.fr/chaine/saxon-pipe/config
-
-There is no element or attributes outside of this namespace.
+The whole config file is in  `http://efl.fr/chaine/saxon-pipe/config` namespace. There is no element or attributes outside of this namespace.
 
 ### Sample file
 ```
