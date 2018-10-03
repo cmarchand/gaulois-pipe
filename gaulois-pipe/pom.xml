@@ -58,6 +58,7 @@
             <artifactId>xercesImpl-xsd11</artifactId>
             <version>2.12-beta-r1667115</version>
         </dependency>
+        <!-- only to exclude xerces -->
         <dependency>
             <groupId>org.opengis.cite.eclipse.webtools.sse</groupId>
             <artifactId>org.eclipse.wst.xml.xpath2.processor</artifactId>
@@ -115,7 +116,7 @@
         <dependency>
             <groupId>top.marchand.xml</groupId>
             <artifactId>cp-protocol</artifactId>
-            <version>1.2</version>
+            <version>2.0</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -328,5 +329,14 @@
             </dependency>
           </dependencies>
         </profile>
+        <profile>
+          <id>xerces</id>
+          <repositories>
+            <repository>
+              <id>xerces</id>
+              <url>https://oss.sonatype.org/content/repositories/central_bundles-13465</url>
+            </repository>
+          </repositories>
+       </profile>
     </profiles>
 </project>

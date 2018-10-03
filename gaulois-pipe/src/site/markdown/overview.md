@@ -1,0 +1,37 @@
+Gaulois-pipe
+------------
+
+Gaulois-pipe is a XSL pipeline solution. It's based on Saxon ([Saxonica](http://saxonica.com)), uses the setDestination(Destination) methods. Gaulois-pipe provides a way to describe the pipeline you want to execute on sources.
+
+You can use **xslt**, **tees**, **outputs**, and your **own java classes**.
+
+At the beginning, we were using XProc. But XProc is a language which is difficult to learn, so it was coasting a lot to maintain. Furthermore, XProc implementations, although being high quality products, are quite slows.
+
+Gaulois-pipe has been written to be simple to write XSL pipelines. It is multi-threaded, it allows giving parameters to XSLs, it can process huge quantities of files, each file may have its own parameter values.
+
+### Multi-threaded processor
+
+Gaulois-pipe is able to process sources multi-threaded. The pipe accepts a @nbThreads attribute, to define the number of threads to use. When working multi-threaded, it is possible to limit the file size which can be processed in parallel ; hence, if you have huge files, they will be processed on a sole thread, and then, small files will be processed multi-threaded ; this is to try to avoir OutOfMemory errors.
+
+If @mutiThreadMaxSourceSize is defined, any files whose size exceeds this value will be processed before, on a mono-thread process. Hence, only "small" files are processed in parallel ; this is to avoid OutOfMemory errors ; if it is not defined, all files that exceed 10Mb will be processed on mono-thread.
+
+### Parameters
+
+XSL may have parameters. Gaulois-pipe is able to manage parameters. Parameters may be defined at many levels :
+
+*   on command-line. After the PARAM keyword, all key=value pairs defines a parameter
+*   at source file level
+*   at XSL (or all ParametrableStep) level
+*   at global level of config-file.
+
+A parameter value MUST be a **Xdm Atomic Value**, as defined in [https://www.w3.org/TR/xpath-datamodel/#AtomicValue](https://www.w3.org/TR/xpath-datamodel/#AtomicValue).  
+A parameter value MUST NOT use or references other parameters values.  
+If the same parameter is defined more than one time, the priority is the above list order.
+
+You can use parameters in config file to specify sources and outputs.
+
+### URI Resolver
+
+Gaulois-pipe uses [xmlresolver](./dependencies.html) [http://xmlresolver.org](http://xmlresolver.org) to resolve URIs. The legacy method to map URI via System properties is now abandoned, and catalogs must be used instead. **There is no backward compatibility**.
+
+Gaulois-pipe also uses [cp-protocol](./dependencies.html), which is a protocol implementation to load resources from classpath. Hence, if you have an XSL in src/main/xsl/my/package/my-xsl.xsl, you may specify it via cp:/my/package/my-xsl.xsl

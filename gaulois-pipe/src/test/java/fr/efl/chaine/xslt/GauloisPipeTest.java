@@ -16,6 +16,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
@@ -678,5 +685,54 @@ public class GauloisPipeTest {
         File expect = new File("target/generated-test-files/input-schema-aware-result.xml");
         assertTrue("file "+expect.getName()+" does not exist",expect.exists());
         expect.delete();
+    }
+
+    @Test()
+    public void testIssue42() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/issues/42/createDirectory.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        File dir = new File("target/generated-test-files/non-exist-dir");
+        // ensure directory does not exists
+        if(dir.exists()) {
+            if(dir.isFile()) {
+                dir.delete();
+            } else {
+                Files.walkFileTree(dir.toPath(), new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        Files.delete(file);
+                        return FileVisitResult.CONTINUE;
+                    }
+                    @Override
+                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                        if(exc==null) {
+                            Files.delete(dir);
+                            return FileVisitResult.CONTINUE;
+                        } else {
+                            throw exc;
+                        }
+                    }
+                });
+                if(dir.exists()) Files.delete(dir.toPath());
+            }
+        }
+        config.verify();
+        piper.setConfig(config);
+        piper.setInstanceName("ISSUE_42");
+        piper.launch();
+        assertTrue("target directory has not been created", dir.exists());
+        assertTrue("target directory is not a directory", dir.isDirectory());
+        File expect = new File(dir,"trace-dir-non-exist.xml");
+        assertTrue("file trace-dir-non-exist.xml does not exist",expect.exists());
+        expect.delete();
+        File subDir = new File(dir, "result-doc");
+        expect = new File(subDir, "result.xml");
+        assertTrue("result-doc subdir does not exists", subDir.exists());
+        assertTrue("result-doc subdir is not a directory", subDir.isDirectory());
+        assertTrue("result-doc/result.xml does not exists", expect.exists());
+        expect.delete();
+        subDir.delete();
+        dir.delete();
     }
 }
