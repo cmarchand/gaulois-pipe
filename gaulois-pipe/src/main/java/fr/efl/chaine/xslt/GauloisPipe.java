@@ -818,7 +818,7 @@ public class GauloisPipe {
                 LOGGER.error("while compiling "+__href);
                 throw ex;
             } catch(Exception ex) {
-                // implementation requirement, but we already have catch all throwable exceptions
+                LOGGER.error("while compiling "+__href);
             }
         }
         XsltTransformer ret = xsl.load();
