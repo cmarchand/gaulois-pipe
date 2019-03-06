@@ -13,7 +13,6 @@
         <version>1.03.05</version>
     </parent>
 
-
     <name>gaulois-pipe</name>
 
     <url>https://github.com/cmarchand/gaulois-pipe</url>
@@ -97,7 +96,7 @@
         <dependency>
             <groupId>org.xmlresolver</groupId>
             <artifactId>xmlresolver</artifactId>
-            <version>0.13.1</version>
+            <version>1.0.1</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
@@ -121,12 +120,12 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>9.2.17.v20160517</version>
+            <version>9.4.9.v20180320</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
-            <version>9.2.17.v20160517</version>
+            <version>9.4.9.v20180320</version>
         </dependency>
         <dependency>
             <groupId>top.marchand.xml.ext-funct</groupId>
