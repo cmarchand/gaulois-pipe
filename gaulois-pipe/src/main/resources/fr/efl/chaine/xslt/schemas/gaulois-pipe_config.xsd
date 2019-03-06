@@ -706,7 +706,8 @@
       <xs:choice maxOccurs="unbounded">
         <xs:element name="xslt" type="cfg:TXslt"/>
         <xs:element name="java" type="cfg:TJava"/>
-        <xs:element name="tee" type="cfg:TTee"/>
+        <!-- removed by issue #43 -->
+        <!--<xs:element name="tee" type="cfg:TTee"/>-->
       </xs:choice>
     </xs:sequence>
     <xs:attribute name="test" type="xs:string">
@@ -724,7 +725,7 @@
           <xs:choice maxOccurs="unbounded">
             <xs:element name="xslt" type="cfg:TXslt"/>
             <xs:element name="java" type="cfg:TJava"/>
-            <xs:element name="tee" type="cfg:TTee"/>
+            <!--<xs:element name="tee" type="cfg:TTee"/>-->
           </xs:choice>
         </xs:sequence>
       </xs:restriction>
