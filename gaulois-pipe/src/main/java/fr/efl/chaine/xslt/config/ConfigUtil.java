@@ -21,6 +21,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -486,11 +487,10 @@ public class ConfigUtil {
     String resolveEscapes(String input, HashMap<QName,ParameterValue> params) {
         if(input==null) return input;
         String ret = input;
-//        if(ret.equals("$[path]/src/test/resources/identity.xsl")) {
-//            System.out.println("on y est !");
-//        }
         ret = (String)ParametersMerger.processParametersReplacement(ret, params);
-        LOGGER.debug("resolveEscapes in "+input+" with "+params+" -> "+ret);
+        if(LOGGER.isDebugEnabled()) {
+            LOGGER.debug("resolveEscapes in {} -> {}", input, ret);
+        }
         return ret;
     }
     private Collection<CfgFile> buildFolderContent(XdmNode node, HashMap<QName,ParameterValue> parameters) throws InvalidSyntaxException {
@@ -526,7 +526,8 @@ public class ConfigUtil {
         }
         
         if(!dir.isDirectory()) {
-            throw new InvalidSyntaxException(dir.getAbsolutePath()+" is not a valid directory");
+            LOGGER.warn(dir.getAbsolutePath()+" is not a valid directory");
+            return Collections.EMPTY_LIST;
         }
         LOGGER.trace("dir="+dir+", filter="+filter+", recurse="+recurse);
         List<CfgFile> files = getFilesFromDirectory(dir,filter,recurse);
