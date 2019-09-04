@@ -9,6 +9,7 @@ package fr.efl.chaine.xslt;
 import fr.efl.chaine.xslt.config.Config;
 import fr.efl.chaine.xslt.config.ConfigUtil;
 import fr.efl.chaine.xslt.config.ParametrableStep;
+import fr.efl.chaine.xslt.utils.ExceptionThrowerStep;
 import fr.efl.chaine.xslt.utils.MutableBoolean;
 import fr.efl.chaine.xslt.utils.ParameterValue;
 import java.io.BufferedReader;
@@ -242,9 +243,9 @@ public class GauloisPipeTest {
         Config config = cu.buildConfig(emptyInputParams);
         config.verify();
     }
-    @Test()
+    @Test(expected = InvalidSyntaxException.class)
     public void testInitialTeeStep() throws Exception {
-        // checks a Tee can be an initial Step
+        // checks a Tee can not be an initial Step
         GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/tee-initial-step.xml");
         Config config = cu.buildConfig(emptyInputParams);
@@ -735,4 +736,87 @@ public class GauloisPipeTest {
         subDir.delete();
         dir.delete();
     }
+    
+    
+    /**
+     * Each <pipe> should have an <output>.
+     * This should be mandatory in the schema.
+     */
+    @Test(expected = InvalidSyntaxException.class)
+    public void testNoOutput() throws Exception {
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), "./src/test/resources/no-output.xml");
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+    }
+    
+    
+    /**
+     * <choose> should not be allowed as a child of main <pipe> by schema
+     *  
+     * Cf. https://github.com/cmarchand/gaulois-pipe/issues/23
+     */
+    @Test(expected = InvalidSyntaxException.class)
+    public void testChooseAtRoot() throws Exception {
+    	String sample = "./src/test/resources/choose-at-root.xml";
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), sample);
+
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+    }
+    
+    /**
+     *  <choose> should not be allowed as the first child of main <pipe> 
+     */
+    @Test(expected = InvalidSyntaxException.class)
+    public void testChooseAtRootExec() throws Exception {
+    	String sample = "./src/test/resources/choose-at-root.xml";
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), sample);
+
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+    }
+    
+    /**
+     * <tee> should not be allowed as the first child of main <pipe> by schema
+     */
+    @Test(expected = InvalidSyntaxException.class)
+    public void testTeeAtRootExec() throws Exception {
+    	String sample = "./src/test/resources/tee-at-root.xml";
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), sample);
+
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();
+    }
+    
+    
+    /**
+     * A (sub)pipe must start with an &lt;xslt&gt; element
+     */
+    @Test(expected = InvalidSyntaxException.class)
+    public void testTeeFirstOfSubpipe() throws Exception {
+    	String sample = "./src/test/resources/tee-fist-of-subpipe.xml";
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), sample);
+
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();     
+    }
+    
+    /**
+     * A (sub)pipe must start with an &lt;xslt&gt; element
+     */
+    @Test(expected = InvalidSyntaxException.class)
+    public void testChooseFirstOfSubpipe() throws Exception {
+    	String sample = "./src/test/resources/choose-fist-of-subpipe.xml";
+        GauloisPipe piper = new GauloisPipe(configFactory);
+        ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), sample);
+
+        Config config = cu.buildConfig(emptyInputParams);
+        config.verify();     
+    }
+    
 }

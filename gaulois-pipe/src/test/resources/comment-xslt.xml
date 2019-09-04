@@ -20,6 +20,9 @@ can obtain one at https://mozilla.org/MPL/2.0/.
         <xslt href="./src/test/resources/step3.xsl">
             <param name="p-step3" value="step3"/>
         </xslt>
+        <output id="nada">
+            <null/>
+        </output>
     </pipe>
     <params>
         <param name="p-general" value="GENERAL"/>
