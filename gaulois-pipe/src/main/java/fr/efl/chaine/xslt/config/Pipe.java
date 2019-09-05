@@ -25,14 +25,14 @@ public class Pipe implements Verifiable {
     private int multithreadMaxSourceSize = 10*1024*1024;
     private int nbThreads = 1;
     private String traceOutput;
-    private final List<ParametrableStep> xslts;
+    private final List<ParametrableStep> steps;
     private Output output;
     private Tee tee;
     private Tee parentTee = null;
     
     public Pipe() {
         super();
-        xslts = new ArrayList<>();
+        steps = new ArrayList<>();
     }
     public Pipe(Tee parent) {
         this();
@@ -56,7 +56,7 @@ public class Pipe implements Verifiable {
     }
 
     public Iterator<ParametrableStep> getXslts() {
-        return xslts.iterator();
+        return steps.iterator();
     }
     
     /**
@@ -67,20 +67,26 @@ public class Pipe implements Verifiable {
      */
     public void addXslt(ParametrableStep xsl) throws InvalidSyntaxException {
         if(output!=null || tee!=null) {
-            throw new InvalidSyntaxException("xsl|javaStep elements must not be added after a output or a tee element");
+            throw new InvalidSyntaxException("xsl|javaStep elements must not be added after an output or a tee element");
         }
-        xslts.add(xsl);
+        steps.add(xsl);
     }
 
     @Override
     public void verify() throws InvalidSyntaxException {
-        for(ParametrableStep x:xslts) x.verify();
-        if(!xslts.isEmpty()) {
-            if(xslts.get(0) instanceof JavaStep) {
-                if(parentTee==null)
-                    throw new InvalidSyntaxException("A java step must not be the first step of a pipe. Please a identity XSL to start pipe.");
-            }
+        for(ParametrableStep x:steps) x.verify();
+        
+        boolean shouldHaveXsltAsFirstStep = !steps.isEmpty() || tee != null;
+        boolean hasXsltAsFirstStep = !steps.isEmpty() && steps.get(0) instanceof Xslt;
+        if(shouldHaveXsltAsFirstStep && !hasXsltAsFirstStep) {
+            throw new InvalidSyntaxException("The first step of a pipe must be an XSLT. Please add an identity XSL to start pipe.");      
         }
+        
+        if(tee==null && output==null) {
+            throw new InvalidSyntaxException("a pipe must be terminated either by a tee or by an output");
+        }
+        
+
         if(tee!=null) {
             tee.verify();
         }
@@ -142,7 +148,7 @@ public class Pipe implements Verifiable {
         String _p = prefix+"  ";
         StringBuilder sb = new StringBuilder();
         sb.append(prefix).append("pipe\n");
-        for(ParametrableStep ps:xslts) {
+        for(ParametrableStep ps:steps) {
             sb.append(ps.toString(_p));
         }
         if(output!=null) {
