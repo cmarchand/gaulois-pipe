@@ -67,7 +67,7 @@ public class Pipe implements Verifiable {
      */
     public void addXslt(ParametrableStep xsl) throws InvalidSyntaxException {
         if(output!=null || tee!=null) {
-            throw new InvalidSyntaxException("xsl|javaStep elements must not be added after a output or a tee element");
+            throw new InvalidSyntaxException("xsl|javaStep elements must not be added after an output or a tee element");
         }
         steps.add(xsl);
     }
@@ -76,23 +76,10 @@ public class Pipe implements Verifiable {
     public void verify() throws InvalidSyntaxException {
         for(ParametrableStep x:steps) x.verify();
         
-        /*
-         * TODO cf. Christophe
-         * - S'il y a des steps dans le pipe, le premier doit être un xslt.
-         * - S'il y a un tee, on doit également mettre un step xslt avant (sinon ça plante !)
-         * - Par ailleurs, pour vérifier que le premier step est un xslt,
-         *   il faut d'abord vérifier que la liste n'est pas vide (sinon, ArrayOutOfBoundsMachinTruc...)
-         *   
-         *   
-         * - Je veux un code lisible, et
-         * - j'aime pas les if dans les if
-         * => Donc voici. Right ?
-         * 
-         */
         boolean shouldHaveXsltAsFirstStep = !steps.isEmpty() || tee != null;
         boolean hasXsltAsFirstStep = !steps.isEmpty() && steps.get(0) instanceof Xslt;
         if(shouldHaveXsltAsFirstStep && !hasXsltAsFirstStep) {
-            throw new InvalidSyntaxException("The first step of a pipe must be an XSLT. Please a identity XSL to start pipe.");      
+            throw new InvalidSyntaxException("The first step of a pipe must be an XSLT. Please add an identity XSL to start pipe.");      
         }
         
         if(tee==null && output==null) {

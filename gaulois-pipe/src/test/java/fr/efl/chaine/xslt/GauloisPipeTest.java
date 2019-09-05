@@ -798,7 +798,7 @@ public class GauloisPipeTest {
      */
     @Test(expected = InvalidSyntaxException.class)
     public void testTeeFirstOfSubpipe() throws Exception {
-    	String sample = "./src/test/resources/tee-fist-of-subpipe.xml";
+    	String sample = "./src/test/resources/tee-first-of-subpipe.xml";
         GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), sample);
 
@@ -811,7 +811,7 @@ public class GauloisPipeTest {
      */
     @Test(expected = InvalidSyntaxException.class)
     public void testChooseFirstOfSubpipe() throws Exception {
-    	String sample = "./src/test/resources/choose-fist-of-subpipe.xml";
+    	String sample = "./src/test/resources/choose-first-of-subpipe.xml";
         GauloisPipe piper = new GauloisPipe(configFactory);
         ConfigUtil cu = new ConfigUtil(configFactory.getConfiguration(), piper.getUriResolver(), sample);
 
